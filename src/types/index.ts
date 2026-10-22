@@ -54,6 +54,7 @@ export interface TravellerInput {
   emergencyContactName?: string;
   emergencyContactPhone?: string;
   assignedSeatNumber?: string;
+  collegeId?: string;
 }
 
 export interface BookingPricing {

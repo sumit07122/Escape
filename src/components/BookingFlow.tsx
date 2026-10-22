@@ -3,16 +3,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Script from 'next/script';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import {
-  Users, User, CheckCircle2, ArrowRight, ArrowLeft,
-  CreditCard, ShieldCheck, Ticket, Download, Phone,
-  Loader2, AlertCircle, Copy, Check, Compass, Calendar,
-  MapPin, LogOut
+  User, CheckCircle2, ArrowRight,
+  Loader2, AlertCircle
 } from 'lucide-react';
 import BusSeatMap from './BusSeatMap';
 import { SittingPreference, TravellerInput, BookingPricing } from '@/types';
-import { CONTACT_INFO, PRICING_DEFAULTS, TRIP_METADATA } from '@/lib/constants';
+import { PRICING_DEFAULTS } from '@/lib/constants';
 
 declare global {
   interface Window {
@@ -30,50 +27,44 @@ interface UserSession {
 }
 
 export default function BookingFlow() {
-  const router = useRouter();
-
-  // 8 Steps:
-  // 1: Google Login
-  // 2: Number of Travellers
-  // 3: Traveller Details
-  // 4: Sitting Preference
-  // 5: Bus & Seat Selection
-  // 6: Booking Summary
-  // 7: Pay Reservation
-  // 8: Confirmation & QR Ticket
+  // Steps:
+  // 1: Google Login (if unauthenticated)
+  // 2: Travellers count
+  // 3: Traveller details
+  // 4: Choose seats & preference
+  // 5: Review & Payment
+  // 6: Confirmation
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [bookingSessionId, setBookingSessionId] = useState<string>('');
 
   // Authentication State
   const [userSession, setUserSession] = useState<UserSession | null>(null);
-  const [checkingAuth, setCheckingAuth] = useState(true);
   const [demoLoginLoading, setDemoLoginLoading] = useState(false);
 
-  // Step 2: Travellers Count
+  // Step: Travellers Count
   const [travellersCount, setTravellersCount] = useState<number>(1);
 
-  // Step 3: Traveller Details
+  // Step: Traveller Details
   const [travellers, setTravellers] = useState<TravellerInput[]>([
-    { fullName: '', phone: '', email: '', gender: 'Male' },
+    { fullName: '', phone: '', email: '', gender: 'Male', collegeId: '' },
   ]);
   const [emergencyContactName, setEmergencyContactName] = useState('');
   const [emergencyContactPhone, setEmergencyContactPhone] = useState('');
 
-  // Step 4: Sitting Preference
+  // Step: Sitting Preference
   const [sittingPreference, setSittingPreference] = useState<SittingPreference>('NO_PREFERENCE');
 
-  // Step 5: Bus & Seat Selection
+  // Step: Bus & Seat Selection
   const [selectedBusId, setSelectedBusId] = useState('');
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
 
-  // Step 6 & 7: Pricing & Payment
+  // Step: Pricing & Payment
   const [pricing, setPricing] = useState<BookingPricing | null>(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
-  // Step 8: Confirmed Booking Details
+  // Step: Confirmed Booking Details
   const [confirmedBooking, setConfirmedBooking] = useState<any>(null);
-  const [copiedId, setCopiedId] = useState(false);
 
   // 1. Initialize Booking Session & Check User Auth
   useEffect(() => {
@@ -91,7 +82,6 @@ export default function BookingFlow() {
           const data = await res.json();
           if (data.authenticated && data.user) {
             setUserSession(data.user);
-            // Autofill primary traveller
             setTravellers((prev) => {
               const updated = [...prev];
               if (updated[0]) {
@@ -100,42 +90,15 @@ export default function BookingFlow() {
               }
               return updated;
             });
-            // Automatically advance to Step 2 if user is already logged in
             setCurrentStep((step) => (step === 1 ? 2 : step));
           }
         }
       } catch {
-        // Continue
-      } finally {
-        setCheckingAuth(false);
+        // Fallback
       }
     }
     checkAuth();
   }, []);
-
-  // 2. Adjust travellers array whenever count changes
-  useEffect(() => {
-    setTravellers((prev) => {
-      const updated = [...prev];
-      while (updated.length < travellersCount) {
-        updated.push({
-          fullName: '',
-          phone: '',
-          email: '',
-          gender: 'Male',
-        });
-      }
-      return updated.slice(0, travellersCount);
-    });
-
-    // Reset selected seats if count doesn't match
-    if (selectedSeats.length > travellersCount) {
-      setSelectedSeats([]);
-    }
-
-    // Refresh pricing server-side
-    refreshPricing(travellersCount);
-  }, [travellersCount]);
 
   const refreshPricing = useCallback(async (count: number) => {
     try {
@@ -149,7 +112,6 @@ export default function BookingFlow() {
         setPricing(data.pricing);
       }
     } catch {
-      // Fallback local profit-safe calculation
       setPricing({
         travellersCount: count,
         baseAmount: count * PRICING_DEFAULTS.pricePerTraveller,
@@ -164,17 +126,34 @@ export default function BookingFlow() {
     }
   }, []);
 
-  // Sandbox demo login handler (for local development or testing when Google keys aren't set)
-  const handleSandboxLogin = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    setDemoLoginLoading(true);
-    try {
-      const email = 'aryan.sharma@gla.ac.in';
-      const name = 'Aryan Sharma';
-      window.location.href = `/api/auth/google?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}&returnUrl=/book`;
-    } catch {
-      setDemoLoginLoading(false);
+  // 2. Adjust travellers array whenever count changes
+  useEffect(() => {
+    setTravellers((prev) => {
+      const updated = [...prev];
+      while (updated.length < travellersCount) {
+        updated.push({
+          fullName: '',
+          phone: '',
+          email: '',
+          gender: 'Male',
+          collegeId: '',
+        });
+      }
+      return updated.slice(0, travellersCount);
+    });
+
+    if (selectedSeats.length > travellersCount) {
+      setSelectedSeats([]);
     }
+
+    refreshPricing(travellersCount);
+  }, [travellersCount, refreshPricing, selectedSeats.length]);
+
+  const handleSandboxLogin = () => {
+    setDemoLoginLoading(true);
+    const email = 'aryan.sharma@gla.ac.in';
+    const name = 'Aryan Sharma';
+    window.location.href = `/api/auth/google?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}&returnUrl=/book`;
   };
 
   const handleSignOut = async () => {
@@ -187,7 +166,6 @@ export default function BookingFlow() {
     }
   };
 
-  // Step 3 Validation: Traveller details
   const validateTravellerDetails = () => {
     for (let i = 0; i < travellers.length; i++) {
       const t = travellers[i];
@@ -200,24 +178,22 @@ export default function BookingFlow() {
         return false;
       }
       if (i === 0 && (!t.email.trim() || !t.email.includes('@'))) {
-        alert('Please enter a valid email address for the primary traveller to receive digital QR tickets.');
+        alert('Please enter a valid email address for the primary contact.');
         return false;
       }
     }
     if (!emergencyContactName.trim() || !emergencyContactPhone.trim()) {
-      alert('Please enter an emergency contact name and phone number for safety.');
+      alert('Please enter an emergency contact name and phone number for student safety.');
       return false;
     }
     return true;
   };
 
-  // Step 5 Seat selection handler
   const handleSeatSelect = (busId: string, seatNumbers: string[]) => {
     setSelectedBusId(busId);
     setSelectedSeats(seatNumbers);
   };
 
-  // Step 7: Razorpay Order Creation & Payment
   const handleProceedToPayment = async () => {
     setIsProcessingPayment(true);
     setPaymentError(null);
@@ -245,7 +221,6 @@ export default function BookingFlow() {
         throw new Error(orderData.error || 'Failed to initialize booking payment');
       }
 
-      // Check if Razorpay SDK is available
       if (typeof window.Razorpay !== 'undefined') {
         const options = {
           key: orderData.keyId,
@@ -261,7 +236,7 @@ export default function BookingFlow() {
             contact: primary.phone,
           },
           theme: {
-            color: '#0d3326', // Forest green
+            color: '#163C32',
           },
           handler: async function (response: any) {
             await verifyPayment({
@@ -281,7 +256,6 @@ export default function BookingFlow() {
         const rzp = new window.Razorpay(options);
         rzp.open();
       } else {
-        // Fallback or Test simulation mode
         await verifyPayment({
           bookingId: orderData.bookingId,
           razorpayOrderId: orderData.razorpayOrderId,
@@ -297,7 +271,6 @@ export default function BookingFlow() {
     }
   };
 
-  // Verify Razorpay payment
   const verifyPayment = async (verificationPayload: any) => {
     try {
       const res = await fetch('/api/bookings/verify-payment', {
@@ -312,9 +285,8 @@ export default function BookingFlow() {
       }
 
       setConfirmedBooking(data.booking);
-      setCurrentStep(8); // Move to final confirmation
+      setCurrentStep(6);
 
-      // Trigger celebration confetti if loaded
       if (typeof window.confetti === 'function') {
         window.confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
       }
@@ -326,60 +298,85 @@ export default function BookingFlow() {
     }
   };
 
-  // Step Indicator labels
-  const stepsList = [
-    { num: 1, label: 'Google Sign In' },
-    { num: 2, label: 'Travellers' },
-    { num: 3, label: 'Traveller Info' },
-    { num: 4, label: 'Preference' },
-    { num: 5, label: 'Bus & Seats' },
-    { num: 6, label: 'Summary' },
-    { num: 7, label: 'Pay Deposit' },
-    { num: 8, label: 'Confirmation' },
+  const bookingSteps = [
+    { num: 2, label: '01 Travellers' },
+    { num: 3, label: '02 Details' },
+    { num: 4, label: '03 Seats' },
+    { num: 5, label: '04 Review & Pay' },
   ];
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 py-8 space-y-8">
-      {/* Razorpay Script */}
+    <div className="w-full max-w-4xl mx-auto px-4 py-8 space-y-8 bg-[#F7F5EF] text-[#171918]">
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       <Script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" strategy="lazyOnload" />
 
-      {/* Progress Stepper Header */}
-      <div className="w-full glass-card rounded-2xl p-4 sm:p-6 border border-white/10">
-        <div className="flex items-center justify-between gap-2 overflow-x-auto pb-2 text-xs">
-          {stepsList.map((s) => {
-            const isCompleted = currentStep > s.num;
-            const isCurrent = currentStep === s.num;
-            return (
-              <div
-                key={s.num}
-                className={`flex items-center gap-1.5 shrink-0 px-2.5 py-1.5 rounded-lg font-bold transition-all ${
-                  isCurrent
-                    ? 'bg-emerald-600 text-white shadow-md'
-                    : isCompleted
-                    ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50'
-                    : 'text-zinc-500 bg-zinc-900/40'
-                }`}
-              >
-                <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] bg-black/30">
-                  {isCompleted ? <Check className="w-3 h-3 text-emerald-400" /> : s.num}
-                </span>
-                <span className="hidden sm:inline">{s.label}</span>
+      {/* Booking Header & Progress Bar */}
+      {currentStep !== 6 && (
+        <div className="bg-white rounded-2xl p-5 border border-[#D8D2C4] space-y-4 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#E7E2D8] pb-3">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#D87945]">
+                RESERVATION PORTAL
+              </span>
+              <h1 className="text-xl sm:text-2xl font-black text-[#171918]">
+                BOOK YOUR SEAT
+              </h1>
+            </div>
+            {userSession && (
+              <div className="flex items-center gap-2 text-xs text-[#646864]">
+                <span>Signed in as <strong>{userSession.name?.split(' ')[0]}</strong></span>
+                <button onClick={handleSignOut} className="text-[#D87945] font-semibold hover:underline">
+                  Logout
+                </button>
               </div>
-            );
-          })}
+            )}
+          </div>
+
+          {/* Simple Progress Bar (Section 15) */}
+          <div className="flex items-center justify-between gap-1 text-xs">
+            {bookingSteps.map((s) => {
+              const isActive = currentStep === s.num;
+              const isPast = currentStep > s.num;
+              return (
+                <div
+                  key={s.num}
+                  className={`flex-1 py-1.5 px-2 rounded-lg text-center font-bold transition-all ${
+                    isActive
+                      ? 'bg-[#163C32] text-white shadow-xs'
+                      : isPast
+                      ? 'bg-[#E7E2D8] text-[#163C32]'
+                      : 'bg-[#F7F5EF] text-[#B4AA96]'
+                  }`}
+                >
+                  <span className="truncate block">{s.label}</span>
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ======================================================== */}
-      {/* STEP 1: GOOGLE AUTHENTICATION ONLY                        */}
+      {/* STEP 1: GOOGLE AUTHENTICATION (CUSTOMER AUTH ONLY)       */}
       {/* ======================================================== */}
       {currentStep === 1 && (
-        <div className="glass-card rounded-3xl p-6 sm:p-10 border border-white/10 space-y-8 text-center animate-in fade-in duration-300">
+        <div className="bg-white rounded-3xl p-6 sm:p-10 border border-[#D8D2C4] space-y-6 text-center shadow-sm animate-in fade-in duration-200">
           <div className="max-w-md mx-auto space-y-3">
-            <div className="w-14 h-14 rounded-2xl bg-white text-zinc-900 flex items-center justify-center mx-auto shadow-xl">
-              {/* Google G Logo SVG */}
-              <svg className="w-7 h-7" viewBox="0 0 24 24">
+            <div className="w-12 h-12 rounded-2xl bg-[#163C32]/10 text-[#163C32] flex items-center justify-center mx-auto">
+              <User className="w-6 h-6" />
+            </div>
+            <h2 className="text-2xl font-black text-[#171918]">Continue with Google</h2>
+            <p className="text-xs text-[#646864]">
+              Sign in with your Google account to select coach seats and receive your digital QR boarding pass.
+            </p>
+          </div>
+
+          <div className="max-w-sm mx-auto space-y-3 pt-2">
+            <a
+              href="/api/auth/google?returnUrl=/book"
+              className="w-full py-3.5 px-6 rounded-xl border border-[#D8D2C4] bg-white hover:bg-[#F7F5EF] text-[#171918] font-bold text-xs shadow-sm flex items-center justify-center gap-3 transition-all hover:border-[#B4AA96]"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path
                   fill="#4285F4"
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -397,209 +394,106 @@ export default function BookingFlow() {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                 />
               </svg>
+              <span>Continue with Google</span>
+            </a>
+
+            <div className="relative flex py-1 items-center">
+              <div className="flex-grow border-t border-[#D8D2C4]" />
+              <span className="flex-shrink mx-2 text-[10px] text-[#B4AA96] uppercase font-bold tracking-wider">
+                Or Sandbox
+              </span>
+              <div className="flex-grow border-t border-[#D8D2C4]" />
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-white">Sign In to Continue</h2>
-            <p className="text-xs sm:text-sm text-zinc-400">
-              One-click access with Google. No passwords or account creation needed.
-            </p>
+
+            <button
+              type="button"
+              onClick={handleSandboxLogin}
+              disabled={demoLoginLoading}
+              className="w-full py-2.5 px-4 rounded-xl bg-[#F7F5EF] hover:bg-[#E7E2D8] border border-[#D8D2C4] text-[#163C32] font-bold text-xs flex items-center justify-center gap-2 transition-colors"
+            >
+              {demoLoginLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin text-[#163C32]" />
+              ) : (
+                <>
+                  <span>1-Click Test Login (Aryan Sharma)</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </>
+              )}
+            </button>
           </div>
-
-          {userSession ? (
-            <div className="max-w-md mx-auto p-5 rounded-2xl bg-emerald-950/40 border border-emerald-600/40 space-y-4 text-left">
-              <div className="flex items-center gap-3">
-                {userSession.image ? (
-                  <img
-                    src={userSession.image}
-                    alt={userSession.name}
-                    className="w-12 h-12 rounded-full border border-emerald-400"
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold">
-                    {userSession.name.charAt(0)}
-                  </div>
-                )}
-                <div className="flex-1 truncate">
-                  <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider block">
-                    Signed In with Google
-                  </span>
-                  <p className="text-sm font-bold text-white truncate">{userSession.name}</p>
-                  <p className="text-xs text-zinc-400 truncate">{userSession.email}</p>
-                </div>
-                <button
-                  onClick={handleSignOut}
-                  className="p-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white"
-                  title="Sign Out"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </div>
-
-              <button
-                onClick={() => setCurrentStep(2)}
-                className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all"
-              >
-                <span>Continue to Number of Travellers</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          ) : (
-            <div className="max-w-md mx-auto space-y-4">
-              {/* Primary: Continue with Google Button */}
-              <a
-                href="/api/auth/google?returnUrl=/book"
-                className="w-full py-4 px-6 rounded-2xl bg-white hover:bg-zinc-100 text-zinc-900 font-bold text-sm shadow-xl flex items-center justify-center gap-3 transition-all hover:scale-[1.02]"
-              >
-                <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
-                  <path
-                    fill="#4285F4"
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                  />
-                  <path
-                    fill="#EA4335"
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                  />
-                </svg>
-                <span>Continue with Google</span>
-              </a>
-
-              {/* Dev/Local Instant Sign-in (Seamless offline testing) */}
-              <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={() => handleSandboxLogin()}
-                  disabled={demoLoginLoading}
-                  className="w-full py-2.5 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-300 flex items-center justify-center gap-2"
-                >
-                  {demoLoginLoading ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <span>Instant GLA Student Sign-in (Demo / Offline Mode)</span>
-                  )}
-                </button>
-              </div>
-
-              <div className="text-[11px] text-zinc-500 pt-2 flex items-center justify-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                <span>Your Google identity is only used to manage your booking & tickets.</span>
-              </div>
-            </div>
-          )}
         </div>
       )}
 
       {/* ======================================================== */}
-      {/* STEP 2: NUMBER OF TRAVELLERS (1–6+)                       */}
+      {/* STEP 2: WHO'S COMING? (TRAVELLER QUANTITY SELECTOR)      */}
       {/* ======================================================== */}
       {currentStep === 2 && (
-        <div className="glass-card rounded-3xl p-6 sm:p-10 border border-white/10 space-y-8 animate-in fade-in duration-300">
-          <div className="space-y-2 text-center max-w-xl mx-auto">
-            <span className="text-xs font-bold text-orange-400 uppercase tracking-widest">
-              STEP 2 OF 8 • CAPACITY PLANNING
+        <div className="bg-white rounded-3xl p-6 sm:p-10 border border-[#D8D2C4] space-y-8 text-center shadow-sm animate-in fade-in duration-200">
+          <div className="max-w-md mx-auto space-y-2">
+            <span className="text-xs font-bold text-[#D87945] uppercase tracking-widest">
+              01 • PASSENGER COUNT
             </span>
-            <h2 className="text-2xl sm:text-3xl font-black text-white">How many travellers?</h2>
-            <p className="text-xs sm:text-sm text-zinc-400">
-              Book for yourself or your friends together under a single booking ID.
+            <h2 className="text-2xl sm:text-3xl font-black text-[#171918]">
+              Who's coming?
+            </h2>
+            <p className="text-xs text-[#646864]">
+              Select the number of seats you wish to reserve together on the same coach.
             </p>
           </div>
 
-          {/* Quick Select Buttons */}
-          <div className="flex flex-wrap items-center justify-center gap-2.5 max-w-md mx-auto">
-            {[1, 2, 3, 4, 5, 6].map((num) => (
+          {/* Large Quantity Selector (Section 17) */}
+          <div className="max-w-xs mx-auto p-4 rounded-2xl bg-[#F7F5EF] border border-[#D8D2C4] space-y-3">
+            <div className="flex items-center justify-between">
               <button
-                key={num}
                 type="button"
-                onClick={() => setTravellersCount(num)}
-                className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl font-black text-base transition-all ${
-                  travellersCount === num
-                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-950 scale-105 border-2 border-emerald-400'
-                    : 'bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-700'
-                }`}
+                disabled={travellersCount <= 1}
+                onClick={() => setTravellersCount((prev) => Math.max(1, prev - 1))}
+                className="w-12 h-12 rounded-xl bg-white border border-[#D8D2C4] text-xl font-bold text-[#171918] hover:bg-[#E7E2D8] disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-xs"
               >
-                {num}
+                −
               </button>
-            ))}
-          </div>
+              <div className="text-center">
+                <span className="text-4xl font-black text-[#171918] block leading-none">
+                  {travellersCount}
+                </span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#646864]">
+                  {travellersCount === 1 ? 'TRAVELLER' : 'TRAVELLERS'}
+                </span>
+              </div>
+              <button
+                type="button"
+                disabled={travellersCount >= 6}
+                onClick={() => setTravellersCount((prev) => Math.min(6, prev + 1))}
+                className="w-12 h-12 rounded-xl bg-white border border-[#D8D2C4] text-xl font-bold text-[#171918] hover:bg-[#E7E2D8] disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-xs"
+              >
+                +
+              </button>
+            </div>
 
-          {/* Counter Controls */}
-          <div className="flex items-center justify-center gap-4 pt-2">
-            <button
-              type="button"
-              onClick={() => setTravellersCount((prev) => Math.max(1, prev - 1))}
-              disabled={travellersCount <= 1}
-              className="w-10 h-10 rounded-xl bg-zinc-800 disabled:opacity-40 text-white font-bold text-lg flex items-center justify-center"
-            >
-              -
-            </button>
-            <span className="text-xl font-black text-white min-w-[120px] text-center">
-              {travellersCount} {travellersCount === 1 ? 'Traveller' : 'Travellers'}
-            </span>
-            <button
-              type="button"
-              onClick={() => setTravellersCount((prev) => Math.min(23, prev + 1))}
-              className="w-10 h-10 rounded-xl bg-zinc-800 text-white font-bold text-lg flex items-center justify-center"
-            >
-              +
-            </button>
-          </div>
-
-          {/* Profit-Safe Pricing Calculation Preview */}
-          <div className="max-w-md mx-auto p-5 rounded-2xl bg-zinc-950/80 border border-white/10 space-y-3">
-            <div className="flex items-center justify-between text-xs text-zinc-400">
-              <span>Standard Trip Rate:</span>
-              <span className="font-bold text-zinc-200">₹6,200 per traveller</span>
-            </div>
-            <div className="flex items-center justify-between text-xs text-zinc-400 border-b border-zinc-800 pb-2">
-              <span>Total Price ({travellersCount} pax):</span>
-              <span className="font-bold text-white text-sm">
-                ₹{(travellersCount * 6200).toLocaleString('en-IN')}
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-xs text-emerald-400 font-bold">
-              <span>Pay Today to Reserve:</span>
-              <span className="text-base text-emerald-300">
-                ₹{(travellersCount * 1000).toLocaleString('en-IN')}
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-[11px] text-zinc-400">
-              <span>Remaining Balance:</span>
-              <span className="font-semibold text-zinc-300">
-                ₹{(travellersCount * 5200).toLocaleString('en-IN')}
-              </span>
+            {/* Transparent Calculation */}
+            <div className="pt-2 border-t border-[#D8D2C4] text-xs space-y-1">
+              <div className="flex justify-between text-[#171918] font-bold">
+                <span>Total Package:</span>
+                <span>₹{(travellersCount * 6200).toLocaleString('en-IN')}</span>
+              </div>
+              <div className="flex justify-between text-[#D87945] font-semibold">
+                <span>Reservation Deposit (Today):</span>
+                <span>₹{(travellersCount * 1000).toLocaleString('en-IN')}</span>
+              </div>
+              <div className="flex justify-between text-[#646864] text-[11px]">
+                <span>Remaining before boarding:</span>
+                <span>₹{(travellersCount * 5200).toLocaleString('en-IN')}</span>
+              </div>
             </div>
           </div>
 
-          {/* Group Operational Note */}
-          {travellersCount > 1 && (
-            <div className="max-w-md mx-auto p-3.5 rounded-xl bg-orange-950/30 border border-orange-700/40 text-xs text-orange-300 flex items-center gap-2">
-              <Compass className="w-4 h-4 shrink-0 text-orange-400" />
-              <span>
-                All {travellersCount} seats will be bookable together on the same coach with adjacent seating recommendation.
-              </span>
-            </div>
-          )}
-
-          <div className="flex items-center justify-between pt-4">
-            <button
-              type="button"
-              onClick={() => setCurrentStep(1)}
-              className="px-5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-xs font-bold text-zinc-300 hover:text-white"
-            >
-              Back
-            </button>
+          <div className="flex justify-center pt-2">
             <button
               type="button"
               onClick={() => setCurrentStep(3)}
-              className="px-7 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm flex items-center gap-2 shadow-lg"
+              className="px-8 py-3.5 rounded-xl bg-[#D87945] hover:bg-[#C26735] text-white font-bold text-xs shadow-md transition-all flex items-center gap-2"
             >
-              <span>Continue to Traveller Details</span>
+              <span>CONTINUE TO TRAVELLER DETAILS</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -607,114 +501,88 @@ export default function BookingFlow() {
       )}
 
       {/* ======================================================== */}
-      {/* STEP 3: TRAVELLER INFORMATION                             */}
+      {/* STEP 3: TRAVELLER DETAILS FORM                           */}
       {/* ======================================================== */}
       {currentStep === 3 && (
-        <div className="glass-card rounded-3xl p-6 sm:p-10 border border-white/10 space-y-8 animate-in fade-in duration-300">
+        <div className="bg-white rounded-3xl p-6 sm:p-10 border border-[#D8D2C4] space-y-8 shadow-sm animate-in fade-in duration-200">
           <div className="space-y-2">
-            <span className="text-xs font-bold text-orange-400 uppercase tracking-widest">
-              STEP 3 OF 8 • TRAVELLER PROFILES
+            <span className="text-xs font-bold text-[#D87945] uppercase tracking-widest">
+              02 • PASSENGER INFORMATION
             </span>
-            <h2 className="text-2xl sm:text-3xl font-black text-white">Traveller Information</h2>
-            <p className="text-xs sm:text-sm text-zinc-400">
-              Provide names and contacts for ticket generation and university manifest.
+            <h2 className="text-2xl font-black text-[#171918]">Traveller Details</h2>
+            <p className="text-xs text-[#646864]">
+              Enter the legal names and contact numbers for all {travellersCount} travellers.
             </p>
           </div>
 
           <div className="space-y-6">
-            {travellers.map((t, idx) => (
-              <div
-                key={idx}
-                className="p-5 rounded-2xl bg-zinc-950/60 border border-zinc-800 space-y-4"
-              >
-                <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                  <span className="text-xs font-black text-white uppercase flex items-center gap-2">
-                    <User className="w-4 h-4 text-emerald-400" />
-                    <span>Traveller #{idx + 1} {idx === 0 ? '(Primary Contact)' : ''}</span>
+            {travellers.map((traveller, idx) => (
+              <div key={idx} className="p-5 rounded-2xl bg-[#F7F5EF] border border-[#D8D2C4] space-y-4">
+                <div className="flex items-center justify-between border-b border-[#D8D2C4] pb-2">
+                  <span className="text-xs font-black text-[#163C32] uppercase tracking-wider">
+                    {idx === 0 ? 'Lead Traveller (Primary Contact)' : `Traveller #${idx + 1}`}
                   </span>
-                  <span className="text-[11px] font-bold text-zinc-500">₹6,200</span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[11px] font-bold text-zinc-400 uppercase mb-1">
-                      Full Name *
-                    </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                  <div className="space-y-1">
+                    <label className="font-bold text-[#171918]">Full Legal Name *</label>
                     <input
                       type="text"
                       required
-                      value={t.fullName}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setTravellers((prev) => {
-                          const copy = [...prev];
-                          copy[idx].fullName = val;
-                          return copy;
-                        });
-                      }}
                       placeholder="e.g. Aryan Sharma"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-white text-xs focus:border-emerald-500 focus:outline-none"
+                      value={traveller.fullName}
+                      onChange={(e) => {
+                        const updated = [...travellers];
+                        updated[idx].fullName = e.target.value;
+                        setTravellers(updated);
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-[#D8D2C4] text-xs text-[#171918] focus:border-[#163C32] focus:outline-none"
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-[11px] font-bold text-zinc-400 uppercase mb-1">
-                      Phone Number (10 Digits) *
-                    </label>
+                  <div className="space-y-1">
+                    <label className="font-bold text-[#171918]">Phone Number *</label>
                     <input
                       type="tel"
                       required
-                      maxLength={10}
-                      value={t.phone}
+                      placeholder="10-digit mobile"
+                      value={traveller.phone}
                       onChange={(e) => {
-                        const val = e.target.value.replace(/[^0-9]/g, '');
-                        setTravellers((prev) => {
-                          const copy = [...prev];
-                          copy[idx].phone = val;
-                          return copy;
-                        });
+                        const updated = [...travellers];
+                        updated[idx].phone = e.target.value;
+                        setTravellers(updated);
                       }}
-                      placeholder="9876543210"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-white text-xs focus:border-emerald-500 focus:outline-none"
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-[#D8D2C4] text-xs text-[#171918] focus:border-[#163C32] focus:outline-none"
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-[11px] font-bold text-zinc-400 uppercase mb-1">
-                      Email Address {idx === 0 ? '*' : '(Optional)'}
-                    </label>
+                  <div className="space-y-1">
+                    <label className="font-bold text-[#171918]">Email Address {idx === 0 ? '*' : '(Optional)'}</label>
                     <input
                       type="email"
                       required={idx === 0}
-                      value={t.email}
+                      placeholder="To receive ticket"
+                      value={traveller.email}
                       onChange={(e) => {
-                        const val = e.target.value;
-                        setTravellers((prev) => {
-                          const copy = [...prev];
-                          copy[idx].email = val;
-                          return copy;
-                        });
+                        const updated = [...travellers];
+                        updated[idx].email = e.target.value;
+                        setTravellers(updated);
                       }}
-                      placeholder="aryan@gla.ac.in"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-white text-xs focus:border-emerald-500 focus:outline-none"
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-[#D8D2C4] text-xs text-[#171918] focus:border-[#163C32] focus:outline-none"
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-[11px] font-bold text-zinc-400 uppercase mb-1">
-                      Gender *
-                    </label>
+                  <div className="space-y-1">
+                    <label className="font-bold text-[#171918]">Gender</label>
                     <select
-                      value={t.gender}
+                      value={traveller.gender}
                       onChange={(e) => {
-                        const val = e.target.value;
-                        setTravellers((prev) => {
-                          const copy = [...prev];
-                          copy[idx].gender = val;
-                          return copy;
-                        });
+                        const updated = [...travellers];
+                        updated[idx].gender = e.target.value as 'Male' | 'Female' | 'Other';
+                        setTravellers(updated);
                       }}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-white text-xs focus:border-emerald-500 focus:outline-none"
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-[#D8D2C4] text-xs text-[#171918] focus:border-[#163C32] focus:outline-none"
                     >
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
@@ -726,47 +594,42 @@ export default function BookingFlow() {
             ))}
 
             {/* Emergency Contact */}
-            <div className="p-5 rounded-2xl bg-zinc-950/60 border border-zinc-800 space-y-4">
-              <span className="text-xs font-black text-orange-400 uppercase tracking-wider block">
-                Emergency Contact (Mandatory for Trip Safety)
+            <div className="p-5 rounded-2xl bg-[#E7E2D8] border border-[#D8D2C4] space-y-3">
+              <span className="text-xs font-bold text-[#163C32] uppercase tracking-wider block">
+                Emergency Contact (Parent / Guardian)
               </span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[11px] font-bold text-zinc-400 uppercase mb-1">
-                    Contact Name (Parent / Guardian) *
-                  </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="space-y-1">
+                  <label className="font-bold text-[#171918]">Contact Name *</label>
                   <input
                     type="text"
                     required
+                    placeholder="e.g. Ramesh Sharma"
                     value={emergencyContactName}
                     onChange={(e) => setEmergencyContactName(e.target.value)}
-                    placeholder="e.g. Ramesh Sharma"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-white text-xs focus:border-emerald-500 focus:outline-none"
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#D8D2C4] text-xs text-[#171918] focus:border-[#163C32] focus:outline-none"
                   />
                 </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-zinc-400 uppercase mb-1">
-                    Emergency Phone Number *
-                  </label>
+                <div className="space-y-1">
+                  <label className="font-bold text-[#171918]">Contact Phone *</label>
                   <input
                     type="tel"
                     required
-                    maxLength={10}
+                    placeholder="10-digit phone"
                     value={emergencyContactPhone}
-                    onChange={(e) => setEmergencyContactPhone(e.target.value.replace(/[^0-9]/g, ''))}
-                    placeholder="9876500000"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-white text-xs focus:border-emerald-500 focus:outline-none"
+                    onChange={(e) => setEmergencyContactPhone(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#D8D2C4] text-xs text-[#171918] focus:border-[#163C32] focus:outline-none"
                   />
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-4">
+          <div className="flex items-center justify-between pt-4 border-t border-[#E7E2D8]">
             <button
               type="button"
               onClick={() => setCurrentStep(2)}
-              className="px-5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-xs font-bold text-zinc-300 hover:text-white"
+              className="px-5 py-2.5 rounded-xl bg-[#F7F5EF] border border-[#D8D2C4] text-xs font-bold text-[#171918] hover:bg-[#E7E2D8]"
             >
               Back
             </button>
@@ -777,9 +640,9 @@ export default function BookingFlow() {
                   setCurrentStep(4);
                 }
               }}
-              className="px-7 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm flex items-center gap-2 shadow-lg"
+              className="px-7 py-3 rounded-xl bg-[#D87945] hover:bg-[#C26735] text-white font-bold text-xs shadow-md flex items-center gap-2"
             >
-              <span>Continue to Sitting Preference</span>
+              <span>CONTINUE TO SEAT MAP</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -787,85 +650,51 @@ export default function BookingFlow() {
       )}
 
       {/* ======================================================== */}
-      {/* STEP 4: SITTING PREFERENCE                                */}
+      {/* STEP 4: CHOOSE SEATS & SITTING PREFERENCE                */}
       {/* ======================================================== */}
       {currentStep === 4 && (
-        <div className="glass-card rounded-3xl p-6 sm:p-10 border border-white/10 space-y-8 animate-in fade-in duration-300">
-          <div className="space-y-2 text-center max-w-lg mx-auto">
-            <span className="text-xs font-bold text-orange-400 uppercase tracking-widest">
-              STEP 4 OF 8 • PREFERENCE GUIDANCE
+        <div className="bg-white rounded-3xl p-6 sm:p-10 border border-[#D8D2C4] space-y-8 shadow-sm animate-in fade-in duration-200">
+          <div className="space-y-2">
+            <span className="text-xs font-bold text-[#D87945] uppercase tracking-widest">
+              03 • SEAT ALLOCATION
             </span>
-            <h2 className="text-2xl sm:text-3xl font-black text-white">Coach Seating Preference</h2>
-            <p className="text-xs sm:text-sm text-zinc-400">
-              Select your preference. We will highlight recommended seats on the map.
+            <h2 className="text-2xl font-black text-[#171918]">Choose Your Seats</h2>
+            <p className="text-xs text-[#646864]">
+              Select exactly <strong>{travellersCount}</strong> {travellersCount === 1 ? 'seat' : 'seats'}. 
+              Seats are held for 10 minutes while you complete checkout.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 max-w-2xl mx-auto">
-            {[
-              { id: 'WINDOW', label: 'Window Seat', desc: 'Scenic Himalayan vistas and roadside views' },
-              { id: 'AISLE', label: 'Aisle Seat', desc: 'Easy walkaway access and extra leg flexibility' },
-              { id: 'FRONT', label: 'Front Rows', desc: 'Smooth highway cruise and fast boarding' },
-              { id: 'BACK', label: 'Rear Cabin', desc: 'Popular with groups travelling together' },
-              { id: 'NO_PREFERENCE', label: 'No Preference', desc: 'Happy with any comfortable seat on the coach' },
-            ].map((pref) => {
-              const isSelected = sittingPreference === pref.id;
-              return (
+          {/* Sitting Preference Pills */}
+          <div className="p-4 rounded-2xl bg-[#F7F5EF] border border-[#D8D2C4] space-y-2">
+            <span className="text-xs font-bold text-[#163C32] uppercase tracking-wider block">
+              Seating Preference (Highlights Matching Seats with ★):
+            </span>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { id: 'WINDOW', label: 'Window' },
+                { id: 'AISLE', label: 'Aisle' },
+                { id: 'FRONT', label: 'Front Rows' },
+                { id: 'BACK', label: 'Rear Cabin' },
+                { id: 'NO_PREFERENCE', label: 'No Preference' },
+              ].map((pref) => (
                 <button
                   key={pref.id}
                   type="button"
                   onClick={() => setSittingPreference(pref.id as SittingPreference)}
-                  className={`p-4 rounded-2xl border text-left transition-all ${
-                    isSelected
-                      ? 'bg-emerald-950/60 border-emerald-500 shadow-md ring-1 ring-emerald-500'
-                      : 'bg-zinc-900/60 border-zinc-800 hover:border-zinc-700'
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    sittingPreference === pref.id
+                      ? 'bg-[#163C32] text-white shadow-xs'
+                      : 'bg-white border border-[#D8D2C4] text-[#171918] hover:border-[#163C32]'
                   }`}
                 >
-                  <span className={`text-sm font-bold block ${isSelected ? 'text-emerald-400' : 'text-white'}`}>
-                    {pref.label}
-                  </span>
-                  <span className="text-[11px] text-zinc-400 block mt-1">{pref.desc}</span>
+                  {pref.label}
                 </button>
-              );
-            })}
+              ))}
+            </div>
           </div>
 
-          <div className="flex items-center justify-between pt-4">
-            <button
-              type="button"
-              onClick={() => setCurrentStep(3)}
-              className="px-5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-xs font-bold text-zinc-300 hover:text-white"
-            >
-              Back
-            </button>
-            <button
-              type="button"
-              onClick={() => setCurrentStep(5)}
-              className="px-7 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm flex items-center gap-2 shadow-lg"
-            >
-              <span>Continue to Seat Map</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* STEP 5: BUS & SEAT SELECTION                              */}
-      {/* ======================================================== */}
-      {currentStep === 5 && (
-        <div className="glass-card rounded-3xl p-6 sm:p-10 border border-white/10 space-y-8 animate-in fade-in duration-300">
-          <div className="space-y-2">
-            <span className="text-xs font-bold text-orange-400 uppercase tracking-widest">
-              STEP 5 OF 8 • BOOKMYSHOW SEAT SELECTOR
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-black text-white">Select Your Coach & Seats</h2>
-            <p className="text-xs sm:text-sm text-zinc-400">
-              Please select exactly <strong className="text-emerald-400">{travellersCount}</strong> {travellersCount === 1 ? 'seat' : 'seats'}. 
-              Seats are held for 10 minutes while you complete reservation.
-            </p>
-          </div>
-
+          {/* Bus Seating Map */}
           <BusSeatMap
             requiredSeatsCount={travellersCount}
             selectedSeats={selectedSeats}
@@ -875,21 +704,21 @@ export default function BookingFlow() {
             preference={sittingPreference}
           />
 
-          <div className="flex items-center justify-between pt-4 border-t border-zinc-800">
+          <div className="flex items-center justify-between pt-4 border-t border-[#E7E2D8]">
             <button
               type="button"
-              onClick={() => setCurrentStep(4)}
-              className="px-5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-xs font-bold text-zinc-300 hover:text-white"
+              onClick={() => setCurrentStep(3)}
+              className="px-5 py-2.5 rounded-xl bg-[#F7F5EF] border border-[#D8D2C4] text-xs font-bold text-[#171918] hover:bg-[#E7E2D8]"
             >
               Back
             </button>
             <button
               type="button"
               disabled={selectedSeats.length !== travellersCount}
-              onClick={() => setCurrentStep(6)}
-              className="px-7 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-bold text-sm flex items-center gap-2 shadow-lg"
+              onClick={() => setCurrentStep(5)}
+              className="px-7 py-3 rounded-xl bg-[#D87945] hover:bg-[#C26735] disabled:opacity-40 text-white font-bold text-xs shadow-md flex items-center gap-2"
             >
-              <span>Continue to Summary ({selectedSeats.length}/{travellersCount} Seats)</span>
+              <span>REVIEW & PAY ({selectedSeats.length}/{travellersCount} Selected)</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -897,66 +726,66 @@ export default function BookingFlow() {
       )}
 
       {/* ======================================================== */}
-      {/* STEP 6: BOOKING SUMMARY (SECTION 22 MINIMAL DESIGN)      */}
+      {/* STEP 5: REVIEW & PAYMENT (SECTION 22 & 23)               */}
       {/* ======================================================== */}
-      {currentStep === 6 && (
-        <div className="glass-card rounded-3xl p-6 sm:p-10 border border-white/10 space-y-8 animate-in fade-in duration-300">
-          <div className="space-y-2 text-center max-w-lg mx-auto">
-            <span className="text-xs font-bold text-orange-400 uppercase tracking-widest">
-              STEP 6 OF 8 • REVIEW & CONFIRM
+      {currentStep === 5 && (
+        <div className="bg-white rounded-3xl p-6 sm:p-10 border border-[#D8D2C4] space-y-8 shadow-sm animate-in fade-in duration-200">
+          <div className="space-y-2 text-center max-w-md mx-auto">
+            <span className="text-xs font-bold text-[#D87945] uppercase tracking-widest">
+              04 • FINAL REVIEW
             </span>
-            <h2 className="text-2xl sm:text-3xl font-black text-white">Booking Summary</h2>
-            <p className="text-xs sm:text-sm text-zinc-400">
-              Review your trip reservation details before completing payment.
+            <h2 className="text-2xl font-black text-[#171918]">Review Your Booking</h2>
+            <p className="text-xs text-[#646864]">
+              Transparent summary. No hidden fees or unexpected charges.
             </p>
           </div>
 
-          {/* Minimal Essential Card */}
-          <div className="max-w-md mx-auto p-6 sm:p-8 rounded-3xl bg-zinc-950 border border-white/15 space-y-5 shadow-2xl">
-            <div className="border-b border-zinc-800 pb-3">
-              <span className="text-[10px] font-black text-zinc-500 uppercase tracking-wider block">TRIP</span>
-              <p className="text-base font-black text-white mt-0.5">GLA → Manali → Kasol → GLA</p>
+          {/* Sticky Summary Card */}
+          <div className="max-w-md mx-auto p-6 sm:p-8 rounded-2xl bg-[#F7F5EF] border border-[#D8D2C4] space-y-4">
+            <div className="border-b border-[#D8D2C4] pb-3">
+              <span className="text-[10px] font-bold text-[#646864] uppercase tracking-wider block">EXPEDITION</span>
+              <p className="text-base font-black text-[#171918]">GLA → Manali → Kasol → GLA</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 border-b border-zinc-800 pb-3 text-xs">
+            <div className="grid grid-cols-2 gap-3 border-b border-[#D8D2C4] pb-3 text-xs">
               <div>
-                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-wider block">DURATION</span>
-                <p className="font-bold text-zinc-200 mt-0.5">6 Days / 5 Nights</p>
+                <span className="text-[10px] font-bold text-[#646864] uppercase block">DURATION</span>
+                <p className="font-bold text-[#171918]">6 Days / 5 Nights</p>
               </div>
               <div>
-                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-wider block">TRAVELLERS</span>
-                <p className="font-bold text-zinc-200 mt-0.5">{travellersCount} Person(s)</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 border-b border-zinc-800 pb-3 text-xs">
-              <div>
-                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-wider block">COACH</span>
-                <p className="font-bold text-emerald-400 mt-0.5">Luxury 2x2 AC Coach</p>
-              </div>
-              <div>
-                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-wider block">SEATS</span>
-                <p className="font-black text-emerald-400 mt-0.5">{selectedSeats.join(', ')}</p>
+                <span className="text-[10px] font-bold text-[#646864] uppercase block">TRAVELLERS</span>
+                <p className="font-bold text-[#171918]">{travellersCount} Person(s)</p>
               </div>
             </div>
 
-            <div className="space-y-2 pt-1 text-xs">
-              <div className="flex justify-between text-zinc-400">
-                <span>PRICE:</span>
-                <span className="font-bold text-white">₹{(travellersCount * 6200).toLocaleString('en-IN')}</span>
+            <div className="grid grid-cols-2 gap-3 border-b border-[#D8D2C4] pb-3 text-xs">
+              <div>
+                <span className="text-[10px] font-bold text-[#646864] uppercase block">COACH</span>
+                <p className="font-bold text-[#163C32]">Luxury 2x2 AC Coach</p>
               </div>
-              <div className="flex justify-between text-emerald-400 font-bold text-sm">
-                <span>RESERVATION TODAY:</span>
-                <span className="text-base text-emerald-300">₹{(travellersCount * 1000).toLocaleString('en-IN')}</span>
+              <div>
+                <span className="text-[10px] font-bold text-[#646864] uppercase block">SEATS</span>
+                <p className="font-black text-[#163C32]">{selectedSeats.join(', ')}</p>
               </div>
-              <div className="flex justify-between text-zinc-400 text-[11px]">
-                <span>REMAINING BALANCE:</span>
-                <span className="text-zinc-300">₹{(travellersCount * 5200).toLocaleString('en-IN')}</span>
+            </div>
+
+            <div className="space-y-1.5 pt-1 text-xs">
+              <div className="flex justify-between text-[#646864]">
+                <span>Total Trip Cost:</span>
+                <span className="font-bold text-[#171918]">₹{(travellersCount * 6200).toLocaleString('en-IN')}</span>
+              </div>
+              <div className="flex justify-between text-[#D87945] font-bold text-sm">
+                <span>Reservation Deposit (Today):</span>
+                <span className="text-base">₹{(travellersCount * 1000).toLocaleString('en-IN')}</span>
+              </div>
+              <div className="flex justify-between text-[#646864] text-[11px]">
+                <span>Balance Before Boarding:</span>
+                <span className="text-[#171918]">₹{(travellersCount * 5200).toLocaleString('en-IN')}</span>
               </div>
             </div>
 
             {paymentError && (
-              <div className="p-3 rounded-xl bg-rose-950/80 border border-rose-600/50 flex items-center gap-2 text-rose-300 text-xs">
+              <div className="p-3 rounded-xl bg-red-50 border border-red-200 flex items-center gap-2 text-red-700 text-xs">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{paymentError}</span>
               </div>
@@ -966,25 +795,25 @@ export default function BookingFlow() {
               type="button"
               disabled={isProcessingPayment}
               onClick={handleProceedToPayment}
-              className="w-full py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-base shadow-xl flex items-center justify-center gap-2 transition-all hover:scale-[1.02]"
+              className="w-full py-3.5 rounded-xl bg-[#D87945] hover:bg-[#C26735] text-white font-extrabold text-sm shadow-md flex items-center justify-center gap-2 transition-all mt-2"
             >
               {isProcessingPayment ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Processing Reservation...</span>
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                  <span>Processing Payment...</span>
                 </>
               ) : (
-                <span>PAY ₹{(travellersCount * 1000).toLocaleString('en-IN')}</span>
+                <span>PAY RESERVATION (₹{(travellersCount * 1000).toLocaleString('en-IN')})</span>
               )}
             </button>
           </div>
 
-          <div className="flex items-center justify-between pt-4">
+          <div className="flex items-center justify-between pt-4 border-t border-[#E7E2D8]">
             <button
               type="button"
               disabled={isProcessingPayment}
-              onClick={() => setCurrentStep(5)}
-              className="px-5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-xs font-bold text-zinc-300 hover:text-white"
+              onClick={() => setCurrentStep(4)}
+              className="px-5 py-2.5 rounded-xl bg-[#F7F5EF] border border-[#D8D2C4] text-xs font-bold text-[#171918] hover:bg-[#E7E2D8]"
             >
               Back to Seats
             </button>
@@ -993,83 +822,75 @@ export default function BookingFlow() {
       )}
 
       {/* ======================================================== */}
-      {/* STEP 8: CONFIRMATION & DIGITAL QR BOARDING PASS           */}
+      {/* STEP 6: CONFIRMATION & DIGITAL BOARDING PASS             */}
       {/* ======================================================== */}
-      {currentStep === 8 && confirmedBooking && (
-        <div className="glass-card rounded-3xl p-6 sm:p-10 border border-white/10 space-y-8 animate-in fade-in duration-500">
+      {currentStep === 6 && confirmedBooking && (
+        <div className="bg-white rounded-3xl p-6 sm:p-10 border border-[#D8D2C4] space-y-8 animate-in fade-in duration-300 shadow-sm">
           <div className="text-center space-y-2 max-w-md mx-auto">
-            <div className="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/40 shadow-lg">
+            <div className="w-14 h-14 rounded-full bg-[#163C32]/10 text-[#163C32] flex items-center justify-center mx-auto border border-[#163C32]/20">
               <CheckCircle2 className="w-8 h-8" />
             </div>
-            <span className="text-xs font-black text-emerald-400 uppercase tracking-widest block">
+            <span className="text-xs font-black text-[#163C32] uppercase tracking-widest block">
               BOOKING CONFIRMED
             </span>
-            <h2 className="text-2xl sm:text-3xl font-black text-white">Himalayan Escape Locked!</h2>
-            <p className="text-xs text-zinc-400">
-              Booking Ref: <strong className="font-mono text-white">#{confirmedBooking.bookingId}</strong>
+            <h2 className="text-2xl sm:text-3xl font-black text-[#171918]">
+              You're going to the mountains.
+            </h2>
+            <p className="text-xs text-[#646864]">
+              Booking ID: <strong className="font-mono text-[#171918]">#{confirmedBooking.bookingId}</strong>
             </p>
           </div>
 
-          {/* Minimal Ticket Card */}
-          <div className="max-w-md mx-auto p-6 rounded-3xl bg-zinc-950 border border-zinc-800 space-y-5 text-xs">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+          {/* Ticket Preview Card */}
+          <div className="max-w-md mx-auto p-6 rounded-2xl bg-[#F7F5EF] border border-[#D8D2C4] space-y-4 text-xs">
+            <div className="flex items-center justify-between border-b border-[#D8D2C4] pb-3">
               <div>
-                <span className="text-[10px] font-black text-orange-400 uppercase tracking-wider block">EXPEDITION</span>
-                <span className="font-black text-white text-sm">GLA HIMALAYAN ESCAPE</span>
-                <p className="text-[10px] text-zinc-500">MANALI × KASOL • 6D / 5N</p>
+                <span className="text-[10px] font-bold text-[#D87945] uppercase tracking-wider block">EXPEDITION</span>
+                <span className="font-black text-[#171918] text-sm">GLA HIMALAYAN ESCAPE</span>
+                <p className="text-[10px] text-[#646864]">MANALI × KASOL • 6D / 5N</p>
               </div>
               <div className="text-right">
-                <span className="text-[10px] font-black text-zinc-500 uppercase block">COACH</span>
-                <span className="font-bold text-emerald-400 text-xs">
+                <span className="text-[10px] font-bold text-[#646864] uppercase block">COACH</span>
+                <span className="font-bold text-[#163C32] text-xs">
                   {confirmedBooking.bus?.busNumber || 'Bus 01'}
                 </span>
               </div>
             </div>
 
-            <div className="space-y-2 text-zinc-300">
+            <div className="space-y-2 text-[#171918]">
               <div className="flex justify-between">
-                <span className="text-zinc-500">Primary Traveller:</span>
-                <span className="font-bold text-white">{confirmedBooking.primaryTravellerName}</span>
+                <span className="text-[#646864]">Primary Traveller:</span>
+                <span className="font-bold">{confirmedBooking.primaryTravellerName}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-zinc-500">Confirmed Seats:</span>
-                <span className="font-bold text-emerald-400">
+                <span className="text-[#646864]">Confirmed Seats:</span>
+                <span className="font-bold text-[#163C32]">
                   {confirmedBooking.travellers?.map((t: any) => t.assignedSeatNumber).join(', ')}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-zinc-500">Reservation Paid:</span>
-                <span className="font-bold text-white">₹{confirmedBooking.reservationAmount?.toLocaleString('en-IN')}</span>
+                <span className="text-[#646864]">Reservation Paid:</span>
+                <span className="font-bold text-[#163C32]">₹{confirmedBooking.reservationAmount?.toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-zinc-500">Remaining Balance:</span>
-                <span className="font-bold text-amber-400">₹{confirmedBooking.remainingBalance?.toLocaleString('en-IN')}</span>
+                <span className="text-[#646864]">Remaining Balance:</span>
+                <span className="font-bold text-[#D87945]">₹{confirmedBooking.remainingBalance?.toLocaleString('en-IN')}</span>
               </div>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-between">
-              <span className="text-xs font-semibold text-zinc-300">Digital Boarding Ticket:</span>
-              <Link
-                href={`/ticket?bookingId=${confirmedBooking.bookingId}`}
-                className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs"
-              >
-                View Ticket
-              </Link>
             </div>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             <Link
               href={`/ticket?bookingId=${confirmedBooking.bookingId}`}
-              className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-lg text-center"
+              className="w-full sm:w-auto px-7 py-3 rounded-xl bg-[#D87945] hover:bg-[#C26735] text-white font-bold text-xs shadow-md text-center"
             >
-              VIEW DIGITAL TICKET
+              VIEW DIGITAL BOARDING PASS
             </Link>
             <Link
               href={`/my-booking?bookingId=${confirmedBooking.bookingId}`}
-              className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-white font-bold text-sm text-center"
+              className="w-full sm:w-auto px-7 py-3 rounded-xl bg-white hover:bg-[#F7F5EF] border border-[#D8D2C4] text-[#171918] font-bold text-xs text-center"
             >
-              MY BOOKING DASHBOARD
+              VIEW MY BOOKING
             </Link>
           </div>
         </div>

@@ -272,6 +272,18 @@ async function runTestSuite() {
     assert(checkinData.success === true, 'Boarding gate check-in confirmed');
 
     // -----------------------------------------------------------------
+    // TEST 9: Trip Capacity Limit Enforcement (75 Max Travellers)
+    // -----------------------------------------------------------------
+    console.log('\nSTEP 9: Testing Trip Capacity Enforcement (75 Max Travellers)...');
+    const capRes = await fetch(`${baseUrl}/api/buses`);
+    const capData = await capRes.json();
+    assert(capData.trip?.capacity === 75, `Configured trip capacity strictly 75 travellers (Found: ${capData.trip?.capacity})`);
+
+    // Verify 4 buses have 92 total passenger seats
+    const totalPhysicalSeats = capData.buses.reduce((acc, b) => acc + b.passengerCapacity, 0);
+    assert(totalPhysicalSeats === 92, `Fleet has 92 physical passenger seats across 4 buses (23 per bus)`);
+
+    // -----------------------------------------------------------------
     // SUMMARY
     // -----------------------------------------------------------------
     console.log('\n======================================================');

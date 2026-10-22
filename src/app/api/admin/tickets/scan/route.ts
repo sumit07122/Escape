@@ -77,7 +77,6 @@ export async function POST(request: NextRequest) {
               assignedBusNumber: ticket.traveller.assignedBusNumber,
               emergencyContactName: ticket.traveller.emergencyContactName,
               emergencyContactPhone: ticket.traveller.emergencyContactPhone,
-              isFreeGroupTraveller: ticket.traveller.isFreeGroupTraveller,
             }
           : null,
         booking: {

@@ -1,96 +1,86 @@
 @import "tailwindcss";
 
 :root {
-  --background: #08140e;
-  --foreground: #f8faf9;
-  --forest-950: #050e09;
-  --forest-900: #0a1d13;
-  --forest-800: #0f2d1e;
-  --forest-700: #15402b;
-  --forest-600: #1b5338;
-  --forest-500: #226846;
-  --orange-accent: #f97316;
-  --orange-hover: #ea580c;
-  --gold-accent: #eab308;
+  --bg-primary: #F7F5EF;
+  --text-primary: #171918;
+  --text-muted: #646864;
+  --forest-dark: #163C32;
+  --forest-deep: #0F2A23;
+  --forest-light: #205648;
+  --stone-bg: #E7E2D8;
+  --stone-border: #D8D2C4;
+  --orange-accent: #D87945;
+  --orange-hover: #C26735;
+  --white: #FFFFFF;
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Glassmorphism utility classes */
-.glass-panel {
-  background: rgba(15, 45, 30, 0.45);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+/* Restrained Editorial Card & Panel Utilities */
+.stone-card {
+  background-color: #FFFFFF;
+  border: 1px solid var(--stone-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
-.glass-card {
-  background: rgba(10, 29, 19, 0.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+.stone-card-hover {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.glass-card-hover {
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+.stone-card-hover:hover {
+  transform: translateY(-2px);
+  border-color: #C0B8A8;
+  box-shadow: 0 8px 20px -6px rgba(22, 60, 50, 0.1);
 }
 
-.glass-card-hover:hover {
-  transform: translateY(-3px);
-  border-color: rgba(249, 115, 22, 0.4);
-  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.6), 0 0 20px 2px rgba(249, 115, 22, 0.15);
-}
-
-/* Mountain glow effects */
-.glow-orange {
-  box-shadow: 0 0 25px -4px rgba(249, 115, 22, 0.4);
-}
-
-.glow-emerald {
-  box-shadow: 0 0 25px -4px rgba(16, 185, 129, 0.4);
-}
-
-.glow-blue {
-  box-shadow: 0 0 25px -4px rgba(56, 189, 248, 0.5);
+.forest-card {
+  background-color: var(--forest-dark);
+  color: #F7F5EF;
+  border: 1px solid #205648;
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #08140e;
+  background: #F7F5EF;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #15402b;
+  background: #C4BCAB;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #226846;
+  background: #163C32;
 }
 
-/* Print styling for digital ticket */
+/* Print Styles for Digital Boarding Pass */
 @media print {
-  nav, footer, .no-print {
+  nav, footer, .no-print, button {
     display: none !important;
   }
   body {
     background: white !important;
     color: black !important;
   }
-  .print-only-card {
+  .print-ticket-container {
     border: 2px solid #000 !important;
     box-shadow: none !important;
     background: white !important;
     color: black !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 16px !important;
   }
 }

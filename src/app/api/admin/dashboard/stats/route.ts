@@ -48,6 +48,7 @@ export async function GET() {
     const remainingBalances = confirmedBookings.reduce(
       (acc, b) => acc + b.remainingBalance,
       0
+    );
     const checkedInTravellersCount = await db.traveller.count({
       where: { checkInStatus: 'CHECKED_IN' },
     });

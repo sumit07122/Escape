@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ArrowRight, Mountain } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 export default function MobileBottomBar() {
   const pathname = usePathname();
@@ -33,24 +33,24 @@ export default function MobileBottomBar() {
   }
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 glass-panel border-t border-white/10 px-4 py-3 pb-safe bg-[#08140e]/95 backdrop-blur-xl">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-[#D8D2C4] px-4 py-3 bg-[#F7F5EF]/95 backdrop-blur-md shadow-lg">
       <div className="flex items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-[11px] font-bold text-emerald-400">
-              {stats ? `${stats.totalBooked}/${stats.capacity} Booked` : 'Limited Seats'}
+            <span className="w-2 h-2 rounded-full bg-[#163C32]" />
+            <span className="text-[11px] font-bold text-[#163C32]">
+              {stats ? `${stats.totalBooked}/${stats.capacity} Booked` : '75 Total Capacity'}
             </span>
           </div>
           <div className="flex items-baseline gap-1">
-            <span className="text-sm font-black text-white">₹1,000</span>
-            <span className="text-[10px] text-zinc-400">reservation to lock seat</span>
+            <span className="text-sm font-black text-[#171918]">₹1,000</span>
+            <span className="text-[10px] text-[#646864]">to reserve seat</span>
           </div>
         </div>
 
         <Link
           href="/book"
-          className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 text-white font-extrabold text-xs shadow-lg glow-orange"
+          className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#D87945] hover:bg-[#C26735] text-white font-bold text-xs shadow-sm"
         >
           <span>BOOK SEAT</span>
           <ArrowRight className="w-3.5 h-3.5" />

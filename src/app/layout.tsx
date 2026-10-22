@@ -5,9 +5,9 @@ import Footer from '@/components/Footer';
 import MobileBottomBar from '@/components/MobileBottomBar';
 
 export const metadata: Metadata = {
-  title: 'GLA Himalayan Escape | Manali × Kasol 6D/5N College Expedition',
+  title: 'GLA Himalayan Escape — Manali & Kasol',
   description:
-    'Join GLA University Mathura for an unforgettable 6 Days / 5 Nights Himalayan expedition to Manali & Kasol. Luxury 2x2 AC coaches with interactive BookMyShow-style seat selection, resort stays, campfire & digital QR tickets.',
+    '6 Days / 5 Nights Himalayan trip from GLA University, Mathura to Manali and Kasol. Reserve your seat for ₹1,000 per traveller.',
   keywords: [
     'GLA University',
     'Manali Kasol Trip',
@@ -21,9 +21,17 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'GLA Expedition Team' }],
   openGraph: {
-    title: 'GLA HIMALAYAN ESCAPE — MANALI × KASOL (6D/5N)',
-    description: 'Mountains. Friends. Adventure. Memories. Starting from GLA University Mathura. Reserve your bus seat now for ₹1,000.',
+    title: 'GLA Himalayan Escape — Manali & Kasol',
+    description: '6 Days / 5 Nights Himalayan trip from GLA University, Mathura to Manali and Kasol. Reserve your seat for ₹1,000 per traveller.',
     type: 'website',
+    images: [
+      {
+        url: '/images/hero-himalayas.jpg',
+        width: 1200,
+        height: 675,
+        alt: 'GLA Himalayan Escape - Manali & Kasol',
+      },
+    ],
   },
 };
 
@@ -34,9 +42,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="h-full scroll-smooth">
-      <body className="min-h-full flex flex-col bg-[#08140e] text-[#f8faf9] selection:bg-orange-500 selection:text-white">
+      <body className="min-h-full flex flex-col bg-[#F7F5EF] text-[#171918] selection:bg-[#163C32] selection:text-white">
         <Navbar />
-        <main className="flex-1 w-full pb-16 md:pb-0">{children}</main>
+        <main className="flex-1 w-full pb-20 md:pb-0">{children}</main>
         <Footer />
         <MobileBottomBar />
       </body>
