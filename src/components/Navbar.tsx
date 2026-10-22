@@ -66,13 +66,13 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-20">
           {/* Brand Logo */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-11 h-11 rounded-full overflow-hidden border border-[#163C32]/20 shadow-sm group-hover:scale-105 transition-transform shrink-0 bg-white">
+            <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[#163C32]/25 shadow-md group-hover:scale-105 transition-transform shrink-0 bg-white p-0.5">
               <Image
                 src="/logo.png"
                 alt="Himalayan Escape Logo"
-                width={44}
-                height={44}
-                className="w-full h-full object-cover"
+                width={48}
+                height={48}
+                className="w-full h-full object-cover rounded-full"
                 priority
               />
             </div>

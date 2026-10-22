@@ -70,8 +70,18 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Large Hero Title */}
-          <div className="space-y-3">
+          {/* Large Hero Title & Prominent Official Brand Badge */}
+          <div className="space-y-4 flex flex-col items-center">
+            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden bg-white/95 border-2 border-white/60 shadow-2xl p-0.5 hover:scale-105 transition-transform duration-300">
+              <Image
+                src="/logo.png"
+                alt="Himalayan Escape Official Logo"
+                width={112}
+                height={112}
+                className="w-full h-full object-cover"
+                priority
+              />
+            </div>
             <div className="text-xs sm:text-sm font-extrabold uppercase tracking-widest text-[#D87945]">
               Student Mountain Expedition 2026
             </div>
@@ -129,7 +139,7 @@ export default function HomePage() {
 
           {/* Origin & Route Text */}
           <p className="text-xs text-stone-200 font-medium tracking-wide pt-1">
-            PICKUP & REPORTING: NEAR GLA MAIN GATE, MATHURA → MANALI → KASOL
+            PICKUP & REPORTING: NEAR MAIN GATE (NH-2), MATHURA → MANALI → KASOL
           </p>
         </div>
       </section>
