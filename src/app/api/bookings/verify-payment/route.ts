@@ -231,21 +231,26 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Audit Log
-      await createAuditLog({
-        action: 'PAYMENT_CONFIRMED',
-        entityType: 'BOOKING',
-        entityId: booking.id,
-        bookingId: booking.bookingId,
-        performedBy: `Razorpay: ${razorpayPaymentId}`,
-        newValue: `CONFIRMED - ₹${booking.reservationAmount} received`,
-      });
+        return {
+          confirmedBooking,
+          travellerRefCode,
+          bookingDbId: booking.id,
+          bookingId: booking.bookingId,
+          reservationAmount: booking.reservationAmount,
+        };
+      },
+      { timeout: 15000, maxWait: 10000 }
+    );
 
-      return {
-        confirmedBooking,
-        travellerRefCode,
-      };
-    });
+    // Audit Log asynchronously outside transaction
+    createAuditLog({
+      action: 'PAYMENT_CONFIRMED',
+      entityType: 'BOOKING',
+      entityId: confirmationResult.bookingDbId,
+      bookingId: confirmationResult.bookingId,
+      performedBy: `Razorpay: ${razorpayPaymentId}`,
+      newValue: `CONFIRMED - ₹${confirmationResult.reservationAmount} received`,
+    }).catch((e) => console.error('Audit log error:', e));
 
     return NextResponse.json({
       success: true,

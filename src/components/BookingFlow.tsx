@@ -336,6 +336,7 @@ export default function BookingFlow() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-4">
             {/* Single Package */}
             <div
+              id="pkg-card-single"
               onClick={() => setPackageType('SINGLE')}
               className={`p-6 rounded-2xl border-2 cursor-pointer transition-all ${
                 packageType === 'SINGLE'
@@ -364,6 +365,7 @@ export default function BookingFlow() {
 
             {/* Couple Package */}
             <div
+              id="pkg-card-couple"
               onClick={() => setPackageType('COUPLE')}
               className={`p-6 rounded-2xl border-2 cursor-pointer transition-all relative ${
                 packageType === 'COUPLE'
@@ -397,6 +399,7 @@ export default function BookingFlow() {
 
             {/* Group Package 5+1 */}
             <div
+              id="pkg-card-group"
               onClick={() => setPackageType('GROUP')}
               className={`p-6 rounded-2xl border-2 cursor-pointer transition-all relative ${
                 packageType === 'GROUP'
@@ -431,6 +434,7 @@ export default function BookingFlow() {
 
           <div className="flex justify-end pt-4">
             <button
+              id="btn-step1-continue"
               onClick={() => setCurrentStep(2)}
               className="flex items-center gap-2 px-8 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm shadow-lg glow-orange transition-all"
             >
@@ -586,6 +590,7 @@ export default function BookingFlow() {
                 }
                 setCurrentStep(3);
               }}
+              id="btn-step2-continue"
               className="flex items-center gap-2 px-8 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm shadow-lg glow-orange"
             >
               <span>Preferences & Referral</span>
@@ -620,6 +625,7 @@ export default function BookingFlow() {
               ].map((p) => (
                 <button
                   key={p.id}
+                  id={`btn-pref-${p.id.toLowerCase()}`}
                   type="button"
                   onClick={() => setSittingPreference(p.id as SittingPreference)}
                   className={`py-3 px-2 rounded-xl text-xs font-bold border transition-all ${
@@ -646,6 +652,7 @@ export default function BookingFlow() {
             <div className="flex gap-2">
               <input
                 type="text"
+                id="input-referral-code"
                 placeholder="e.g. GLA-HIMALAYA10"
                 value={referralCode}
                 onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
@@ -653,6 +660,7 @@ export default function BookingFlow() {
               />
               <button
                 type="button"
+                id="btn-apply-referral"
                 onClick={refreshPricing}
                 disabled={isCalculatingPrice}
                 className="px-5 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white text-xs font-bold flex items-center gap-1.5"
@@ -675,6 +683,7 @@ export default function BookingFlow() {
               Back
             </button>
             <button
+              id="btn-step3-continue"
               onClick={() => setCurrentStep(4)}
               className="flex items-center gap-2 px-8 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm shadow-lg glow-orange"
             >
@@ -737,6 +746,7 @@ export default function BookingFlow() {
                 Back
               </button>
               <button
+                id="btn-step4-continue"
                 disabled={selectedSeats.length !== requiredSeatsCount}
                 onClick={() => {
                   if (selectedSeats.length !== requiredSeatsCount) {
@@ -875,6 +885,7 @@ export default function BookingFlow() {
               Back
             </button>
             <button
+              id="btn-pay-deposit"
               onClick={handlePayReservation}
               disabled={isProcessingPayment || !termsAccepted}
               className={`flex items-center gap-2.5 px-8 py-3.5 rounded-xl font-bold text-sm shadow-xl transition-all ${

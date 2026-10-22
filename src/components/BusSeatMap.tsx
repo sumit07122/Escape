@@ -290,6 +290,8 @@ export default function BusSeatMap({
     return (
       <button
         key={seat.id || seat.seatNumber}
+        id={`seat-${seat.seatNumber}`}
+        data-seat={seat.seatNumber}
         type="button"
         disabled={isDisabled && !isAdmin}
         onClick={() => handleSeatClick(seat)}

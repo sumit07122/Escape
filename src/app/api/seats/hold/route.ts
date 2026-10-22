@@ -104,30 +104,37 @@ export async function POST(request: NextRequest) {
           where: { id: seat.id },
           data: { status: 'HELD', isAvailable: false },
         });
-
-        await createAuditLog({
-          action: 'SEAT_HELD',
-          entityType: 'SEAT',
-          entityId: seat.id,
-          performedBy: travellerName ? `Traveller: ${travellerName}` : `Session: ${bookingSessionId}`,
-          seatNumber: seat.seatNumber,
-          busId,
-          newValue: `Held until ${expiresAt.toISOString()}`,
-        });
       }
 
       return {
         busId,
         seatNumbers,
+        seats,
         expiresAt: expiresAt.toISOString(),
         heldSecondsRemaining: 600,
       };
-    });
+    }, { timeout: 15000, maxWait: 10000 });
+
+    // Create audit logs asynchronously outside the transaction
+    for (const seat of result.seats) {
+      createAuditLog({
+        action: 'SEAT_HELD',
+        entityType: 'SEAT',
+        entityId: seat.id,
+        performedBy: travellerName ? `Traveller: ${travellerName}` : `Session: ${bookingSessionId}`,
+        seatNumber: seat.seatNumber,
+        busId,
+        newValue: `Held until ${expiresAt.toISOString()}`,
+      }).catch((e) => console.error('Audit log error:', e));
+    }
 
     return NextResponse.json({
       success: true,
       message: `Held ${seatNumbers.join(', ')} for 10 minutes`,
-      ...result,
+      busId: result.busId,
+      seatNumbers: result.seatNumbers,
+      expiresAt: result.expiresAt,
+      heldSecondsRemaining: result.heldSecondsRemaining,
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Failed to hold seat';

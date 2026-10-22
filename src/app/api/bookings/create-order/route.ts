@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 9. Persist pending Booking and Travellers in database
-    await db.$transaction(async (tx) => {
+    const txResult = await db.$transaction(async (tx) => {
       const booking = await tx.booking.create({
         data: {
           bookingId,
@@ -201,32 +201,39 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      // Record pending payment
-      await tx.payment.create({
-        data: {
-          bookingId: booking.id,
-          razorpayOrderId: orderResult.orderId,
-          amount: pricing.reservationAmount,
-          currency: 'INR',
-          paymentType: 'RESERVATION',
-          status: 'PENDING',
-        },
-      });
+        // Record pending payment
+        await tx.payment.create({
+          data: {
+            bookingId: booking.id,
+            razorpayOrderId: orderResult.orderId,
+            amount: pricing.reservationAmount,
+            currency: 'INR',
+            paymentType: 'RESERVATION',
+            status: 'PENDING',
+          },
+        });
 
-      await createAuditLog({
-        action: 'BOOKING_INITIATED',
-        entityType: 'BOOKING',
-        entityId: booking.id,
-        bookingId,
-        performedBy: primaryTraveller.fullName,
-        metadata: {
-          packageType,
-          seats: selectedSeats,
-          amount: pricing.reservationAmount,
-          orderId: orderResult.orderId,
-        },
-      });
-    });
+        return {
+          bookingDbId: booking.id,
+        };
+      },
+      { timeout: 15000, maxWait: 10000 }
+    );
+
+    // Asynchronously log outside transaction
+    createAuditLog({
+      action: 'BOOKING_INITIATED',
+      entityType: 'BOOKING',
+      entityId: txResult.bookingDbId,
+      bookingId,
+      performedBy: primaryTraveller.fullName,
+      metadata: {
+        packageType,
+        seats: selectedSeats,
+        amount: pricing.reservationAmount,
+        orderId: orderResult.orderId,
+      },
+    }).catch((e) => console.error('Audit log error:', e));
 
     return NextResponse.json({
       success: true,

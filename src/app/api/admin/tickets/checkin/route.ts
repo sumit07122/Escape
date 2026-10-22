@@ -69,16 +69,17 @@ export async function POST(request: NextRequest) {
           notes,
         },
       });
+    }, { timeout: 15000, maxWait: 10000 });
 
-      await createAuditLog({
-        action: 'TRAVELLER_CHECKED_IN',
-        entityType: 'TICKET',
-        entityId: ticket.id,
-        bookingId: ticket.booking.bookingId,
-        performedBy: `Admin: ${adminName}`,
-        newValue: `CHECKED IN at ${now.toISOString()}`,
-      });
-    });
+    // Asynchronously log outside transaction
+    createAuditLog({
+      action: 'TRAVELLER_CHECKED_IN',
+      entityType: 'TICKET',
+      entityId: ticket.id,
+      bookingId: ticket.booking.bookingId,
+      performedBy: `Admin: ${adminName}`,
+      newValue: `CHECKED IN at ${now.toISOString()}`,
+    }).catch((e) => console.error('Audit log error:', e));
 
     return NextResponse.json({
       success: true,
