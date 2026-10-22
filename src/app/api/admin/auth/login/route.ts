@@ -59,34 +59,44 @@ export async function POST(request: NextRequest) {
 
     // 3. Fallback check against environment credentials
     if (!authenticatedAdmin) {
-      if (cleanEmail === defaultAdminEmail && password === defaultAdminPassword) {
+      const allowedAdminEmails = [
+        defaultAdminEmail,
+        'admin@glaescape.in',
+        'admin@himalayaescape.in',
+        'coordinator@himalayaescape.in',
+      ];
+      if (allowedAdminEmails.includes(cleanEmail) && password === defaultAdminPassword) {
         authenticatedAdmin = {
-          email: defaultAdminEmail,
+          email: cleanEmail,
           name: 'Lead Coordinator',
           role: 'SUPER_ADMIN',
         };
 
-        // Auto-seed Admin and User record in background
-        db.admin.upsert({
-          where: { email: defaultAdminEmail },
-          update: { role: 'SUPER_ADMIN', name: 'Lead Coordinator' },
-          create: {
-            email: defaultAdminEmail,
-            name: 'Lead Coordinator',
-            passwordHash: hashPassword(defaultAdminPassword),
-            role: 'SUPER_ADMIN',
-          },
-        }).catch((e) => console.warn('[AUTO_SEED_ADMIN_ERROR]', e));
+        // Auto-seed Admin and User record in background safely (non-blocking)
+        try {
+          db.admin.upsert({
+            where: { email: cleanEmail },
+            update: { role: 'SUPER_ADMIN', name: 'Lead Coordinator' },
+            create: {
+              email: cleanEmail,
+              name: 'Lead Coordinator',
+              passwordHash: hashPassword(defaultAdminPassword),
+              role: 'SUPER_ADMIN',
+            },
+          }).catch((e) => console.warn('[AUTO_SEED_ADMIN_ERROR]', e));
 
-        db.user.upsert({
-          where: { email: defaultAdminEmail },
-          update: { role: 'ADMIN' },
-          create: {
-            email: defaultAdminEmail,
-            name: 'Lead Coordinator',
-            role: 'ADMIN',
-          },
-        }).catch((e) => console.warn('[AUTO_SEED_USER_ADMIN_ERROR]', e));
+          db.user.upsert({
+            where: { email: cleanEmail },
+            update: { role: 'ADMIN' },
+            create: {
+              email: cleanEmail,
+              name: 'Lead Coordinator',
+              role: 'ADMIN',
+            },
+          }).catch((e) => console.warn('[AUTO_SEED_USER_ADMIN_ERROR]', e));
+        } catch (seedErr) {
+          console.warn('[SEED_EXCEPTION]', seedErr);
+        }
       }
     }
 

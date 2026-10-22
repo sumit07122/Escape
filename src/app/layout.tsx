@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: '/public/logo.png',
+        url: '/logo.png',
         width: 800,
         height: 800,
         alt: 'Himalayan Escape 2026 Logo',
