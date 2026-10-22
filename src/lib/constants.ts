@@ -5,11 +5,11 @@ export const TRIP_METADATA = {
   title: 'HIMALAYAN ESCAPE (MANALI × KASOL)',
   duration: '6 DAYS • 5 NIGHTS',
   tagline: 'Mountains. Friends. Adventure. Memories.',
-  origin: 'Pickup & Reporting: Near GLA Main Gate, Mathura',
+  origin: 'Pickup & Reporting: Near Main Gate (NH-2), Mathura',
   destination: 'Manali & Kasol, Himachal Pradesh',
   capacity: 75,
   dates: 'November 15 - November 20, 2026',
-  reportingLocation: 'Pickup & Reporting: Near GLA Main Gate, Mathura',
+  reportingLocation: 'Pickup & Reporting: Near Main Gate (NH-2), Mathura',
   disclaimer: 'Independent student-organized expedition. Not an officially sponsored university event. Trip itinerary may change due to weather, road conditions, traffic, permits, government restrictions, local conditions, or safety requirements. Weather-dependent and road-dependent activities (such as Atal Tunnel / Sissu snow trails and river rafting) are subject to official clearances and cannot be guaranteed.',
 };
 
@@ -32,7 +32,7 @@ export const CONTACT_INFO = {
   police: '100',
   ambulance: '108',
   email: 'trips@glaescape.in',
-  office: 'GLA University, 17km Stone, NH-2, Mathura-Delhi Road, Mathura, UP 281406',
+  office: '17km Stone, NH-2, Mathura-Delhi Road, Mathura, UP 281406',
 };
 
 // 25-seat Bus Configuration
@@ -100,16 +100,16 @@ export const INITIAL_BUSES = [
 export const ITINERARY_DAYS = [
   {
     dayNumber: 1,
-    title: 'DAY 1 — GLA TO MANALI',
+    title: 'DAY 1 — MATHURA TO MANALI',
     subtitle: 'Reporting, QR Check-in & Departure',
     stayLocation: 'Bus / Overnight journey',
     mealsConfig: 'Dinner halt en route (Self-paid)',
-    description: 'Assemble at GLA University Mathura campus. Complete QR digital ticket verification, seat allotment check, luggage loading, and pre-departure safety briefing before boarding our luxury AC coaches.',
+    description: 'Assemble at Mathura departure bay (NH-2). Complete QR digital ticket verification, seat allotment check, luggage loading, and pre-departure safety briefing before boarding our luxury AC coaches.',
     items: [
-      { time: '04:30 PM', location: 'GLA University Bus Bay', activity: 'Traveller reporting at GLA University', description: 'Reporting and document/QR verification at GLA campus.', isOptional: false },
-      { time: '05:00 PM', location: 'GLA Campus', activity: 'QR & Seat Verification', description: 'Digital QR scanning, luggage loading and tag assignment.', isOptional: false },
-      { time: '05:45 PM', location: 'GLA Auditorium Bay', activity: 'Group Briefing & Safety Guidelines', description: 'Coordinator introduction, trip kit distribution and route guidelines.', isOptional: false },
-      { time: '06:15 PM', location: 'GLA Main Gate', activity: 'Bus Departure', description: 'Flag-off from Mathura toward Western Himalayan foothills.', isOptional: false },
+      { time: '04:30 PM', location: 'Mathura Departure Bay', activity: 'Traveller reporting & verification', description: 'Reporting and document/QR verification at Mathura bay.', isOptional: false },
+      { time: '05:00 PM', location: 'Reporting Bay', activity: 'QR & Seat Verification', description: 'Digital QR scanning, luggage loading and tag assignment.', isOptional: false },
+      { time: '05:45 PM', location: 'Assembly Area', activity: 'Group Briefing & Safety Guidelines', description: 'Coordinator introduction, trip kit distribution and route guidelines.', isOptional: false },
+      { time: '06:15 PM', location: 'Main Gate Highway Bay', activity: 'Bus Departure', description: 'Flag-off from Mathura toward Western Himalayan foothills.', isOptional: false },
       { time: '10:30 PM', location: 'Highway Food Plaza (Murthal/Karnal)', activity: 'Dinner Break & Freshen-up', description: 'Sanitized food stop and refreshment break.', isOptional: false },
       { time: '11:45 PM', location: 'En Route Manali', activity: 'Overnight Road Journey', description: 'Comfortable reclining seats, ambient cabin lighting, scenic highway drive.', isOptional: false },
     ],
@@ -180,23 +180,23 @@ export const ITINERARY_DAYS = [
   },
   {
     dayNumber: 6,
-    title: 'DAY 6 — KASOL TO GLA',
+    title: 'DAY 6 — KASOL TO MATHURA',
     subtitle: 'Return Journey & Fond Memories',
-    stayLocation: 'Home / GLA Mathura',
+    stayLocation: 'Home / Mathura',
     mealsConfig: 'Breakfast Included',
     description: 'After breakfast and group photos, embark on the scenic return journey through Himachal toward Mathura, concluding an unforgettable college expedition.',
     items: [
       { time: '07:30 AM', location: 'Kasol', activity: 'Breakfast & Hotel Checkout', description: 'Farewell breakfast and coach boarding.', isOptional: false },
-      { time: '08:30 AM', location: 'Parvati Valley', activity: 'Return Journey toward GLA University', description: 'Scenic drive descending through Mandi and Chandigarh highway.', isOptional: false },
+      { time: '08:30 AM', location: 'Parvati Valley', activity: 'Return Journey toward Mathura', description: 'Scenic drive descending through Mandi and Chandigarh highway.', isOptional: false },
       { time: '02:00 PM', location: 'Highway Restaurant', activity: 'Lunch & Freshen-up Halt', description: 'Group lunch break en route.', isOptional: false },
       { time: '06:00 PM', location: 'En route Delhi-Mathura', activity: 'Trip Feedback & Digital Ticket Archive', description: 'Share photos, submit trip feedback, and swap social handles.', isOptional: false },
-      { time: '11:00 PM', location: 'GLA University Mathura', activity: 'Arrival at GLA University & Trip Completion', description: 'Safe arrival back at GLA campus. End of the Himalayan Escape!', isOptional: false },
+      { time: '11:00 PM', location: 'Mathura Departure Bay', activity: 'Arrival at Mathura & Trip Completion', description: 'Safe arrival back in Mathura. End of the Himalayan Escape!', isOptional: false },
     ],
   },
 ];
 
 export const INCLUSIONS_LIST = [
-  'Roundtrip Luxury 2x2 AC Tourist Bus transport from GLA University to Manali, Kasol & back',
+  'Roundtrip Luxury 2x2 AC Tourist Bus transport from Mathura to Manali, Kasol & back',
   '2 Nights accommodation in 3-star resort in Manali',
   '2 Nights accommodation in premium riverside resort/camp in Kasol',
   'Configured meals: Daily Breakfast & Dinner at hotels as specified in itinerary',
@@ -231,7 +231,7 @@ export const PACKING_LIST = [
   { item: 'Small daypack backpack (15-20L)', essential: true, note: 'For day trips to Solang and Kasol' },
   { item: 'Rain protection (Foldable umbrella/poncho)', essential: false, note: 'Himalayan weather can be unpredictable' },
   { item: 'Cash & Digital UPI', essential: true, note: 'Some remote Kasol cafes only accept cash' },
-  { item: 'Valid College / Govt ID & Digital QR Ticket', essential: true, note: 'Required at pickup point (Near GLA Main Gate, Mathura)' },
+  { item: 'Valid College / Govt ID & Digital QR Ticket', essential: true, note: 'Required at pickup point (Near Main Gate, NH-2 Mathura)' },
 ];
 
 export const FAQ_ITEMS = [

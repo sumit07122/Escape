@@ -9,7 +9,7 @@ export interface PricingCalculationInput {
 }
 
 /**
- * Server-side Profit-Safe Pricing Engine for GLA HIMALAYAN ESCAPE
+ * Server-side Profit-Safe Pricing Engine for HIMALAYAN ESCAPE
  * Single source of truth:
  * - ₹6,200 per traveller (total amount = travellers × 6,200)
  * - ₹1,000 reservation deposit per traveller (pay now = travellers × 1,000)

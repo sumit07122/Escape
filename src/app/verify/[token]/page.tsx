@@ -36,7 +36,7 @@ export default function VerifyTicketPage({
   return (
     <div className="w-full max-w-lg mx-auto px-4 py-16 space-y-6">
       {loading ? (
-        <div className="p-12 text-center text-zinc-400">Verifying Boarding Pass with GLA Expedition Server...</div>
+        <div className="p-12 text-center text-zinc-400">Verifying Boarding Pass with Expedition Server...</div>
       ) : error ? (
         <div className="glass-card rounded-3xl p-8 border border-rose-600/50 text-center space-y-4">
           <div className="w-16 h-16 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center mx-auto">
@@ -98,7 +98,7 @@ export default function VerifyTicketPage({
 
           <div className="text-xs text-zinc-400 flex items-center justify-center gap-1.5">
             <MapPin className="w-4 h-4 text-orange-400 shrink-0" />
-            <span>Boarding Location: GLA University Mathura Bus Bay</span>
+            <span>Boarding Location: Mathura NH-2 Departure Bay</span>
           </div>
         </div>
       )}

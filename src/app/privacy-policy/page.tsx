@@ -1,7 +1,7 @@
 import React from 'react';
 
 export const metadata = {
-  title: 'Privacy Policy | GLA Himalayan Escape',
+  title: 'Privacy Policy | Himalayan Escape',
   description: 'How we collect, protect, and use traveller information.',
 };
 

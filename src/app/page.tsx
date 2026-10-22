@@ -76,7 +76,7 @@ export default function HomePage() {
               Student Mountain Expedition 2026
             </div>
             <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight uppercase leading-none text-white drop-shadow-md">
-              HIMALAYAN ESCAPE
+              HIMALAYAN ESCAPE 2026
             </h1>
             <p className="text-lg sm:text-2xl font-light text-stone-100 tracking-wide drop-shadow-sm">
               Manali × Kasol • Mountains. Friends. Adventure. Memories.

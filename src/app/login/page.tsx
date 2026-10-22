@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, Suspense } from 'react';
+import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ShieldCheck, Lock, Mail, Loader2, AlertCircle, ArrowRight, User } from 'lucide-react';
 
@@ -46,6 +47,24 @@ function LoginFormContent() {
   return (
     <div className="w-full min-h-[75vh] flex items-center justify-center px-4 py-12 bg-[#F7F5EF] text-[#171918]">
       <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-8 border border-[#D8D2C4] space-y-6 shadow-sm">
+        {/* Brand Header with Official Logo */}
+        <div className="text-center space-y-2">
+          <div className="w-16 h-16 rounded-full overflow-hidden bg-white border border-[#163C32]/20 shadow-sm mx-auto">
+            <Image
+              src="/logo.png"
+              alt="Himalayan Escape"
+              width={64}
+              height={64}
+              className="w-full h-full object-cover"
+              priority
+            />
+          </div>
+          <h1 className="text-xl font-black tracking-tight text-[#171918]">HIMALAYAN ESCAPE</h1>
+          <p className="text-[10px] font-bold tracking-widest text-[#D87945] uppercase">
+            STUDENT MOUNTAIN EXPEDITION • 2026
+          </p>
+        </div>
+
         {/* Toggle between Traveller & Admin */}
         <div className="flex rounded-xl bg-[#F7F5EF] p-1 border border-[#D8D2C4]">
           <button
@@ -93,7 +112,7 @@ function LoginFormContent() {
               </p>
               <p className="mt-0.5 text-[11px] leading-relaxed opacity-90">
                 {urlError.toLowerCase().includes('google oauth not configured')
-                  ? 'Google OAuth credentials are being verified. You can use 1-Click Test Login below to sign in immediately, or paste GOOGLE_CLIENT_SECRET in .env.local.'
+                  ? 'Google OAuth credentials are being initialized. Please ensure GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are configured in the environment.'
                   : urlError}
               </p>
             </div>

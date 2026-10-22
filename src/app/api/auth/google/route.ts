@@ -6,8 +6,10 @@ export async function GET(request: NextRequest) {
 
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-  const redirectUri = `${appUrl}/api/auth/google/callback`;
+  const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || 'localhost:3000';
+  const proto = request.headers.get("x-forwarded-proto") || (request.url.startsWith('https') ? 'https' : 'http');
+  const origin = process.env.NEXTAUTH_URL || `${proto}://${host}`;
+  const redirectUri = `${origin}/api/auth/google/callback`;
 
   const isRealSecret =
     clientSecret &&

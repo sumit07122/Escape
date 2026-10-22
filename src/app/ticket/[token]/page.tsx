@@ -169,8 +169,14 @@ export default function DigitalTicketPage({
         <div className="bg-[#163C32] text-white p-6 sm:p-8 relative print-banner">
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/20 pb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#D87945] flex items-center justify-center text-white font-black text-lg shadow-sm">
-                HE
+              <div className="w-11 h-11 rounded-full overflow-hidden bg-white border border-white/20 shadow-sm shrink-0">
+                <Image
+                  src="/logo.png"
+                  alt="Himalayan Escape"
+                  width={44}
+                  height={44}
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div>
                 <span className="text-[10px] font-extrabold tracking-widest text-[#D87945] uppercase block">
@@ -202,7 +208,7 @@ export default function DigitalTicketPage({
             </div>
             <div>
               <span className="text-[10px] text-stone-300 uppercase block font-semibold">PICKUP & REPORTING</span>
-              <span className="font-bold text-white">Near GLA Main Gate, Mathura</span>
+              <span className="font-bold text-white">Near Main Gate (NH-2), Mathura</span>
             </div>
             <div>
               <span className="text-[10px] text-stone-300 uppercase block font-semibold">BOOKING REF</span>
@@ -345,7 +351,7 @@ export default function DigitalTicketPage({
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[#1C1C1C]/80">
               <p>
-                <strong>Reporting Spot:</strong> Near GLA Main Gate (Pickup Bay area), NH-2, Mathura.
+                <strong>Reporting Spot:</strong> Near Main Gate (Pickup Bay area), NH-2 Highway, Mathura.
               </p>
               <p>
                 <strong>Reporting Time:</strong> 04:30 PM. Coach gate verification desk opens 1 hour prior to departure.

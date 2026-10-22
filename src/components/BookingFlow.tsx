@@ -226,9 +226,9 @@ export default function BookingFlow() {
           key: orderData.keyId,
           amount: orderData.amountInPaise,
           currency: 'INR',
-          name: 'GLA HIMALAYAN ESCAPE',
+          name: 'HIMALAYAN ESCAPE',
           description: `Seat Reservation (${travellers.length} Travellers) - ${orderData.bookingId}`,
-          image: '/favicon.ico',
+          image: '/logo.png',
           order_id: orderData.razorpayOrderId,
           prefill: {
             name: primary.fullName,
@@ -776,7 +776,7 @@ export default function BookingFlow() {
           <div className="max-w-md mx-auto p-6 sm:p-8 rounded-2xl bg-[#F7F5EF] border border-[#D8D2C4] space-y-4">
             <div className="border-b border-[#D8D2C4] pb-3">
               <span className="text-[10px] font-bold text-[#646864] uppercase tracking-wider block">EXPEDITION</span>
-              <p className="text-base font-black text-[#171918]">GLA → Manali → Kasol → GLA</p>
+              <p className="text-base font-black text-[#171918]">Mathura → Manali → Kasol → Mathura</p>
             </div>
 
             <div className="grid grid-cols-2 gap-3 border-b border-[#D8D2C4] pb-3 text-xs">
@@ -878,7 +878,7 @@ export default function BookingFlow() {
             <div className="flex items-center justify-between border-b border-[#D8D2C4] pb-3">
               <div>
                 <span className="text-[10px] font-bold text-[#D87945] uppercase tracking-wider block">EXPEDITION</span>
-                <span className="font-black text-[#171918] text-sm">GLA HIMALAYAN ESCAPE</span>
+                <span className="font-black text-[#171918] text-sm">HIMALAYAN ESCAPE</span>
                 <p className="text-[10px] text-[#646864]">MANALI × KASOL • 6D / 5N</p>
               </div>
               <div className="text-right">

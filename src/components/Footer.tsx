@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
-import { Mountain, Phone, MapPin, Shield } from 'lucide-react';
+import Image from 'next/image';
+import { Phone, MapPin, Shield } from 'lucide-react';
 import { CONTACT_INFO } from '@/lib/constants';
 
 export default function Footer() {
@@ -11,8 +12,14 @@ export default function Footer() {
           {/* Brand */}
           <div className="space-y-3 md:col-span-1">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-[#163C32] flex items-center justify-center text-white shadow-sm">
-                <Mountain className="w-4 h-4 text-white" />
+              <div className="w-10 h-10 rounded-full overflow-hidden bg-white border border-[#163C32]/20 shadow-sm shrink-0">
+                <Image
+                  src="/logo.png"
+                  alt="Himalayan Escape Logo"
+                  width={40}
+                  height={40}
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div>
                 <span className="font-black text-[#171918] text-sm tracking-tight">HIMALAYAN ESCAPE</span>
@@ -20,7 +27,7 @@ export default function Footer() {
               </div>
             </div>
             <p className="text-[#171918]/70 text-[11px] leading-relaxed">
-              Independent student mountain expedition. Pickup & Reporting: Near GLA Main Gate, Mathura. Flat ₹6,200 package with ₹1,000 reservation deposit.
+              Independent student mountain expedition. Pickup & Reporting: Near Main Gate (NH-2), Mathura. Flat ₹6,200 package with ₹1,000 reservation deposit.
             </p>
           </div>
 
@@ -70,7 +77,7 @@ export default function Footer() {
               </div>
               <div className="flex items-center gap-2 text-[#171918]/70">
                 <MapPin className="w-3.5 h-3.5 text-[#D87945] shrink-0" />
-                <span>Pickup & Reporting: Near GLA Main Gate, Mathura</span>
+                <span>Pickup & Reporting: Near Main Gate (NH-2), Mathura</span>
               </div>
             </div>
           </div>

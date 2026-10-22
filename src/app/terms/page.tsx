@@ -49,7 +49,7 @@ export default function TermsPage() {
         <section className="space-y-2">
           <h2 className="text-base font-bold text-[#171918]">4. Digital Boarding Passes</h2>
           <p>
-            Each traveller receives a unique digital QR boarding pass upon confirmation. This pass must be presented at the departure point (Near GLA Main Gate, Mathura) for check-in.
+            Each traveller receives a unique digital QR boarding pass upon confirmation. This pass must be presented at the departure point (Near Main Gate, NH-2 Mathura) for check-in.
           </p>
         </section>
       </div>

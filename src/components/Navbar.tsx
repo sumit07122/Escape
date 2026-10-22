@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   Mountain, Menu, X, ArrowRight, User as UserIcon,
@@ -65,15 +66,22 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-20">
           {/* Brand Logo */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-[#163C32] flex items-center justify-center text-[#F7F5EF] shadow-sm group-hover:scale-105 transition-transform">
-              <Mountain className="w-5 h-5 text-[#F7F5EF]" />
+            <div className="w-11 h-11 rounded-full overflow-hidden border border-[#163C32]/20 shadow-sm group-hover:scale-105 transition-transform shrink-0 bg-white">
+              <Image
+                src="/logo.png"
+                alt="Himalayan Escape Logo"
+                width={44}
+                height={44}
+                className="w-full h-full object-cover"
+                priority
+              />
             </div>
             <div>
               <span className="font-black text-base sm:text-lg tracking-tight text-[#171918] block leading-tight">
                 HIMALAYAN ESCAPE
               </span>
               <p className="text-[10px] font-bold tracking-widest text-[#D87945] uppercase">
-                STUDENT EXPEDITION • MANALI × KASOL
+                6D / 5N • MANALI × KASOL EXPEDITION
               </p>
             </div>
           </Link>

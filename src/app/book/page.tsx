@@ -17,7 +17,7 @@ export default function BookPage() {
           HIMALAYAN ESCAPE
         </h1>
         <p className="text-xs sm:text-sm text-[#646864]">
-          MANALI × KASOL • 6 DAYS • 5 NIGHTS • PICKUP NEAR GLA MAIN GATE, MATHURA
+          MANALI × KASOL • 6 DAYS • 5 NIGHTS • PICKUP NEAR MAIN GATE (NH-2), MATHURA
         </p>
       </div>
 
