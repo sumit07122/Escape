@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { BUS_25_SEATS_LAYOUT } from '@/lib/constants';
 import { getCurrentAdmin, createAuditLog } from '@/lib/server-utils';
 
-export const dynamic = 'force-dynamic';
+
 
 export async function GET() {
   try {

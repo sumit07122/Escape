@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getCurrentAdmin } from '@/lib/server-utils';
 
-export const dynamic = 'force-dynamic';
+
 
 export async function GET() {
   try {

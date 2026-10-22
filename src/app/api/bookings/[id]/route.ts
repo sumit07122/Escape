@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import QRCode from 'qrcode';
 
-export const dynamic = 'force-dynamic';
+
 
 export async function GET(
   request: NextRequest,
