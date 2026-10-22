@@ -1,0 +1,490 @@
+// Prisma Schema for GLA Himalayan Escape
+// Manali x Kasol 6D/5N Full-Stack Travel Booking Platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite" // Set to "postgresql" for production deployment with PostgreSQL
+  url      = env("DATABASE_URL")
+}
+
+model Trip {
+  id              String         @id @default(cuid())
+  title           String         @default("GLA HIMALAYAN ESCAPE")
+  subtitle        String         @default("MANALI × KASOL")
+  duration        String         @default("6 DAYS / 5 NIGHTS")
+  origin          String         @default("GLA University, Mathura")
+  destination     String         @default("Manali & Kasol, Himachal Pradesh")
+  capacity        Int            @default(75)
+  startDate       DateTime
+  endDate         DateTime
+  status          String         @default("OPEN") // OPEN, FULL, COMPLETED, CANCELLED
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  buses           Bus[]
+  packages        Package[]
+  itineraryDays   ItineraryDay[]
+  expenses        Expense[]
+  bookings        Booking[]
+  hotels          Hotel[]
+}
+
+model Package {
+  id                String    @id @default(cuid())
+  tripId            String
+  trip              Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  name              String    // SINGLE, COUPLE, GROUP
+  slug              String    @unique
+  price             Float     // 6200 for single, 6500 for couple
+  reservationAmount Float     @default(1000)
+  travellersCount   Int       @default(1)
+  description       String?
+  features          String?   // JSON string
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  bookings          Booking[]
+}
+
+model Bus {
+  id                String       @id @default(cuid())
+  tripId            String
+  trip              Trip         @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  busNumber         String       // "Bus 01", "Bus 02", "Bus 03", "Bus 04"
+  vehicleName       String       @default("Himalayan Luxury Express (2x2 AC)")
+  vehicleNumber     String       @default("UP-85-GLA-001")
+  physicalCapacity  Int          @default(25)
+  passengerCapacity Int          @default(23)
+  driverSeats       Int          @default(1)
+  conductorSeats    Int          @default(1)
+  driverName        String?      @default("Rajesh Sharma")
+  driverPhone       String?      @default("7017936338")
+  conductorName     String?      @default("Amit Verma")
+  conductorPhone    String?      @default("9368287947")
+  status            String       @default("ACTIVE") // ACTIVE, MAINTENANCE, DISABLED
+  orderIndex        Int          @default(1)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  seats             BusSeat[]
+  bookings          Booking[]
+  transports        Transport[]
+}
+
+model BusSeat {
+  id           String        @id @default(cuid())
+  busId        String
+  bus          Bus           @relation(fields: [busId], references: [id], onDelete: Cascade)
+  seatNumber   String        // "L1", "L2", ... "L9", "R1"..."R9", "B1"..."B5", "DRIVER", "CONDUCTOR"
+  seatType     String        @default("PASSENGER") // DRIVER, CONDUCTOR, PASSENGER
+  rowNumber    Int
+  side         String        // LEFT, RIGHT, REAR, FRONT
+  position     String        // WINDOW, AISLE, REAR, CABIN
+  isBookable   Boolean       @default(true)
+  isAvailable  Boolean       @default(true)
+  status       String        @default("AVAILABLE") // AVAILABLE, SELECTED, HELD, BOOKED, UNAVAILABLE
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  seatHold     SeatHold?
+  seatBooking  SeatBooking?
+  auditLogs    AuditLog[]
+
+  @@unique([busId, seatNumber])
+  @@index([busId, status])
+}
+
+model SeatHold {
+  id               String    @id @default(cuid())
+  busSeatId        String    @unique
+  busSeat          BusSeat   @relation(fields: [busSeatId], references: [id], onDelete: Cascade)
+  bookingSessionId String
+  userId           String?
+  travellerName    String?
+  heldAt           DateTime  @default(now())
+  expiresAt        DateTime
+  status           String    @default("ACTIVE") // ACTIVE, EXPIRED, RELEASED, CONVERTED
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([bookingSessionId])
+  @@index([expiresAt, status])
+}
+
+model Booking {
+  id                     String             @id @default(cuid())
+  bookingId              String             @unique // e.g. "GHE-260123"
+  tripId                 String
+  trip                   Trip               @relation(fields: [tripId], references: [id])
+  packageId              String
+  package                Package            @relation(fields: [packageId], references: [id])
+  userId                 String?
+  primaryTravellerName   String
+  primaryEmail           String
+  primaryPhone           String
+  gender                 String?            @default("NOT_SPECIFIED")
+  emergencyContactName   String
+  emergencyContactPhone  String
+  sittingPreference      String             @default("NO_PREFERENCE") // WINDOW, AISLE, FRONT, BACK, NO_PREFERENCE
+  travellersCount        Int                @default(1)
+  
+  // Pricing
+  totalAmount            Float
+  reservationAmount      Float              @default(1000)
+  discountAmount         Float              @default(0)
+  finalAmount            Float
+  remainingBalance       Float
+  
+  // Status
+  paymentStatus          String             @default("PENDING") // PENDING, AUTHORIZED, PAID, FAILED, REFUNDED, CANCELLED, EXPIRED
+  bookingStatus          String             @default("PENDING") // PENDING, CONFIRMED, CANCELLED
+  busId                  String?
+  bus                    Bus?               @relation(fields: [busId], references: [id])
+  referralCodeUsed       String?
+  isGroupOffer           Boolean            @default(false)
+  notes                  String?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+
+  travellers             Traveller[]
+  payments               Payment[]
+  seatBookings           SeatBooking[]
+  tickets                Ticket[]
+  referralUses           ReferralUse[]
+  groupBooking           GroupBooking?
+  auditLogs              AuditLog[]
+  roomAssignments        RoomAssignment[]
+
+  @@index([bookingId])
+  @@index([primaryEmail])
+  @@index([primaryPhone])
+  @@index([bookingStatus])
+  @@index([paymentStatus])
+}
+
+model Traveller {
+  id                     String          @id @default(cuid())
+  bookingId              String
+  booking                Booking         @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  fullName               String
+  phone                  String
+  email                  String
+  gender                 String
+  emergencyContactName   String?
+  emergencyContactPhone  String?
+  isFreeGroupTraveller   Boolean         @default(false)
+  assignedSeatNumber     String?
+  assignedBusNumber      String?
+  checkInStatus          String          @default("PENDING") // PENDING, CHECKED_IN
+  checkedInAt            DateTime?
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+
+  seatBooking            SeatBooking?
+  ticket                 Ticket?
+  roomAssignments        RoomAssignment[]
+}
+
+model SeatBooking {
+  id           String     @id @default(cuid())
+  busSeatId    String     @unique
+  busSeat      BusSeat    @relation(fields: [busSeatId], references: [id], onDelete: Cascade)
+  bookingId    String
+  booking      Booking    @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  travellerId  String?    @unique
+  traveller    Traveller? @relation(fields: [travellerId], references: [id], onDelete: SetNull)
+  status       String     @default("CONFIRMED") // CONFIRMED, CANCELLED, TRANSFERRED
+  confirmedAt  DateTime   @default(now())
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([bookingId])
+}
+
+model Payment {
+  id                 String    @id @default(cuid())
+  bookingId          String
+  booking            Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  razorpayOrderId    String    @unique
+  razorpayPaymentId  String?   @unique
+  razorpaySignature  String?
+  amount             Float
+  currency           String    @default("INR")
+  paymentType        String    @default("RESERVATION") // RESERVATION, REMAINING_BALANCE, FULL
+  status             String    @default("PENDING") // PENDING, PAID, FAILED, REFUNDED
+  verifiedAt         DateTime?
+  payload            String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([bookingId])
+  @@index([status])
+}
+
+model Ticket {
+  id                String     @id @default(cuid())
+  ticketNumber      String     @unique // e.g. "TKT-GHE-10101"
+  bookingId         String
+  booking           Booking    @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  travellerId       String?    @unique
+  traveller         Traveller? @relation(fields: [travellerId], references: [id], onDelete: SetNull)
+  qrToken           String     @unique // Secure random 32-char verification token
+  status            String     @default("VALID") // VALID, CHECKED_IN, CANCELLED
+  checkInTime       DateTime?
+  checkInByAdminId  String?
+  issuedAt          DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  checkIns          CheckIn[]
+
+  @@index([ticketNumber])
+  @@index([qrToken])
+}
+
+model CheckIn {
+  id           String    @id @default(cuid())
+  ticketId     String
+  ticket       Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  bookingId    String
+  adminId      String?
+  adminName    String?
+  location     String    @default("GLA University, Mathura")
+  checkInTime  DateTime  @default(now())
+  notes        String?
+
+  @@index([ticketId])
+  @@index([bookingId])
+}
+
+model Referral {
+  id                   String        @id @default(cuid())
+  code                 String        @unique // e.g. "GLA-ROHIT10"
+  ownerName            String
+  ownerPhone           String
+  ownerEmail           String
+  successfulReferrals  Int           @default(0)
+  discountPercentage   Float         @default(5.0) // 5% per referral
+  maxDiscount          Float         @default(10.0) // 10% maximum
+  isActive             Boolean       @default(true)
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  referralUses         ReferralUse[]
+
+  @@index([code])
+}
+
+model ReferralUse {
+  id               String    @id @default(cuid())
+  referralId       String
+  referral         Referral  @relation(fields: [referralId], references: [id])
+  bookingId        String
+  booking          Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  discountApplied  Float
+  isVerified       Boolean   @default(false) // Counts only after referred booking pays reservation
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([referralId])
+  @@index([bookingId])
+}
+
+model GroupBooking {
+  id                 String    @id @default(cuid())
+  bookingId          String    @unique
+  booking            Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  groupName          String?   @default("GLA Travellers Squad")
+  paidTravellers     Int       @default(5)
+  freeTravellers     Int       @default(1)
+  totalSeatsOccupied Int       @default(6)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}
+
+model Hotel {
+  id             String    @id @default(cuid())
+  tripId         String
+  trip           Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  name           String    // e.g. "Snow Valley Resort Manali"
+  location       String    // Manali / Kasol
+  address        String?
+  contactPerson  String?
+  contactPhone   String?
+  checkInDate    DateTime?
+  checkOutDate   DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  rooms          Room[]
+}
+
+model Room {
+  id             String           @id @default(cuid())
+  hotelId        String
+  hotel          Hotel            @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  roomNumber     String
+  roomType       String           @default("Triple Sharing") // Deluxe Double, Triple Sharing, Quad Sharing
+  capacity       Int              @default(3)
+  notes          String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  assignments    RoomAssignment[]
+}
+
+model RoomAssignment {
+  id           String     @id @default(cuid())
+  roomId       String
+  room         Room       @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  travellerId  String
+  traveller    Traveller  @relation(fields: [travellerId], references: [id], onDelete: Cascade)
+  bookingId    String
+  booking      Booking    @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  assignedAt   DateTime   @default(now())
+
+  @@index([roomId])
+}
+
+model ItineraryDay {
+  id             String          @id @default(cuid())
+  tripId         String
+  trip           Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  dayNumber      Int             // 1 to 6
+  title          String          // "DAY 1 — GLA TO MANALI"
+  subtitle       String?
+  description    String?
+  stayLocation   String?         // "Bus / overnight journey", "Manali", "Kasol"
+  mealsConfig    String?         // "Dinner Included"
+  isPublic       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  items          ItineraryItem[]
+
+  @@unique([tripId, dayNumber])
+}
+
+model ItineraryItem {
+  id           String        @id @default(cuid())
+  dayId        String
+  day          ItineraryDay  @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  time         String?       // "06:00 PM"
+  location     String
+  activity     String
+  description  String?
+  isOptional   Boolean       @default(false)
+  extraCost    Float?
+  orderIndex   Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([dayId])
+}
+
+model Transport {
+  id             String    @id @default(cuid())
+  busId          String?
+  bus            Bus?      @relation(fields: [busId], references: [id], onDelete: SetNull)
+  vehicleType    String    @default("Luxury 2x2 AC Tourist Coach")
+  vehicleNumber  String
+  driverName     String
+  driverPhone    String
+  conductorName  String?
+  conductorPhone String?
+  route          String    @default("GLA University -> Manali -> Kasol -> GLA University")
+  departureTime  DateTime?
+  arrivalTime    DateTime?
+  fuelCost       Float?    @default(0)
+  tollCost       Float?    @default(0)
+  permitCost     Float?    @default(0)
+  status         String    @default("READY")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Expense {
+  id           String    @id @default(cuid())
+  tripId       String
+  trip         Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  category     String    // Transport, Hotels, Food, Activities, Staff, Marketing, Emergency, Miscellaneous, Other
+  title        String
+  amount       Float
+  date         DateTime  @default(now())
+  vendor       String?
+  receiptRef   String?
+  description  String?
+  recordedBy   String?   @default("Admin")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([tripId])
+  @@index([category])
+}
+
+model Notification {
+  id         String    @id @default(cuid())
+  recipient  String
+  channel    String    @default("EMAIL") // EMAIL, WHATSAPP, SMS, IN_APP
+  type       String    // BOOKING_CONFIRMATION, PAYMENT_CONFIRMATION, TICKET_GENERATED, BALANCE_REMINDER, TRIP_REMINDER, SEAT_CHANGE, BUS_CHANGE, CANCELLATION, ADMIN_ANNOUNCEMENT
+  title      String
+  message    String
+  status     String    @default("QUEUED") // QUEUED, SENT, FAILED
+  sentAt     DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model AuditLog {
+  id           String    @id @default(cuid())
+  action       String    // SEAT_HELD, SEAT_RELEASED, SEAT_BOOKED, ADMIN_SEAT_CHANGE, ADMIN_BUS_MOVE, SEAT_UNAVAILABLE, PAYMENT_CONFIRMED, CHECK_IN, BOOKING_CANCELLED, SETTINGS_UPDATE
+  entityType   String    // SEAT, BOOKING, BUS, PAYMENT, SETTINGS
+  entityId     String
+  performedBy  String    @default("SYSTEM") // Admin email or USER or SYSTEM
+  bookingId    String?
+  booking      Booking?  @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  busSeatId    String?
+  busSeat      BusSeat?  @relation(fields: [busSeatId], references: [id], onDelete: SetNull)
+  seatNumber   String?
+  busId        String?
+  oldValue     String?
+  newValue     String?
+  ipAddress    String?
+  metadata     String?
+  timestamp    DateTime  @default(now())
+
+  @@index([action])
+  @@index([entityType, entityId])
+}
+
+model Settings {
+  id          String    @id @default(cuid())
+  key         String    @unique
+  value       String
+  category    String    @default("GENERAL") // GENERAL, PRICING, BUS, CONTACTS, POLICIES
+  description String?
+  updatedAt   DateTime  @updatedAt
+}
+
+model Admin {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         String    @default("SUPER_ADMIN") // SUPER_ADMIN, COORDINATOR, SCANNER
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  phone     String?
+  name      String
+  role      String    @default("TRAVELLER")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
