@@ -37,27 +37,29 @@ export default function HomePage() {
   const totalCapacity = busesData?.trip?.capacity || 75;
 
   return (
-    <div className="w-full flex flex-col space-y-20 sm:space-y-28 bg-[#F7F5EF] text-[#171918]">
+    <div className="w-full flex flex-col bg-[#F7F5EF] text-[#171918]">
       {/* ======================================================== */}
       {/* 1. HERO SECTION (EDITORIAL PHOTOGRAPHY + TRANSPARENT PRICING) */}
       {/* ======================================================== */}
-      <section className="relative w-full min-h-[90vh] flex items-center justify-center pt-16 pb-20 overflow-hidden">
-        {/* Full-width Himalayan Photograph with Subtle Dark Overlay */}
-        <div className="absolute inset-0 z-0">
+      <section className="relative w-full min-h-[80vh] md:min-h-[90vh] flex flex-col justify-center items-center text-center overflow-hidden px-4 pt-24 pb-16">
+        {/* Full-width Himalayan Photograph with Seamless Gradient Overlay */}
+        <div className="absolute inset-0 -z-10 w-full h-full overflow-hidden">
           <Image
             src="/images/hero-himalayas.jpg"
             alt="Himalayan mountain peaks in Manali"
             fill
             priority
             className="object-cover object-center"
+            sizes="100vw"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/45 to-black/75 z-10" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-[#F7F5EF]" />
         </div>
 
-        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center text-center space-y-8 z-20 text-white">
+        {/* Hero Content Layer */}
+        <div className="relative z-10 max-w-4xl mx-auto space-y-6 flex flex-col items-center">
           {/* Live Seat Counter & Status Pill */}
           <div className="flex flex-col sm:flex-row items-center gap-3">
-            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-black/45 backdrop-blur-md border border-white/20 text-xs font-bold tracking-wide text-white shadow-xl">
+            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-black/50 backdrop-blur-md border border-white/20 text-xs font-bold tracking-wide text-white shadow-xl">
               <span className="relative flex h-2.5 w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
@@ -73,16 +75,16 @@ export default function HomePage() {
             <div className="text-xs sm:text-sm font-extrabold uppercase tracking-widest text-[#D87945]">
               Student Mountain Expedition 2026
             </div>
-            <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight uppercase leading-none">
+            <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight uppercase leading-none text-white drop-shadow-md">
               HIMALAYAN ESCAPE
             </h1>
-            <p className="text-lg sm:text-2xl font-light text-stone-200 tracking-wide">
+            <p className="text-lg sm:text-2xl font-light text-stone-100 tracking-wide drop-shadow-sm">
               Manali × Kasol • Mountains. Friends. Adventure. Memories.
             </p>
           </div>
 
           {/* Clean Pricing Breakdown Card */}
-          <div className="w-full max-w-lg p-5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/25 shadow-2xl space-y-4">
+          <div className="w-full max-w-lg p-5 rounded-2xl bg-black/45 backdrop-blur-md border border-white/25 shadow-2xl space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/15 pb-4">
               <div className="text-left">
                 <span className="text-[11px] font-bold tracking-widest uppercase text-stone-300 block">
@@ -94,7 +96,7 @@ export default function HomePage() {
                 <span className="text-[10px] text-stone-300 ml-1 font-semibold">/ student</span>
               </div>
               <div className="text-right">
-                <span className="text-[11px] font-bold tracking-widest uppercase text-amber-300 block">
+                <span className="text-[11px] font-bold tracking-widest uppercase text-[#D87945] block">
                   ONLINE RESERVATION
                 </span>
                 <span className="text-3xl sm:text-4xl font-black tracking-tight text-[#D87945]">
@@ -126,56 +128,58 @@ export default function HomePage() {
           </div>
 
           {/* Origin & Route Text */}
-          <p className="text-xs text-stone-300 font-medium tracking-wide pt-2">
+          <p className="text-xs text-stone-200 font-medium tracking-wide pt-1">
             PICKUP & REPORTING: NEAR GLA MAIN GATE, MATHURA → MANALI → KASOL
           </p>
         </div>
       </section>
 
-      {/* ======================================================== */}
-      {/* 2. TRIP INTRODUCTION SECTION                             */}
-      {/* ======================================================== */}
-      <section id="trip-overview" className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 scroll-mt-24">
-        <div className="space-y-4 max-w-3xl">
-          <span className="text-xs font-bold text-[#163C32] uppercase tracking-widest">
-            THE EXPEDITION
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-[#171918]">
-            Six days. One unforgettable escape.
-          </h2>
-          <div className="space-y-3 text-base text-[#171918]/80 leading-relaxed font-normal">
-            <p>
-              Himalayan Escape is an independent student mountain expedition departing near the GLA Main Gate, Mathura. Designed for comfort and adventure, travellers journey across the plains of North India and climb into the high valleys of Himachal Pradesh aboard dedicated 2x2 luxury tourist coaches.
-            </p>
-            <p>
-              From the snowy heights of Solang Valley and the engineering marvel of the Atal Tunnel to the mystical cedar forests and riverside cafés of Kasol and the spiritual hot springs of Manikaran Sahib, every day offers a balance of curated group exploration and independent freedom.
-            </p>
-            <p className="text-sm font-medium text-[#163C32]">
-              Pickup & Reporting: Near GLA Main Gate, Mathura → Manali → Solang Valley → Atal Tunnel → Sissu → Kasol → Manikaran → Mathura
-            </p>
-          </div>
+      {/* Metric Cards - Positioned cleanly in the transition between hero and content */}
+      <div className="relative z-20 max-w-5xl mx-auto -mt-12 px-4 grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
+        <div className="p-5 rounded-2xl bg-white border border-[#D8D2C4] shadow-md hover:shadow-lg transition-shadow text-center">
+          <span className="block text-2xl font-black text-[#163C32]">6 DAYS</span>
+          <span className="text-xs font-semibold text-[#646864] uppercase tracking-wider">EXPEDITION</span>
         </div>
+        <div className="p-5 rounded-2xl bg-white border border-[#D8D2C4] shadow-md hover:shadow-lg transition-shadow text-center">
+          <span className="block text-2xl font-black text-[#163C32]">5 NIGHTS</span>
+          <span className="text-xs font-semibold text-[#646864] uppercase tracking-wider">ACCOMMODATION</span>
+        </div>
+        <div className="p-5 rounded-2xl bg-white border border-[#D8D2C4] shadow-md hover:shadow-lg transition-shadow text-center">
+          <span className="block text-2xl font-black text-[#D87945]">₹6,200</span>
+          <span className="text-xs font-semibold text-[#646864] uppercase tracking-wider">PER PERSON</span>
+        </div>
+        <div className="p-5 rounded-2xl bg-white border border-[#D8D2C4] shadow-md hover:shadow-lg transition-shadow text-center">
+          <span className="block text-2xl font-black text-[#171918]">{totalCapacity} SEATS</span>
+          <span className="text-xs font-semibold text-[#646864] uppercase tracking-wider">MAX CAPACITY</span>
+        </div>
+      </div>
 
-        {/* Clean Metadata Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
-          <div className="p-5 rounded-2xl bg-white border border-[#D8D2C4]">
-            <span className="block text-2xl font-black text-[#163C32]">6 DAYS</span>
-            <span className="text-xs font-semibold text-[#646864] uppercase tracking-wider">EXPEDITION</span>
+      {/* Main Content Sections with Standard Spacing */}
+      <div className="w-full space-y-20 sm:space-y-28 pt-16 sm:pt-20">
+        {/* ======================================================== */}
+        {/* 2. TRIP INTRODUCTION SECTION                             */}
+        {/* ======================================================== */}
+        <section id="trip-overview" className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 scroll-mt-24">
+          <div className="space-y-4 max-w-3xl">
+            <span className="text-xs font-bold text-[#163C32] uppercase tracking-widest">
+              THE EXPEDITION
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-[#171918]">
+              Six days. One unforgettable escape.
+            </h2>
+            <div className="space-y-3 text-base text-[#171918]/80 leading-relaxed font-normal">
+              <p>
+                Himalayan Escape is an independent student mountain expedition departing near the GLA Main Gate, Mathura. Designed for comfort and adventure, travellers journey across the plains of North India and climb into the high valleys of Himachal Pradesh aboard dedicated 2x2 luxury tourist coaches.
+              </p>
+              <p>
+                From the snowy heights of Solang Valley and the engineering marvel of the Atal Tunnel to the mystical cedar forests and riverside cafés of Kasol and the spiritual hot springs of Manikaran Sahib, every day offers a balance of curated group exploration and independent freedom.
+              </p>
+              <p className="text-sm font-medium text-[#163C32]">
+                Pickup & Reporting: Near GLA Main Gate, Mathura → Manali → Solang Valley → Atal Tunnel → Sissu → Kasol → Manikaran → Mathura
+              </p>
+            </div>
           </div>
-          <div className="p-5 rounded-2xl bg-white border border-[#D8D2C4]">
-            <span className="block text-2xl font-black text-[#163C32]">5 NIGHTS</span>
-            <span className="text-xs font-semibold text-[#646864] uppercase tracking-wider">ACCOMMODATION</span>
-          </div>
-          <div className="p-5 rounded-2xl bg-white border border-[#D8D2C4]">
-            <span className="block text-2xl font-black text-[#D87945]">₹6,200</span>
-            <span className="text-xs font-semibold text-[#646864] uppercase tracking-wider">PER PERSON</span>
-          </div>
-          <div className="p-5 rounded-2xl bg-white border border-[#D8D2C4]">
-            <span className="block text-2xl font-black text-[#171918]">75 SEATS</span>
-            <span className="text-xs font-semibold text-[#646864] uppercase tracking-wider">MAX CAPACITY</span>
-          </div>
-        </div>
-      </section>
+        </section>
 
       {/* ======================================================== */}
       {/* 3. RESTRAINED EDITORIAL PHOTOGRAPHY                      */}
@@ -512,6 +516,7 @@ export default function HomePage() {
           </Link>
         </div>
       </section>
+      </div>
     </div>
   );
 }
