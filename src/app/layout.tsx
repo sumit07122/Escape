@@ -3,6 +3,7 @@ import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import MobileBottomBar from '@/components/MobileBottomBar';
+import { Analytics } from '@vercel/analytics/next';
 
 export const metadata: Metadata = {
   title: 'GLA Himalayan Escape — Manali & Kasol',
@@ -47,6 +48,7 @@ export default function RootLayout({
         <main className="flex-1 w-full pb-20 md:pb-0">{children}</main>
         <Footer />
         <MobileBottomBar />
+        <Analytics />
       </body>
     </html>
   );
