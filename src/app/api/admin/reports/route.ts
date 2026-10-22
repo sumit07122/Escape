@@ -47,24 +47,7 @@ export async function GET() {
       },
     });
 
-    // 4. Referrals
-    const referrals = await db.referral.findMany({
-      orderBy: { successfulReferrals: 'desc' },
-      include: {
-        referralUses: true,
-      },
-    });
-
-    // 5. Group Bookings
-    const groupBookings = await db.groupBooking.findMany({
-      include: {
-        booking: {
-          include: { travellers: true },
-        },
-      },
-    });
-
-    // 6. Expenses
+    // 4. Expenses
     const expenses = await db.expense.findMany();
     const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
 
@@ -93,8 +76,6 @@ export async function GET() {
       bookings,
       travellers,
       payments,
-      referrals,
-      groupBookings,
       expenses,
     });
   } catch (error) {

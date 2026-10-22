@@ -71,13 +71,24 @@ export async function createAuditLog(params: {
   metadata?: Record<string, unknown> | null;
 }) {
   try {
+    let resolvedBookingDbId: string | null = null;
+    if (params.bookingId) {
+      const b = await db.booking.findFirst({
+        where: {
+          OR: [{ id: params.bookingId }, { bookingId: params.bookingId }],
+        },
+        select: { id: true },
+      });
+      resolvedBookingDbId = b?.id || null;
+    }
+
     await db.auditLog.create({
       data: {
         action: params.action,
         entityType: params.entityType,
         entityId: params.entityId,
         performedBy: params.performedBy || 'SYSTEM',
-        bookingId: params.bookingId,
+        bookingId: resolvedBookingDbId,
         busSeatId: params.busSeatId,
         seatNumber: params.seatNumber,
         busId: params.busId,

@@ -89,7 +89,7 @@ export default function TripDetailsPage() {
       <div className="text-center">
         <Link
           href="/book"
-          className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm shadow-lg glow-orange"
+          className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-lg transition-all"
         >
           <span>PROCEED TO SEAT BOOKING</span>
           <ArrowRight className="w-4 h-4" />

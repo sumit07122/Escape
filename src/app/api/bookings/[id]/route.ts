@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import QRCode from 'qrcode';
-
-
+import { canAccessBooking, getAdminSessionFromRequest, getUserSessionFromRequest } from '@/lib/auth';
 
 export async function GET(
   request: NextRequest,
@@ -10,6 +9,9 @@ export async function GET(
 ) {
   try {
     const { id: bookingIdentifier } = await params;
+    const { searchParams } = new URL(request.url);
+    const verifyEmail = searchParams.get('email');
+    const verifyPhone = searchParams.get('phone');
 
     const booking = await db.booking.findFirst({
       where: {
@@ -27,12 +29,46 @@ export async function GET(
         bus: true,
         package: true,
         payments: true,
-        groupBooking: true,
       },
     });
 
     if (!booking) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
+    }
+
+    // Server-side ownership / authorization check:
+    // 1. Admin session has full access
+    const admin = await getAdminSessionFromRequest(request);
+    let isAuthorized = !!admin;
+
+    // 2. Customer user session
+    if (!isAuthorized) {
+      const user = await getUserSessionFromRequest(request);
+      if (user) {
+        if (booking.userId && user.id === booking.userId) isAuthorized = true;
+        if (user.email.toLowerCase().trim() === booking.primaryEmail.toLowerCase().trim()) isAuthorized = true;
+      }
+    }
+
+    // 3. Email / Phone lookup verification (for manual ticket lookup form)
+    if (!isAuthorized && verifyEmail) {
+      if (verifyEmail.toLowerCase().trim() === booking.primaryEmail.toLowerCase().trim()) {
+        isAuthorized = true;
+      }
+    }
+    if (!isAuthorized && verifyPhone) {
+      const cleanInput = verifyPhone.replace(/[^0-9]/g, '');
+      const cleanStored = booking.primaryPhone.replace(/[^0-9]/g, '');
+      if (cleanInput && cleanStored && cleanInput.slice(-10) === cleanStored.slice(-10)) {
+        isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized) {
+      return NextResponse.json(
+        { error: 'Unauthorized: You do not have permission to view this booking' },
+        { status: 403 }
+      );
     }
 
     // Generate QR code data URLs for all tickets
@@ -41,7 +77,6 @@ export async function GET(
         let qrDataUrl = '';
         if (t.ticket?.qrToken) {
           try {
-            // Encode verification URL with secure random token
             const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/verify/${t.ticket.qrToken}`;
             qrDataUrl = await QRCode.toDataURL(verifyUrl, {
               width: 300,

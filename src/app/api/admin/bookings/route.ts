@@ -45,7 +45,6 @@ export async function GET(request: NextRequest) {
         bus: true,
         package: true,
         payments: true,
-        groupBooking: true,
       },
     });
 

@@ -123,6 +123,7 @@ model Booking {
   packageId              String
   package                Package            @relation(fields: [packageId], references: [id])
   userId                 String?
+  user                   User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
   primaryTravellerName   String
   primaryEmail           String
   primaryPhone           String
@@ -144,8 +145,6 @@ model Booking {
   bookingStatus          String             @default("PENDING") // PENDING, CONFIRMED, CANCELLED
   busId                  String?
   bus                    Bus?               @relation(fields: [busId], references: [id])
-  referralCodeUsed       String?
-  isGroupOffer           Boolean            @default(false)
   notes                  String?
   createdAt              DateTime           @default(now())
   updatedAt              DateTime           @updatedAt
@@ -154,8 +153,6 @@ model Booking {
   payments               Payment[]
   seatBookings           SeatBooking[]
   tickets                Ticket[]
-  referralUses           ReferralUse[]
-  groupBooking           GroupBooking?
   auditLogs              AuditLog[]
   roomAssignments        RoomAssignment[]
 
@@ -176,7 +173,6 @@ model Traveller {
   gender                 String
   emergencyContactName   String?
   emergencyContactPhone  String?
-  isFreeGroupTraveller   Boolean         @default(false)
   assignedSeatNumber     String?
   assignedBusNumber      String?
   checkInStatus          String          @default("PENDING") // PENDING, CHECKED_IN
@@ -260,50 +256,6 @@ model CheckIn {
   @@index([bookingId])
 }
 
-model Referral {
-  id                   String        @id @default(cuid())
-  code                 String        @unique // e.g. "GLA-ROHIT10"
-  ownerName            String
-  ownerPhone           String
-  ownerEmail           String
-  successfulReferrals  Int           @default(0)
-  discountPercentage   Float         @default(5.0) // 5% per referral
-  maxDiscount          Float         @default(10.0) // 10% maximum
-  isActive             Boolean       @default(true)
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
-
-  referralUses         ReferralUse[]
-
-  @@index([code])
-}
-
-model ReferralUse {
-  id               String    @id @default(cuid())
-  referralId       String
-  referral         Referral  @relation(fields: [referralId], references: [id])
-  bookingId        String
-  booking          Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  discountApplied  Float
-  isVerified       Boolean   @default(false) // Counts only after referred booking pays reservation
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-
-  @@index([referralId])
-  @@index([bookingId])
-}
-
-model GroupBooking {
-  id                 String    @id @default(cuid())
-  bookingId          String    @unique
-  booking            Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  groupName          String?   @default("GLA Travellers Squad")
-  paidTravellers     Int       @default(5)
-  freeTravellers     Int       @default(1)
-  totalSeatsOccupied Int       @default(6)
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
-}
 
 model Hotel {
   id             String    @id @default(cuid())
@@ -484,7 +436,11 @@ model User {
   email     String    @unique
   phone     String?
   name      String
+  image     String?
+  googleId  String?   @unique
   role      String    @default("TRAVELLER")
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+
+  bookings  Booking[]
 }

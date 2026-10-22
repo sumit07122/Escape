@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { verifyRazorpaySignature } from '@/lib/razorpay';
-import { generateTicketQrToken, generateTicketNumber, generateReferralCode } from '@/lib/qr';
+import { generateTicketQrToken, generateTicketNumber } from '@/lib/qr';
 import { createAuditLog } from '@/lib/server-utils';
 
 export async function POST(request: NextRequest) {
@@ -12,7 +12,6 @@ export async function POST(request: NextRequest) {
       razorpayOrderId,
       razorpayPaymentId,
       razorpaySignature,
-      bookingSessionId,
     } = body;
 
     if (!bookingId || !razorpayOrderId || !razorpayPaymentId) {
@@ -62,6 +61,7 @@ export async function POST(request: NextRequest) {
         bookingStatus: booking.bookingStatus,
         paymentStatus: booking.paymentStatus,
         tickets: booking.tickets,
+        booking,
       });
     }
 
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
         const qrToken = generateTicketQrToken();
         const ticketNumber = generateTicketNumber();
 
-        const ticket = await tx.ticket.upsert({
+        await tx.ticket.upsert({
           where: { travellerId: traveller.id },
           update: {
             status: 'VALID',
@@ -180,45 +180,6 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Handle referral activation if a code was used
-      if (booking.referralCodeUsed) {
-        const referral = await tx.referral.findUnique({
-          where: { code: booking.referralCodeUsed },
-        });
-
-        if (referral) {
-          await tx.referralUse.create({
-            data: {
-              referralId: referral.id,
-              bookingId: booking.id,
-              discountApplied: booking.discountAmount,
-              isVerified: true,
-            },
-          });
-
-          await tx.referral.update({
-            where: { id: referral.id },
-            data: {
-              successfulReferrals: { increment: 1 },
-            },
-          });
-        }
-      }
-
-      // Generate a new unique referral code for this newly confirmed primary traveller!
-      const travellerRefCode = generateReferralCode(booking.primaryTravellerName);
-      await tx.referral.upsert({
-        where: { code: travellerRefCode },
-        update: {},
-        create: {
-          code: travellerRefCode,
-          ownerName: booking.primaryTravellerName,
-          ownerPhone: booking.primaryPhone,
-          ownerEmail: booking.primaryEmail,
-          discountPercentage: 5.0,
-        },
-      });
-
       // Queue confirmation notification
       await tx.notification.create({
         data: {
@@ -231,16 +192,13 @@ export async function POST(request: NextRequest) {
         },
       });
 
-        return {
-          confirmedBooking,
-          travellerRefCode,
-          bookingDbId: booking.id,
-          bookingId: booking.bookingId,
-          reservationAmount: booking.reservationAmount,
-        };
-      },
-      { timeout: 15000, maxWait: 10000 }
-    );
+      return {
+        confirmedBooking,
+        bookingDbId: booking.id,
+        bookingId: booking.bookingId,
+        reservationAmount: booking.reservationAmount,
+      };
+    }, { timeout: 15000, maxWait: 10000 });
 
     // Audit Log asynchronously outside transaction
     createAuditLog({
@@ -256,7 +214,6 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Booking confirmed and seats locked successfully!',
       booking: confirmationResult.confirmedBooking,
-      referralCode: confirmationResult.travellerRefCode,
     });
   } catch (error: unknown) {
     console.error('Payment confirmation error:', error);

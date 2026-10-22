@@ -4,25 +4,24 @@ import { calculateBookingPricing } from '@/lib/pricing';
 import { createRazorpayOrder } from '@/lib/razorpay';
 import { generateBookingId } from '@/lib/qr';
 import { cleanExpiredHolds, createAuditLog } from '@/lib/server-utils';
-import { PackageType, TravellerInput } from '@/types';
+import { TravellerInput } from '@/types';
+import { getUserSessionFromRequest } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const {
-      packageType,
       travellers,
       sittingPreference = 'NO_PREFERENCE',
       busId,
       selectedSeats,
       bookingSessionId,
-      referralCode,
       emergencyContactName,
       emergencyContactPhone,
     } = body;
 
-    if (!packageType || !busId || !selectedSeats || !Array.isArray(selectedSeats) || selectedSeats.length === 0) {
-      return NextResponse.json({ error: 'Missing package, bus or seat selection' }, { status: 400 });
+    if (!busId || !selectedSeats || !Array.isArray(selectedSeats) || selectedSeats.length === 0) {
+      return NextResponse.json({ error: 'Missing bus or seat selection' }, { status: 400 });
     }
 
     if (!travellers || !Array.isArray(travellers) || travellers.length === 0) {
@@ -31,13 +30,6 @@ export async function POST(request: NextRequest) {
 
     if (!bookingSessionId) {
       return NextResponse.json({ error: 'Booking session ID is missing' }, { status: 400 });
-    }
-
-    // Couple booking validation: exactly 2 travellers and 2 seats
-    if (packageType === 'COUPLE') {
-      if (travellers.length !== 2 || selectedSeats.length !== 2) {
-        return NextResponse.json({ error: 'Couple package requires exactly 2 travellers and 2 seats' }, { status: 400 });
-      }
     }
 
     // Number of seats must equal number of travellers
@@ -53,7 +45,7 @@ export async function POST(request: NextRequest) {
     // 2. Fetch master trip and check capacity limit (75)
     const trip = await db.trip.findFirst({
       include: {
-        packages: { where: { slug: (packageType as string).toLowerCase() } },
+        packages: true,
       },
     });
 
@@ -96,74 +88,79 @@ export async function POST(request: NextRequest) {
       }, { status: 409 });
     }
 
-    // 4. Validate referral code (prevent self-referral)
     const primaryTraveller = travellers[0];
-    let validReferralPercent = 0;
-    let cleanReferralCode: string | undefined = undefined;
 
-    if (referralCode && typeof referralCode === 'string') {
-      const codeUpper = referralCode.trim().toUpperCase();
-      const ref = await db.referral.findUnique({ where: { code: codeUpper } });
-      if (ref && ref.isActive && ref.ownerPhone !== primaryTraveller.phone.trim()) {
-        validReferralPercent = ref.discountPercentage;
-        cleanReferralCode = codeUpper;
-      }
-    }
-
-    // 5. Server-side calculate pricing
+    // 4. Server-side calculate pricing strictly: ₹6,200 total, ₹1,000 reservation deposit per traveller
     const pricing = calculateBookingPricing({
-      packageType: packageType as PackageType,
       travellersCount: travellers.length,
-      referralCode: cleanReferralCode,
-      validReferralPercent,
     });
 
-    // 6. Generate unique booking ID
+    // 5. Generate unique booking ID
     const bookingId = generateBookingId();
 
-    // 7. Create Razorpay order for ₹1,000 reservation amount
+    // 6. Create Razorpay order for ₹1,000 * travellersCount reservation amount
     const orderResult = await createRazorpayOrder({
       amountInRupees: pricing.reservationAmount,
       receipt: `RCPT-${bookingId}`,
       notes: {
         bookingId,
-        packageType,
         travellersCount: String(travellers.length),
         seats: selectedSeats.join(','),
       },
     });
 
-    // 8. Find matching package ID
+    // 7. Find default package ID
     const selectedPackage = trip.packages[0] || (await db.package.findFirst({ where: { tripId: trip.id } }));
     if (!selectedPackage) {
       return NextResponse.json({ error: 'Package not configured' }, { status: 500 });
     }
 
-    // 9. Persist pending Booking and Travellers in database
+    // Check customer user session if available
+    const customerUser = await getUserSessionFromRequest(request);
+
+    // 8. Persist pending Booking and Travellers in database
     const txResult = await db.$transaction(async (tx) => {
+      // Find or create User for customer if needed
+      let linkedUserId = customerUser?.id;
+      if (!linkedUserId && primaryTraveller.email) {
+        const existing = await tx.user.findUnique({ where: { email: primaryTraveller.email.toLowerCase().trim() } });
+        if (existing) {
+          linkedUserId = existing.id;
+        } else {
+          const newUser = await tx.user.create({
+            data: {
+              email: primaryTraveller.email.toLowerCase().trim(),
+              name: primaryTraveller.fullName,
+              phone: primaryTraveller.phone,
+              role: 'TRAVELLER',
+            },
+          });
+          linkedUserId = newUser.id;
+        }
+      }
+
       const booking = await tx.booking.create({
         data: {
           bookingId,
           tripId: trip.id,
           packageId: selectedPackage.id,
+          userId: linkedUserId,
           primaryTravellerName: primaryTraveller.fullName,
-          primaryEmail: primaryTraveller.email,
+          primaryEmail: primaryTraveller.email.toLowerCase().trim(),
           primaryPhone: primaryTraveller.phone,
           gender: primaryTraveller.gender || 'NOT_SPECIFIED',
           emergencyContactName: emergencyContactName || primaryTraveller.emergencyContactName || primaryTraveller.fullName,
           emergencyContactPhone: emergencyContactPhone || primaryTraveller.emergencyContactPhone || primaryTraveller.phone,
           sittingPreference,
           travellersCount: travellers.length,
-          totalAmount: pricing.baseAmount,
+          totalAmount: pricing.totalAmount,
           reservationAmount: pricing.reservationAmount,
-          discountAmount: pricing.referralDiscountAmount + pricing.groupDiscountAmount,
+          discountAmount: 0,
           finalAmount: pricing.finalAmount,
           remainingBalance: pricing.remainingBalance,
           paymentStatus: 'PENDING',
           bookingStatus: 'PENDING',
           busId,
-          referralCodeUsed: cleanReferralCode,
-          isGroupOffer: pricing.isGroupOffer,
         },
       });
 
@@ -171,7 +168,6 @@ export async function POST(request: NextRequest) {
       for (let i = 0; i < travellers.length; i++) {
         const t = travellers[i];
         const assignedSeat = selectedSeats[i];
-        const isFree = pricing.isGroupOffer && i >= pricing.paidTravellersCount;
 
         await tx.traveller.create({
           data: {
@@ -182,43 +178,27 @@ export async function POST(request: NextRequest) {
             gender: t.gender,
             emergencyContactName: t.emergencyContactName || emergencyContactName,
             emergencyContactPhone: t.emergencyContactPhone || emergencyContactPhone,
-            isFreeGroupTraveller: isFree,
             assignedSeatNumber: assignedSeat,
           },
         });
       }
 
-      // If group booking, create group record
-      if (pricing.isGroupOffer) {
-        await tx.groupBooking.create({
-          data: {
-            bookingId: booking.id,
-            groupName: `${primaryTraveller.fullName}'s Squad`,
-            paidTravellers: pricing.paidTravellersCount,
-            freeTravellers: pricing.freeTravellersCount,
-            totalSeatsOccupied: travellers.length,
-          },
-        });
-      }
+      // Record pending payment
+      await tx.payment.create({
+        data: {
+          bookingId: booking.id,
+          razorpayOrderId: orderResult.orderId,
+          amount: pricing.reservationAmount,
+          currency: 'INR',
+          paymentType: 'RESERVATION',
+          status: 'PENDING',
+        },
+      });
 
-        // Record pending payment
-        await tx.payment.create({
-          data: {
-            bookingId: booking.id,
-            razorpayOrderId: orderResult.orderId,
-            amount: pricing.reservationAmount,
-            currency: 'INR',
-            paymentType: 'RESERVATION',
-            status: 'PENDING',
-          },
-        });
-
-        return {
-          bookingDbId: booking.id,
-        };
-      },
-      { timeout: 15000, maxWait: 10000 }
-    );
+      return {
+        bookingDbId: booking.id,
+      };
+    }, { timeout: 15000, maxWait: 10000 });
 
     // Asynchronously log outside transaction
     createAuditLog({
@@ -228,7 +208,6 @@ export async function POST(request: NextRequest) {
       bookingId,
       performedBy: primaryTraveller.fullName,
       metadata: {
-        packageType,
         seats: selectedSeats,
         amount: pricing.reservationAmount,
         orderId: orderResult.orderId,

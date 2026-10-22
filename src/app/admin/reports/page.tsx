@@ -108,22 +108,22 @@ export default function AdminReportsPage() {
 
       {/* Breakdown Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Receivables & Discounts */}
+        {/* Receivables & Capacity */}
         <div className="glass-card rounded-2xl p-6 border border-zinc-800 space-y-4 text-xs">
           <h3 className="font-bold text-white uppercase tracking-wider text-sm border-b border-zinc-800 pb-2">
-            Receivables & Discounts Summary
+            Receivables & Capacity Summary
           </h3>
           <div className="flex justify-between py-2 border-b border-zinc-900">
-            <span className="text-zinc-400">Outstanding Traveller Balances:</span>
-            <span className="font-bold text-amber-400">₹{(summary?.remainingReceivable || 0).toLocaleString('en-IN')}</span>
+            <span className="text-zinc-400">Reservation Deposits Collected:</span>
+            <span className="font-bold text-emerald-400">₹{(summary?.reservationCollected || 0).toLocaleString('en-IN')}</span>
           </div>
           <div className="flex justify-between py-2 border-b border-zinc-900">
-            <span className="text-zinc-400">Total Referral & Group Discounts Awarded:</span>
-            <span className="font-bold text-emerald-400">₹{(summary?.totalDiscounts || 0).toLocaleString('en-IN')}</span>
+            <span className="text-zinc-400">Outstanding Traveller Balances (₹5,200/pax):</span>
+            <span className="font-bold text-amber-400">₹{(summary?.remainingReceivable || 0).toLocaleString('en-IN')}</span>
           </div>
           <div className="flex justify-between py-2">
-            <span className="text-zinc-400">Total Registered Travellers:</span>
-            <span className="font-bold text-white">{summary?.totalTravellers || 0} Travellers</span>
+            <span className="text-zinc-400">Total Confirmed Travellers:</span>
+            <span className="font-bold text-white">{summary?.totalTravellers || 0} / 75 Capacity</span>
           </div>
         </div>
 

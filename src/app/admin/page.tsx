@@ -132,11 +132,11 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="p-5 rounded-2xl bg-zinc-950/80 border border-zinc-800 space-y-1">
-          <span className="text-xs text-zinc-400 font-medium">Referral Discounts</span>
-          <div className="text-xl font-black text-emerald-400">
-            ₹{(stats?.referralDiscounts || 0).toLocaleString('en-IN')}
+          <span className="text-xs text-zinc-400 font-medium">Currently Held</span>
+          <div className="text-xl font-black text-amber-400">
+            {stats?.heldSeats || 0} Seats
           </div>
-          <p className="text-[11px] text-zinc-500">5% – 10% awarded to referrers</p>
+          <p className="text-[11px] text-zinc-500">10-minute active holds</p>
         </div>
       </div>
 

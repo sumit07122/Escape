@@ -34,13 +34,9 @@ async function main() {
     { key: 'trip_subtitle', value: TRIP_METADATA.title, category: 'GENERAL', description: 'Expedition destination route' },
     { key: 'trip_duration', value: TRIP_METADATA.duration, category: 'GENERAL', description: 'Duration in days/nights' },
     { key: 'trip_capacity', value: String(TRIP_METADATA.capacity), category: 'PRICING', description: 'Total passenger capacity' },
-    { key: 'price_single', value: String(PRICING_DEFAULTS.singlePrice), category: 'PRICING', description: 'Single package price in INR' },
-    { key: 'price_couple', value: String(PRICING_DEFAULTS.couplePrice), category: 'PRICING', description: 'Couple package price in INR for 2 travellers' },
-    { key: 'price_reservation', value: String(PRICING_DEFAULTS.reservationAmount), category: 'PRICING', description: 'Reservation amount in INR' },
-    { key: 'group_paid_count', value: String(PRICING_DEFAULTS.groupPaidCount), category: 'PRICING', description: 'Paid travellers required for group offer' },
-    { key: 'group_free_count', value: String(PRICING_DEFAULTS.groupFreeCount), category: 'PRICING', description: 'Free travellers provided in group offer' },
-    { key: 'referral_percent', value: String(PRICING_DEFAULTS.referralPercent), category: 'PRICING', description: 'Referral discount percent per referral' },
-    { key: 'referral_max_percent', value: String(PRICING_DEFAULTS.maxReferralDiscountPercent), category: 'PRICING', description: 'Maximum referral discount percent cap' },
+    { key: 'price_single', value: String(PRICING_DEFAULTS.pricePerTraveller), category: 'PRICING', description: 'Price per traveller in INR (Single source of truth)' },
+    { key: 'price_reservation', value: String(PRICING_DEFAULTS.reservationAmountPerTraveller), category: 'PRICING', description: 'Reservation amount per traveller in INR' },
+    { key: 'price_remaining', value: String(PRICING_DEFAULTS.remainingBalancePerTraveller), category: 'PRICING', description: 'Remaining balance per traveller in INR' },
     { key: 'seat_hold_minutes', value: String(PRICING_DEFAULTS.seatHoldMinutes), category: 'BUS', description: 'Temporary seat hold duration in minutes' },
     { key: 'contact_phone_1', value: CONTACT_INFO.coordinatorPhone1, category: 'CONTACTS', description: 'Primary coordinator phone' },
     { key: 'contact_phone_2', value: CONTACT_INFO.coordinatorPhone2, category: 'CONTACTS', description: 'Secondary coordinator phone' },
@@ -75,37 +71,27 @@ async function main() {
   }
   console.log(`✓ Master Trip confirmed: ${trip.title} (ID: ${trip.id})`);
 
-  // 4. Seed Packages
+  // 4. Seed Packages (Standard single source of truth: ₹6,200 per traveller)
   const packages = [
     {
       tripId: trip.id,
       name: 'SINGLE',
       slug: 'single',
-      price: PRICING_DEFAULTS.singlePrice,
-      reservationAmount: PRICING_DEFAULTS.reservationAmount,
+      price: PRICING_DEFAULTS.pricePerTraveller,
+      reservationAmount: PRICING_DEFAULTS.reservationAmountPerTraveller,
       travellersCount: 1,
-      description: 'Single seat package with full transportation, 3-star resort stay on sharing basis, daily breakfast & dinner, sightseeing and coordinator support.',
-      features: JSON.stringify(['1 Dedicated Bus Seat', 'Manali & Kasol Hotel Stay', 'Breakfast & Dinner Included', 'Digital QR Ticket', 'Trip Coordinator Support']),
-    },
-    {
-      tripId: trip.id,
-      name: 'COUPLE',
-      slug: 'couple',
-      price: PRICING_DEFAULTS.couplePrice,
-      reservationAmount: PRICING_DEFAULTS.reservationAmount,
-      travellersCount: 2,
-      description: 'Exclusive package for 2 travellers. Includes 2 adjacent reserved seats, private double-occupancy hotel room in Manali & Kasol, meals and sightseeing.',
-      features: JSON.stringify(['2 Adjacent Bus Seats', 'Private Double Room Stay', 'All Sightseeing & Transfers', 'Breakfast & Dinner Included', 'Couple Digital Tickets']),
+      description: 'Single traveller seat with roundtrip luxury 2x2 AC transport, 3-star resort stay, daily breakfast & dinner, sightseeing and coordinator support.',
+      features: JSON.stringify(['1 Dedicated Bus Seat', 'Manali & Kasol Hotel Stay', 'Breakfast & Dinner Included', 'Digital QR Boarding Pass', 'Trip Coordinator Support']),
     },
     {
       tripId: trip.id,
       name: 'GROUP',
       slug: 'group',
-      price: PRICING_DEFAULTS.singlePrice * 5, // 5 Paid travellers
-      reservationAmount: PRICING_DEFAULTS.reservationAmount,
-      travellersCount: 6, // 6 Travellers total (5 paid + 1 free)
-      description: '5+1 Special Group Offer: Book for 5 paid friends and get the 6th friend completely FREE! Includes 6 reserved bus seats, resort rooms and all activities.',
-      features: JSON.stringify(['6 Bus Seats Reserved', '1 Friend Travels 100% Free', 'Group Accommodation', 'Campfire & Evening Activities', '6 Digital QR Passes']),
+      price: PRICING_DEFAULTS.pricePerTraveller,
+      reservationAmount: PRICING_DEFAULTS.reservationAmountPerTraveller,
+      travellersCount: 1,
+      description: 'Group booking for friends travelling together. ₹6,200 per traveller with adjacent seat recommendation, unified dashboard, and individual QR passes.',
+      features: JSON.stringify(['Same Bus Allocation', 'Adjacent Seat Recommendations', 'Shared Booking Dashboard', 'All Hotel Stays & Meals Included', 'Individual Digital Passes']),
     },
   ];
 
@@ -298,20 +284,6 @@ async function main() {
   }
   console.log(`✓ Seeded Manali & Kasol Hotels and Room Inventory`);
 
-  // 8. Seed Example Initial Referrals
-  const sampleReferrals = [
-    { code: 'GLA-HIMALAYA10', ownerName: 'GLA Council', ownerPhone: '7017936338', ownerEmail: 'council@gla.ac.in', discountPercentage: 10.0 },
-    { code: 'GLA-ADVENTURE5', ownerName: 'Trip Support', ownerPhone: '9368287947', ownerEmail: 'support@glaescape.in', discountPercentage: 5.0 },
-  ];
-
-  for (const ref of sampleReferrals) {
-    await prisma.referral.upsert({
-      where: { code: ref.code },
-      update: { discountPercentage: ref.discountPercentage },
-      create: ref,
-    });
-  }
-  console.log(`✓ Seeded initial referral codes`);
 
   console.log('🎉 Database seed completed successfully!');
 }

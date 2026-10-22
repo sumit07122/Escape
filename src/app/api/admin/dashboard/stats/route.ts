@@ -48,14 +48,6 @@ export async function GET() {
     const remainingBalances = confirmedBookings.reduce(
       (acc, b) => acc + b.remainingBalance,
       0
-    );
-    const referralDiscounts = confirmedBookings.reduce(
-      (acc, b) => acc + b.discountAmount,
-      0
-    );
-
-    const groupBookingsCount = await db.groupBooking.count();
-
     const checkedInTravellersCount = await db.traveller.count({
       where: { checkInStatus: 'CHECKED_IN' },
     });
@@ -75,11 +67,13 @@ export async function GET() {
       },
     });
 
+    let totalHeldSeats = 0;
     const busMetrics = buses.map((bus) => {
       const passengerSeats = bus.seats.filter((s) => s.isBookable);
       const booked = passengerSeats.filter((s) => s.status === 'BOOKED').length;
       const held = passengerSeats.filter((s) => s.status === 'HELD').length;
       const available = passengerSeats.filter((s) => s.status === 'AVAILABLE').length;
+      totalHeldSeats += held;
 
       return {
         id: bus.id,
@@ -102,11 +96,10 @@ export async function GET() {
         confirmedTravellers: confirmedTravellersCount,
         pendingBookings: pendingBookingsCount,
         availableCapacity,
+        heldSeats: totalHeldSeats,
         reservationRevenue,
         totalRevenue,
         remainingBalances,
-        referralDiscounts,
-        groupBookings: groupBookingsCount,
         checkedInTravellers: checkedInTravellersCount,
       },
       buses: busMetrics,

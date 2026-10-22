@@ -54,23 +54,18 @@ export interface TravellerInput {
   emergencyContactName?: string;
   emergencyContactPhone?: string;
   assignedSeatNumber?: string;
-  isFreeGroupTraveller?: boolean;
 }
 
 export interface BookingPricing {
-  packageType: PackageType;
   travellersCount: number;
   baseAmount: number;
-  referralCode?: string;
-  referralDiscountPercent: number;
-  referralDiscountAmount: number;
-  groupDiscountAmount: number;
-  finalAmount: number;
+  totalAmount: number;
+  pricePerTraveller: number;
+  reservationAmountPerTraveller: number;
   reservationAmount: number;
   remainingBalance: number;
-  isGroupOffer: boolean;
-  paidTravellersCount: number;
-  freeTravellersCount: number;
+  finalAmount: number;
+  discountAmount: number;
 }
 
 export interface PublicTripDetails {
@@ -84,11 +79,9 @@ export interface PublicTripDetails {
   totalBooked: number;
   totalHeld: number;
   totalAvailable: number;
+  pricePerTraveller: number;
   singlePrice: number;
-  couplePrice: number;
   reservationAmount: number;
-  groupOffer: string;
-  referralOffer: string;
   coordinatorPhone1: string;
   coordinatorPhone2: string;
   buses: {

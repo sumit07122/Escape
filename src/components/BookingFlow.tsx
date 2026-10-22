@@ -1,16 +1,18 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Script from 'next/script';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  Users, User, Heart, CheckCircle2, ArrowRight, ArrowLeft,
-  CreditCard, Sparkles, ShieldCheck, Ticket, Download, Phone,
-  MessageSquare, Loader2, AlertCircle, Copy, Check
+  Users, User, CheckCircle2, ArrowRight, ArrowLeft,
+  CreditCard, ShieldCheck, Ticket, Download, Phone,
+  Loader2, AlertCircle, Copy, Check, Compass, Calendar,
+  MapPin, LogOut
 } from 'lucide-react';
 import BusSeatMap from './BusSeatMap';
-import { PackageType, SittingPreference, TravellerInput, BookingPricing } from '@/types';
-import { CONTACT_INFO, PRICING_DEFAULTS } from '@/lib/constants';
+import { SittingPreference, TravellerInput, BookingPricing } from '@/types';
+import { CONTACT_INFO, PRICING_DEFAULTS, TRIP_METADATA } from '@/lib/constants';
 
 declare global {
   interface Window {
@@ -19,45 +21,61 @@ declare global {
   }
 }
 
+interface UserSession {
+  id: string;
+  email: string;
+  name: string;
+  image?: string | null;
+  role: string;
+}
+
 export default function BookingFlow() {
   const router = useRouter();
 
-  // Booking Flow Steps: 1: Package, 2: Travellers, 3: Preference & Referral, 4: Seats, 5: Review & Pay, 6: Confirmed
+  // 8 Steps:
+  // 1: Google Login
+  // 2: Number of Travellers
+  // 3: Traveller Details
+  // 4: Sitting Preference
+  // 5: Bus & Seat Selection
+  // 6: Booking Summary
+  // 7: Pay Reservation
+  // 8: Confirmation & QR Ticket
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [bookingSessionId, setBookingSessionId] = useState<string>('');
 
-  // Step 1: Package
-  const [packageType, setPackageType] = useState<PackageType>('SINGLE');
+  // Authentication State
+  const [userSession, setUserSession] = useState<UserSession | null>(null);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [demoLoginLoading, setDemoLoginLoading] = useState(false);
 
-  // Step 2: Travellers
+  // Step 2: Travellers Count
+  const [travellersCount, setTravellersCount] = useState<number>(1);
+
+  // Step 3: Traveller Details
   const [travellers, setTravellers] = useState<TravellerInput[]>([
-    { fullName: '', phone: '', email: '', gender: 'Male', emergencyContactName: '', emergencyContactPhone: '' },
+    { fullName: '', phone: '', email: '', gender: 'Male' },
   ]);
   const [emergencyContactName, setEmergencyContactName] = useState('');
   const [emergencyContactPhone, setEmergencyContactPhone] = useState('');
 
-  // Step 3: Referral & Preference
-  const [referralCode, setReferralCode] = useState('');
-  const [referralMessage, setReferralMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  // Step 4: Sitting Preference
   const [sittingPreference, setSittingPreference] = useState<SittingPreference>('NO_PREFERENCE');
 
-  // Step 4: Bus & Seats
+  // Step 5: Bus & Seat Selection
   const [selectedBusId, setSelectedBusId] = useState('');
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
 
-  // Step 5: Pricing & Payment
+  // Step 6 & 7: Pricing & Payment
   const [pricing, setPricing] = useState<BookingPricing | null>(null);
-  const [isCalculatingPrice, setIsCalculatingPrice] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
-  // Step 6: Confirmation
+  // Step 8: Confirmed Booking Details
   const [confirmedBooking, setConfirmedBooking] = useState<any>(null);
-  const [newReferralCode, setNewReferralCode] = useState<string>('');
-  const [copiedRef, setCopiedRef] = useState(false);
+  const [copiedId, setCopiedId] = useState(false);
 
-  // Initialize booking session ID
+  // 1. Initialize Booking Session & Check User Auth
   useEffect(() => {
     let sid = sessionStorage.getItem('gla_booking_session');
     if (!sid) {
@@ -65,465 +83,638 @@ export default function BookingFlow() {
       sessionStorage.setItem('gla_booking_session', sid);
     }
     setBookingSessionId(sid);
+
+    async function checkAuth() {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.authenticated && data.user) {
+            setUserSession(data.user);
+            // Autofill primary traveller
+            setTravellers((prev) => {
+              const updated = [...prev];
+              if (updated[0]) {
+                updated[0].fullName = updated[0].fullName || data.user.name || '';
+                updated[0].email = updated[0].email || data.user.email || '';
+              }
+              return updated;
+            });
+            // Automatically advance to Step 2 if user is already logged in
+            setCurrentStep((step) => (step === 1 ? 2 : step));
+          }
+        }
+      } catch {
+        // Continue
+      } finally {
+        setCheckingAuth(false);
+      }
+    }
+    checkAuth();
   }, []);
 
-  // Update travellers array size when package changes
+  // 2. Adjust travellers array whenever count changes
   useEffect(() => {
-    let requiredCount = 1;
-    if (packageType === 'SINGLE') requiredCount = 1;
-    if (packageType === 'COUPLE') requiredCount = 2;
-    if (packageType === 'GROUP') requiredCount = 6;
-
     setTravellers((prev) => {
       const updated = [...prev];
-      while (updated.length < requiredCount) {
+      while (updated.length < travellersCount) {
         updated.push({
           fullName: '',
           phone: '',
           email: '',
           gender: 'Male',
-          isFreeGroupTraveller: packageType === 'GROUP' && updated.length >= 5,
         });
       }
-      return updated.slice(0, requiredCount);
+      return updated.slice(0, travellersCount);
     });
 
-    // Reset seats when package changes to prevent seat count mismatch
-    setSelectedSeats([]);
-  }, [packageType]);
+    // Reset selected seats if count doesn't match
+    if (selectedSeats.length > travellersCount) {
+      setSelectedSeats([]);
+    }
 
-  // Server-side recalculate pricing whenever relevant fields change
-  const refreshPricing = async () => {
-    setIsCalculatingPrice(true);
+    // Refresh pricing server-side
+    refreshPricing(travellersCount);
+  }, [travellersCount]);
+
+  const refreshPricing = useCallback(async (count: number) => {
     try {
       const res = await fetch('/api/pricing/calculate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          packageType,
-          travellersCount: travellers.length,
-          referralCode: referralCode.trim() || undefined,
-          primaryPhone: travellers[0]?.phone || undefined,
-        }),
+        body: JSON.stringify({ travellersCount: count }),
       });
-
       if (res.ok) {
         const data = await res.json();
         setPricing(data.pricing);
-        if (referralCode.trim()) {
-          if (data.referral.status === 'VALID') {
-            setReferralMessage({ text: data.referral.message, type: 'success' });
-          } else {
-            setReferralMessage({ text: data.referral.message || 'Invalid referral code', type: 'error' });
-          }
-        }
       }
     } catch {
-      // Fallback
-    } finally {
-      setIsCalculatingPrice(false);
-    }
-  };
-
-  useEffect(() => {
-    refreshPricing();
-  }, [packageType, travellers.length]);
-
-  // Handle single traveller field update
-  const handleTravellerChange = (index: number, field: keyof TravellerInput, value: string) => {
-    setTravellers((prev) => {
-      const next = [...prev];
-      next[index] = { ...next[index], [field]: value };
-      return next;
-    });
-  };
-
-  // Trigger celebratory confetti on confirmation
-  const triggerConfetti = () => {
-    if (typeof window !== 'undefined' && window.confetti) {
-      window.confetti({
-        particleCount: 120,
-        spread: 80,
-        origin: { y: 0.6 },
-        colors: ['#10B981', '#F97316', '#38BDF8', '#EAB308', '#FFFFFF'],
+      // Fallback local profit-safe calculation
+      setPricing({
+        travellersCount: count,
+        baseAmount: count * PRICING_DEFAULTS.pricePerTraveller,
+        totalAmount: count * PRICING_DEFAULTS.pricePerTraveller,
+        pricePerTraveller: PRICING_DEFAULTS.pricePerTraveller,
+        reservationAmountPerTraveller: PRICING_DEFAULTS.reservationAmountPerTraveller,
+        reservationAmount: count * PRICING_DEFAULTS.reservationAmountPerTraveller,
+        remainingBalance: count * PRICING_DEFAULTS.remainingBalancePerTraveller,
+        finalAmount: count * PRICING_DEFAULTS.pricePerTraveller,
+        discountAmount: 0,
       });
     }
+  }, []);
+
+  // Sandbox demo login handler (for local development or testing when Google keys aren't set)
+  const handleSandboxLogin = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setDemoLoginLoading(true);
+    try {
+      const email = 'aryan.sharma@gla.ac.in';
+      const name = 'Aryan Sharma';
+      window.location.href = `/api/auth/google?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}&returnUrl=/book`;
+    } catch {
+      setDemoLoginLoading(false);
+    }
   };
 
-  // Create Razorpay Order and Launch Checkout
-  const handlePayReservation = async () => {
-    if (!termsAccepted) {
-      setPaymentError('Please accept the trip terms & safety conditions to proceed.');
-      return;
+  const handleSignOut = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      setUserSession(null);
+      setCurrentStep(1);
+    } catch {
+      // Continue
     }
+  };
 
+  // Step 3 Validation: Traveller details
+  const validateTravellerDetails = () => {
+    for (let i = 0; i < travellers.length; i++) {
+      const t = travellers[i];
+      if (!t.fullName.trim()) {
+        alert(`Please enter the full name for Traveller #${i + 1}`);
+        return false;
+      }
+      if (!t.phone.trim() || t.phone.replace(/[^0-9]/g, '').length < 10) {
+        alert(`Please enter a valid 10-digit phone number for Traveller #${i + 1}`);
+        return false;
+      }
+      if (i === 0 && (!t.email.trim() || !t.email.includes('@'))) {
+        alert('Please enter a valid email address for the primary traveller to receive digital QR tickets.');
+        return false;
+      }
+    }
+    if (!emergencyContactName.trim() || !emergencyContactPhone.trim()) {
+      alert('Please enter an emergency contact name and phone number for safety.');
+      return false;
+    }
+    return true;
+  };
+
+  // Step 5 Seat selection handler
+  const handleSeatSelect = (busId: string, seatNumbers: string[]) => {
+    setSelectedBusId(busId);
+    setSelectedSeats(seatNumbers);
+  };
+
+  // Step 7: Razorpay Order Creation & Payment
+  const handleProceedToPayment = async () => {
     setIsProcessingPayment(true);
     setPaymentError(null);
 
     try {
-      // 1. Create order on backend
+      const primary = travellers[0];
+      const payload = {
+        travellers,
+        sittingPreference,
+        busId: selectedBusId,
+        selectedSeats,
+        bookingSessionId,
+        emergencyContactName,
+        emergencyContactPhone,
+      };
+
       const res = await fetch('/api/bookings/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          packageType,
-          travellers,
-          sittingPreference,
-          busId: selectedBusId,
-          selectedSeats,
-          bookingSessionId,
-          referralCode: referralCode.trim() || undefined,
-          emergencyContactName: emergencyContactName || travellers[0]?.fullName,
-          emergencyContactPhone: emergencyContactPhone || travellers[0]?.phone,
-        }),
+        body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
+      const orderData = await res.json();
       if (!res.ok) {
-        setPaymentError(data.error || 'Failed to initiate booking. Please retry.');
-        setIsProcessingPayment(false);
-        return;
+        throw new Error(orderData.error || 'Failed to initialize booking payment');
       }
 
-      const { bookingId, razorpayOrderId, amount, isMock, keyId } = data;
-
-      // 2. If sandbox test mode (without valid live credentials), verify with server sandbox flow
-      if (isMock || !window.Razorpay) {
-        // Automatically verify sandbox payment server-side
-        const verifyRes = await fetch('/api/bookings/verify-payment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            bookingId,
-            razorpayOrderId,
-            razorpayPaymentId: `pay_test_${Math.random().toString(36).substring(2, 10)}`,
-            razorpaySignature: 'test_sandbox_signature_verified',
-            bookingSessionId,
-          }),
-        });
-
-        const verifyData = await verifyRes.json();
-        if (verifyRes.ok) {
-          setConfirmedBooking(verifyData.booking);
-          setNewReferralCode(verifyData.referralCode);
-          setCurrentStep(6);
-          triggerConfetti();
-        } else {
-          setPaymentError(verifyData.error || 'Payment verification failed.');
-        }
-        setIsProcessingPayment(false);
-        return;
-      }
-
-      // 3. Launch official Razorpay Checkout modal
-      const options = {
-        key: keyId,
-        amount: Math.round(amount * 100),
-        currency: 'INR',
-        name: 'GLA Himalayan Escape',
-        description: `₹1,000 Reservation - Booking ${bookingId}`,
-        image: 'https://cdn-icons-png.flaticon.com/512/826/826070.png',
-        order_id: razorpayOrderId,
-        prefill: {
-          name: travellers[0].fullName,
-          email: travellers[0].email,
-          contact: travellers[0].phone,
-        },
-        theme: {
-          color: '#0D2B1D',
-        },
-        handler: async function (response: any) {
-          // Verify Razorpay payment server-side
-          try {
-            const verifyRes = await fetch('/api/bookings/verify-payment', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                bookingId,
-                razorpayOrderId: response.razorpay_order_id,
-                razorpayPaymentId: response.razorpay_payment_id,
-                razorpaySignature: response.razorpay_signature,
-                bookingSessionId,
-              }),
-            });
-
-            const verifyData = await verifyRes.json();
-            if (verifyRes.ok) {
-              setConfirmedBooking(verifyData.booking);
-              setNewReferralCode(verifyData.referralCode);
-              setCurrentStep(6);
-              triggerConfetti();
-            } else {
-              setPaymentError(verifyData.error || 'Payment verification failed server-side.');
-            }
-          } catch {
-            setPaymentError('Network error while verifying payment. Our team will verify via webhook.');
-          } finally {
-            setIsProcessingPayment(false);
-          }
-        },
-        modal: {
-          ondismiss: function () {
-            setIsProcessingPayment(false);
-            setPaymentError('Payment window closed. Your seats remain held for the duration of the timer.');
+      // Check if Razorpay SDK is available
+      if (typeof window.Razorpay !== 'undefined') {
+        const options = {
+          key: orderData.keyId,
+          amount: orderData.amountInPaise,
+          currency: 'INR',
+          name: 'GLA HIMALAYAN ESCAPE',
+          description: `Seat Reservation (${travellers.length} Travellers) - ${orderData.bookingId}`,
+          image: '/favicon.ico',
+          order_id: orderData.razorpayOrderId,
+          prefill: {
+            name: primary.fullName,
+            email: primary.email,
+            contact: primary.phone,
           },
-        },
-      };
+          theme: {
+            color: '#0d3326', // Forest green
+          },
+          handler: async function (response: any) {
+            await verifyPayment({
+              bookingId: orderData.bookingId,
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+            });
+          },
+          modal: {
+            ondismiss: function () {
+              setIsProcessingPayment(false);
+            },
+          },
+        };
 
-      const rzp = new window.Razorpay(options);
-      rzp.on('payment.failed', function (response: any) {
-        setIsProcessingPayment(false);
-        setPaymentError(response.error.description || 'Payment transaction failed.');
-      });
-      rzp.open();
-    } catch (err: any) {
-      setPaymentError(err.message || 'An unexpected error occurred.');
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+      } else {
+        // Fallback or Test simulation mode
+        await verifyPayment({
+          bookingId: orderData.bookingId,
+          razorpayOrderId: orderData.razorpayOrderId,
+          razorpayPaymentId: 'pay_sim_' + Date.now(),
+          razorpaySignature: 'simulated_signature_sandbox',
+        });
+      }
+    } catch (err: unknown) {
+      console.error(err);
+      const msg = err instanceof Error ? err.message : 'Payment process interrupted';
+      setPaymentError(msg);
       setIsProcessingPayment(false);
     }
   };
 
-  const requiredSeatsCount = packageType === 'SINGLE' ? 1 : packageType === 'COUPLE' ? 2 : 6;
+  // Verify Razorpay payment
+  const verifyPayment = async (verificationPayload: any) => {
+    try {
+      const res = await fetch('/api/bookings/verify-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(verificationPayload),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Payment verification failed');
+      }
+
+      setConfirmedBooking(data.booking);
+      setCurrentStep(8); // Move to final confirmation
+
+      // Trigger celebration confetti if loaded
+      if (typeof window.confetti === 'function') {
+        window.confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Verification failed';
+      setPaymentError(msg);
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
+  // Step Indicator labels
+  const stepsList = [
+    { num: 1, label: 'Google Sign In' },
+    { num: 2, label: 'Travellers' },
+    { num: 3, label: 'Traveller Info' },
+    { num: 4, label: 'Preference' },
+    { num: 5, label: 'Bus & Seats' },
+    { num: 6, label: 'Summary' },
+    { num: 7, label: 'Pay Deposit' },
+    { num: 8, label: 'Confirmation' },
+  ];
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 py-8">
-      {/* Razorpay and Confetti Scripts */}
+    <div className="w-full max-w-4xl mx-auto px-4 py-8 space-y-8">
+      {/* Razorpay Script */}
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
-      <Script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js" strategy="lazyOnload" />
+      <Script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" strategy="lazyOnload" />
 
-      {/* 6-Step Visual Progress Bar */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between max-w-2xl mx-auto">
-          {[
-            { num: 1, label: 'Package' },
-            { num: 2, label: 'Travellers' },
-            { num: 3, label: 'Preferences' },
-            { num: 4, label: 'Seats' },
-            { num: 5, label: 'Review & Pay' },
-            { num: 6, label: 'Confirmed' },
-          ].map((s) => (
-            <div key={s.num} className="flex flex-col items-center">
+      {/* Progress Stepper Header */}
+      <div className="w-full glass-card rounded-2xl p-4 sm:p-6 border border-white/10">
+        <div className="flex items-center justify-between gap-2 overflow-x-auto pb-2 text-xs">
+          {stepsList.map((s) => {
+            const isCompleted = currentStep > s.num;
+            const isCurrent = currentStep === s.num;
+            return (
               <div
-                className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs transition-all ${
-                  currentStep === s.num
-                    ? 'bg-orange-500 text-white ring-4 ring-orange-500/30 glow-orange'
-                    : currentStep > s.num
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-zinc-800 text-zinc-500 border border-zinc-700'
+                key={s.num}
+                className={`flex items-center gap-1.5 shrink-0 px-2.5 py-1.5 rounded-lg font-bold transition-all ${
+                  isCurrent
+                    ? 'bg-emerald-600 text-white shadow-md'
+                    : isCompleted
+                    ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50'
+                    : 'text-zinc-500 bg-zinc-900/40'
                 }`}
               >
-                {currentStep > s.num ? <Check className="w-4 h-4 stroke-[3]" /> : s.num}
+                <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] bg-black/30">
+                  {isCompleted ? <Check className="w-3 h-3 text-emerald-400" /> : s.num}
+                </span>
+                <span className="hidden sm:inline">{s.label}</span>
               </div>
-              <span className={`text-[10px] mt-1.5 font-semibold hidden sm:block ${
-                currentStep >= s.num ? 'text-zinc-200' : 'text-zinc-500'
-              }`}>
-                {s.label}
-              </span>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
-      {/* STEP 1: SELECT PACKAGE */}
+      {/* ======================================================== */}
+      {/* STEP 1: GOOGLE AUTHENTICATION ONLY                        */}
+      {/* ======================================================== */}
       {currentStep === 1 && (
-        <div className="glass-card rounded-3xl p-6 sm:p-10 border border-white/10 space-y-6">
-          <div className="text-center space-y-2">
-            <h2 className="text-2xl sm:text-3xl font-black text-white">Choose Your Package</h2>
+        <div className="glass-card rounded-3xl p-6 sm:p-10 border border-white/10 space-y-8 text-center animate-in fade-in duration-300">
+          <div className="max-w-md mx-auto space-y-3">
+            <div className="w-14 h-14 rounded-2xl bg-white text-zinc-900 flex items-center justify-center mx-auto shadow-xl">
+              {/* Google G Logo SVG */}
+              <svg className="w-7 h-7" viewBox="0 0 24 24">
+                <path
+                  fill="#4285F4"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                />
+              </svg>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black text-white">Sign In to Continue</h2>
             <p className="text-xs sm:text-sm text-zinc-400">
-              Only ₹1,000 reservation required today to secure your seat and lock the bus.
+              One-click access with Google. No passwords or account creation needed.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-4">
-            {/* Single Package */}
-            <div
-              id="pkg-card-single"
-              onClick={() => setPackageType('SINGLE')}
-              className={`p-6 rounded-2xl border-2 cursor-pointer transition-all ${
-                packageType === 'SINGLE'
-                  ? 'bg-emerald-950/60 border-emerald-500 shadow-xl shadow-emerald-950/60'
-                  : 'bg-zinc-900/60 border-zinc-800 hover:border-zinc-700'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <span className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400">
-                  <User className="w-6 h-6" />
-                </span>
-                <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-zinc-800 text-zinc-300">
-                  1 Seat
-                </span>
-              </div>
-              <h3 className="text-lg font-bold text-white">Single Explorer</h3>
-              <p className="text-xs text-zinc-400 mt-1">Full transport, resort stay on sharing, sightseeing & meals.</p>
-              <div className="mt-5 pt-4 border-t border-white/10 flex items-baseline justify-between">
-                <div>
-                  <span className="text-2xl font-black text-white">₹6,200</span>
-                  <span className="text-xs text-zinc-400"> / person</span>
+          {userSession ? (
+            <div className="max-w-md mx-auto p-5 rounded-2xl bg-emerald-950/40 border border-emerald-600/40 space-y-4 text-left">
+              <div className="flex items-center gap-3">
+                {userSession.image ? (
+                  <img
+                    src={userSession.image}
+                    alt={userSession.name}
+                    className="w-12 h-12 rounded-full border border-emerald-400"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold">
+                    {userSession.name.charAt(0)}
+                  </div>
+                )}
+                <div className="flex-1 truncate">
+                  <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider block">
+                    Signed In with Google
+                  </span>
+                  <p className="text-sm font-bold text-white truncate">{userSession.name}</p>
+                  <p className="text-xs text-zinc-400 truncate">{userSession.email}</p>
                 </div>
-                <span className="text-xs font-bold text-orange-400">₹1,000 today</span>
+                <button
+                  onClick={handleSignOut}
+                  className="p-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white"
+                  title="Sign Out"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+
+              <button
+                onClick={() => setCurrentStep(2)}
+                className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all"
+              >
+                <span>Continue to Number of Travellers</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="max-w-md mx-auto space-y-4">
+              {/* Primary: Continue with Google Button */}
+              <a
+                href="/api/auth/google?returnUrl=/book"
+                className="w-full py-4 px-6 rounded-2xl bg-white hover:bg-zinc-100 text-zinc-900 font-bold text-sm shadow-xl flex items-center justify-center gap-3 transition-all hover:scale-[1.02]"
+              >
+                <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                  <path
+                    fill="#4285F4"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                  />
+                </svg>
+                <span>Continue with Google</span>
+              </a>
+
+              {/* Dev/Local Instant Sign-in (Seamless offline testing) */}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => handleSandboxLogin()}
+                  disabled={demoLoginLoading}
+                  className="w-full py-2.5 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-300 flex items-center justify-center gap-2"
+                >
+                  {demoLoginLoading ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <span>Instant GLA Student Sign-in (Demo / Offline Mode)</span>
+                  )}
+                </button>
+              </div>
+
+              <div className="text-[11px] text-zinc-500 pt-2 flex items-center justify-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Your Google identity is only used to manage your booking & tickets.</span>
               </div>
             </div>
+          )}
+        </div>
+      )}
 
-            {/* Couple Package */}
-            <div
-              id="pkg-card-couple"
-              onClick={() => setPackageType('COUPLE')}
-              className={`p-6 rounded-2xl border-2 cursor-pointer transition-all relative ${
-                packageType === 'COUPLE'
-                  ? 'bg-emerald-950/60 border-emerald-500 shadow-xl shadow-emerald-950/60'
-                  : 'bg-zinc-900/60 border-zinc-800 hover:border-zinc-700'
-              }`}
+      {/* ======================================================== */}
+      {/* STEP 2: NUMBER OF TRAVELLERS (1–6+)                       */}
+      {/* ======================================================== */}
+      {currentStep === 2 && (
+        <div className="glass-card rounded-3xl p-6 sm:p-10 border border-white/10 space-y-8 animate-in fade-in duration-300">
+          <div className="space-y-2 text-center max-w-xl mx-auto">
+            <span className="text-xs font-bold text-orange-400 uppercase tracking-widest">
+              STEP 2 OF 8 • CAPACITY PLANNING
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-black text-white">How many travellers?</h2>
+            <p className="text-xs sm:text-sm text-zinc-400">
+              Book for yourself or your friends together under a single booking ID.
+            </p>
+          </div>
+
+          {/* Quick Select Buttons */}
+          <div className="flex flex-wrap items-center justify-center gap-2.5 max-w-md mx-auto">
+            {[1, 2, 3, 4, 5, 6].map((num) => (
+              <button
+                key={num}
+                type="button"
+                onClick={() => setTravellersCount(num)}
+                className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl font-black text-base transition-all ${
+                  travellersCount === num
+                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-950 scale-105 border-2 border-emerald-400'
+                    : 'bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-700'
+                }`}
+              >
+                {num}
+              </button>
+            ))}
+          </div>
+
+          {/* Counter Controls */}
+          <div className="flex items-center justify-center gap-4 pt-2">
+            <button
+              type="button"
+              onClick={() => setTravellersCount((prev) => Math.max(1, prev - 1))}
+              disabled={travellersCount <= 1}
+              className="w-10 h-10 rounded-xl bg-zinc-800 disabled:opacity-40 text-white font-bold text-lg flex items-center justify-center"
             >
-              <span className="absolute -top-3 right-4 px-2.5 py-0.5 rounded-full bg-orange-500 text-[10px] font-black uppercase text-white shadow">
-                Best Value
-              </span>
-              <div className="flex items-center justify-between mb-4">
-                <span className="p-2.5 rounded-xl bg-orange-500/20 text-orange-400">
-                  <Heart className="w-6 h-6" />
-                </span>
-                <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-zinc-800 text-zinc-300">
-                  2 Seats
-                </span>
-              </div>
-              <h3 className="text-lg font-bold text-white">Couple Package</h3>
-              <p className="text-xs text-zinc-400 mt-1">
-                2 adjacent bus seats + private double room in Manali & Kasol.
-              </p>
-              <div className="mt-5 pt-4 border-t border-white/10 flex items-baseline justify-between">
-                <div>
-                  <span className="text-2xl font-black text-white">₹6,500</span>
-                  <span className="text-xs text-zinc-400"> total for 2</span>
-                </div>
-                <span className="text-xs font-bold text-orange-400">₹1,000 today</span>
-              </div>
+              -
+            </button>
+            <span className="text-xl font-black text-white min-w-[120px] text-center">
+              {travellersCount} {travellersCount === 1 ? 'Traveller' : 'Travellers'}
+            </span>
+            <button
+              type="button"
+              onClick={() => setTravellersCount((prev) => Math.min(23, prev + 1))}
+              className="w-10 h-10 rounded-xl bg-zinc-800 text-white font-bold text-lg flex items-center justify-center"
+            >
+              +
+            </button>
+          </div>
+
+          {/* Profit-Safe Pricing Calculation Preview */}
+          <div className="max-w-md mx-auto p-5 rounded-2xl bg-zinc-950/80 border border-white/10 space-y-3">
+            <div className="flex items-center justify-between text-xs text-zinc-400">
+              <span>Standard Trip Rate:</span>
+              <span className="font-bold text-zinc-200">₹6,200 per traveller</span>
             </div>
-
-            {/* Group Package 5+1 */}
-            <div
-              id="pkg-card-group"
-              onClick={() => setPackageType('GROUP')}
-              className={`p-6 rounded-2xl border-2 cursor-pointer transition-all relative ${
-                packageType === 'GROUP'
-                  ? 'bg-emerald-950/60 border-emerald-500 shadow-xl shadow-emerald-950/60'
-                  : 'bg-zinc-900/60 border-zinc-800 hover:border-zinc-700'
-              }`}
-            >
-              <span className="absolute -top-3 right-4 px-2.5 py-0.5 rounded-full bg-amber-400 text-[10px] font-black uppercase text-zinc-950 shadow">
-                5 + 1 FREE
+            <div className="flex items-center justify-between text-xs text-zinc-400 border-b border-zinc-800 pb-2">
+              <span>Total Price ({travellersCount} pax):</span>
+              <span className="font-bold text-white text-sm">
+                ₹{(travellersCount * 6200).toLocaleString('en-IN')}
               </span>
-              <div className="flex items-center justify-between mb-4">
-                <span className="p-2.5 rounded-xl bg-amber-500/20 text-amber-400">
-                  <Users className="w-6 h-6" />
-                </span>
-                <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-zinc-800 text-zinc-300">
-                  6 Seats
-                </span>
-              </div>
-              <h3 className="text-lg font-bold text-white">Group Squad (5+1)</h3>
-              <p className="text-xs text-zinc-400 mt-1">
-                Book for 5 paid friends and get the 6th friend completely FREE!
-              </p>
-              <div className="mt-5 pt-4 border-t border-white/10 flex items-baseline justify-between">
-                <div>
-                  <span className="text-2xl font-black text-white">₹31,000</span>
-                  <span className="text-xs text-zinc-400"> for 6 pax</span>
-                </div>
-                <span className="text-xs font-bold text-orange-400">₹1,000 today</span>
-              </div>
+            </div>
+            <div className="flex items-center justify-between text-xs text-emerald-400 font-bold">
+              <span>Pay Today to Reserve:</span>
+              <span className="text-base text-emerald-300">
+                ₹{(travellersCount * 1000).toLocaleString('en-IN')}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-[11px] text-zinc-400">
+              <span>Remaining Balance:</span>
+              <span className="font-semibold text-zinc-300">
+                ₹{(travellersCount * 5200).toLocaleString('en-IN')}
+              </span>
             </div>
           </div>
 
-          <div className="flex justify-end pt-4">
+          {/* Group Operational Note */}
+          {travellersCount > 1 && (
+            <div className="max-w-md mx-auto p-3.5 rounded-xl bg-orange-950/30 border border-orange-700/40 text-xs text-orange-300 flex items-center gap-2">
+              <Compass className="w-4 h-4 shrink-0 text-orange-400" />
+              <span>
+                All {travellersCount} seats will be bookable together on the same coach with adjacent seating recommendation.
+              </span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between pt-4">
             <button
-              id="btn-step1-continue"
-              onClick={() => setCurrentStep(2)}
-              className="flex items-center gap-2 px-8 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm shadow-lg glow-orange transition-all"
+              type="button"
+              onClick={() => setCurrentStep(1)}
+              className="px-5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-xs font-bold text-zinc-300 hover:text-white"
             >
-              <span>Continue to Travellers</span>
+              Back
+            </button>
+            <button
+              type="button"
+              onClick={() => setCurrentStep(3)}
+              className="px-7 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm flex items-center gap-2 shadow-lg"
+            >
+              <span>Continue to Traveller Details</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </div>
       )}
 
-      {/* STEP 2: TRAVELLER DETAILS */}
-      {currentStep === 2 && (
-        <div className="glass-card rounded-3xl p-6 sm:p-10 border border-white/10 space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-black text-white">Traveller Details</h2>
-              <p className="text-xs text-zinc-400">
-                Package: <strong className="text-emerald-400">{packageType}</strong> ({travellers.length} traveller{travellers.length > 1 ? 's' : ''})
-              </p>
-            </div>
-            <button
-              onClick={() => setCurrentStep(1)}
-              className="text-xs text-zinc-400 hover:text-white flex items-center gap-1"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" /> Change
-            </button>
+      {/* ======================================================== */}
+      {/* STEP 3: TRAVELLER INFORMATION                             */}
+      {/* ======================================================== */}
+      {currentStep === 3 && (
+        <div className="glass-card rounded-3xl p-6 sm:p-10 border border-white/10 space-y-8 animate-in fade-in duration-300">
+          <div className="space-y-2">
+            <span className="text-xs font-bold text-orange-400 uppercase tracking-widest">
+              STEP 3 OF 8 • TRAVELLER PROFILES
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-black text-white">Traveller Information</h2>
+            <p className="text-xs sm:text-sm text-zinc-400">
+              Provide names and contacts for ticket generation and university manifest.
+            </p>
           </div>
 
           <div className="space-y-6">
-            {travellers.map((traveller, idx) => (
+            {travellers.map((t, idx) => (
               <div
                 key={idx}
-                className="p-5 rounded-2xl bg-zinc-900/70 border border-zinc-800 space-y-4"
+                className="p-5 rounded-2xl bg-zinc-950/60 border border-zinc-800 space-y-4"
               >
                 <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                  <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <span className="text-xs font-black text-white uppercase flex items-center gap-2">
                     <User className="w-4 h-4 text-emerald-400" />
-                    Traveller {idx + 1} {idx === 0 ? '(Primary Contact)' : ''}
+                    <span>Traveller #{idx + 1} {idx === 0 ? '(Primary Contact)' : ''}</span>
                   </span>
-                  {traveller.isFreeGroupTraveller && (
-                    <span className="text-[10px] font-black px-2 py-0.5 rounded bg-amber-400 text-zinc-950 uppercase">
-                      100% Free Seat
-                    </span>
-                  )}
+                  <span className="text-[11px] font-bold text-zinc-500">₹6,200</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-zinc-400 mb-1">Full Name *</label>
+                    <label className="block text-[11px] font-bold text-zinc-400 uppercase mb-1">
+                      Full Name *
+                    </label>
                     <input
                       type="text"
                       required
-                      placeholder="e.g. Rohit Sharma"
-                      value={traveller.fullName}
-                      onChange={(e) => handleTravellerChange(idx, 'fullName', e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-950 border border-zinc-700 text-white text-sm focus:border-emerald-500 focus:outline-none"
+                      value={t.fullName}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setTravellers((prev) => {
+                          const copy = [...prev];
+                          copy[idx].fullName = val;
+                          return copy;
+                        });
+                      }}
+                      placeholder="e.g. Aryan Sharma"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-white text-xs focus:border-emerald-500 focus:outline-none"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-zinc-400 mb-1">Mobile Number (WhatsApp) *</label>
+                    <label className="block text-[11px] font-bold text-zinc-400 uppercase mb-1">
+                      Phone Number (10 Digits) *
+                    </label>
                     <input
                       type="tel"
                       required
-                      placeholder="e.g. 9876543210"
-                      value={traveller.phone}
-                      onChange={(e) => handleTravellerChange(idx, 'phone', e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-950 border border-zinc-700 text-white text-sm focus:border-emerald-500 focus:outline-none"
+                      maxLength={10}
+                      value={t.phone}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        setTravellers((prev) => {
+                          const copy = [...prev];
+                          copy[idx].phone = val;
+                          return copy;
+                        });
+                      }}
+                      placeholder="9876543210"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-white text-xs focus:border-emerald-500 focus:outline-none"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-zinc-400 mb-1">Email Address *</label>
+                    <label className="block text-[11px] font-bold text-zinc-400 uppercase mb-1">
+                      Email Address {idx === 0 ? '*' : '(Optional)'}
+                    </label>
                     <input
                       type="email"
-                      required
-                      placeholder="e.g. rohit@gla.ac.in"
-                      value={traveller.email}
-                      onChange={(e) => handleTravellerChange(idx, 'email', e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-950 border border-zinc-700 text-white text-sm focus:border-emerald-500 focus:outline-none"
+                      required={idx === 0}
+                      value={t.email}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setTravellers((prev) => {
+                          const copy = [...prev];
+                          copy[idx].email = val;
+                          return copy;
+                        });
+                      }}
+                      placeholder="aryan@gla.ac.in"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-white text-xs focus:border-emerald-500 focus:outline-none"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-zinc-400 mb-1">Gender *</label>
+                    <label className="block text-[11px] font-bold text-zinc-400 uppercase mb-1">
+                      Gender *
+                    </label>
                     <select
-                      value={traveller.gender}
-                      onChange={(e) => handleTravellerChange(idx, 'gender', e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-950 border border-zinc-700 text-white text-sm focus:border-emerald-500 focus:outline-none"
+                      value={t.gender}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setTravellers((prev) => {
+                          const copy = [...prev];
+                          copy[idx].gender = val;
+                          return copy;
+                        });
+                      }}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-white text-xs focus:border-emerald-500 focus:outline-none"
                     >
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
@@ -535,33 +726,36 @@ export default function BookingFlow() {
             ))}
 
             {/* Emergency Contact */}
-            <div className="p-5 rounded-2xl bg-zinc-900/70 border border-zinc-800 space-y-4">
-              <span className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4" />
-                Emergency Contact (Parent / Guardian)
+            <div className="p-5 rounded-2xl bg-zinc-950/60 border border-zinc-800 space-y-4">
+              <span className="text-xs font-black text-orange-400 uppercase tracking-wider block">
+                Emergency Contact (Mandatory for Trip Safety)
               </span>
-
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">Contact Person Name *</label>
+                  <label className="block text-[11px] font-bold text-zinc-400 uppercase mb-1">
+                    Contact Name (Parent / Guardian) *
+                  </label>
                   <input
                     type="text"
                     required
-                    placeholder="Parent / Guardian Name"
                     value={emergencyContactName}
                     onChange={(e) => setEmergencyContactName(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-950 border border-zinc-700 text-white text-sm focus:border-emerald-500 focus:outline-none"
+                    placeholder="e.g. Ramesh Sharma"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-white text-xs focus:border-emerald-500 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">Contact Phone Number *</label>
+                  <label className="block text-[11px] font-bold text-zinc-400 uppercase mb-1">
+                    Emergency Phone Number *
+                  </label>
                   <input
                     type="tel"
                     required
-                    placeholder="Emergency Contact Phone"
+                    maxLength={10}
                     value={emergencyContactPhone}
-                    onChange={(e) => setEmergencyContactPhone(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-950 border border-zinc-700 text-white text-sm focus:border-emerald-500 focus:outline-none"
+                    onChange={(e) => setEmergencyContactPhone(e.target.value.replace(/[^0-9]/g, ''))}
+                    placeholder="9876500000"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-white text-xs focus:border-emerald-500 focus:outline-none"
                   />
                 </div>
               </div>
@@ -570,480 +764,313 @@ export default function BookingFlow() {
 
           <div className="flex items-center justify-between pt-4">
             <button
-              onClick={() => setCurrentStep(1)}
-              className="px-6 py-2.5 rounded-xl border border-zinc-700 text-zinc-300 hover:text-white text-sm font-semibold"
+              type="button"
+              onClick={() => setCurrentStep(2)}
+              className="px-5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-xs font-bold text-zinc-300 hover:text-white"
             >
               Back
             </button>
             <button
+              type="button"
               onClick={() => {
-                // Validate fields
-                for (const t of travellers) {
-                  if (!t.fullName.trim() || !t.phone.trim() || !t.email.trim()) {
-                    alert('Please complete all required traveller details.');
-                    return;
-                  }
+                if (validateTravellerDetails()) {
+                  setCurrentStep(4);
                 }
-                if (!emergencyContactName || !emergencyContactPhone) {
-                  alert('Please enter an emergency contact person and phone number.');
-                  return;
-                }
-                setCurrentStep(3);
               }}
-              id="btn-step2-continue"
-              className="flex items-center gap-2 px-8 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm shadow-lg glow-orange"
+              className="px-7 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm flex items-center gap-2 shadow-lg"
             >
-              <span>Preferences & Referral</span>
+              <span>Continue to Sitting Preference</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </div>
       )}
 
-      {/* STEP 3: PREFERENCES & REFERRAL */}
-      {currentStep === 3 && (
-        <div className="glass-card rounded-3xl p-6 sm:p-10 border border-white/10 space-y-6">
-          <div className="text-center space-y-1">
-            <h2 className="text-2xl font-black text-white">Seat Preference & Discounts</h2>
-            <p className="text-xs text-zinc-400">
-              Select your sitting preference and apply any friend referral code for up to 10% discount.
+      {/* ======================================================== */}
+      {/* STEP 4: SITTING PREFERENCE                                */}
+      {/* ======================================================== */}
+      {currentStep === 4 && (
+        <div className="glass-card rounded-3xl p-6 sm:p-10 border border-white/10 space-y-8 animate-in fade-in duration-300">
+          <div className="space-y-2 text-center max-w-lg mx-auto">
+            <span className="text-xs font-bold text-orange-400 uppercase tracking-widest">
+              STEP 4 OF 8 • PREFERENCE GUIDANCE
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-black text-white">Coach Seating Preference</h2>
+            <p className="text-xs sm:text-sm text-zinc-400">
+              Select your preference. We will highlight recommended seats on the map.
             </p>
           </div>
 
-          {/* Sitting Preference */}
-          <div className="space-y-3 pt-2">
-            <label className="block text-xs font-bold text-zinc-300 uppercase tracking-wider">
-              Sitting Preference (Recommendation Only)
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-              {[
-                { id: 'WINDOW', label: 'Window' },
-                { id: 'AISLE', label: 'Aisle' },
-                { id: 'FRONT', label: 'Front' },
-                { id: 'BACK', label: 'Back' },
-                { id: 'NO_PREFERENCE', label: 'No Preference' },
-              ].map((p) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 max-w-2xl mx-auto">
+            {[
+              { id: 'WINDOW', label: 'Window Seat', desc: 'Scenic Himalayan vistas and roadside views' },
+              { id: 'AISLE', label: 'Aisle Seat', desc: 'Easy walkaway access and extra leg flexibility' },
+              { id: 'FRONT', label: 'Front Rows', desc: 'Smooth highway cruise and fast boarding' },
+              { id: 'BACK', label: 'Rear Cabin', desc: 'Popular with groups travelling together' },
+              { id: 'NO_PREFERENCE', label: 'No Preference', desc: 'Happy with any comfortable seat on the coach' },
+            ].map((pref) => {
+              const isSelected = sittingPreference === pref.id;
+              return (
                 <button
-                  key={p.id}
-                  id={`btn-pref-${p.id.toLowerCase()}`}
+                  key={pref.id}
                   type="button"
-                  onClick={() => setSittingPreference(p.id as SittingPreference)}
-                  className={`py-3 px-2 rounded-xl text-xs font-bold border transition-all ${
-                    sittingPreference === p.id
-                      ? 'bg-emerald-500 text-white border-emerald-400 shadow-md glow-emerald'
-                      : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:border-zinc-700'
+                  onClick={() => setSittingPreference(pref.id as SittingPreference)}
+                  className={`p-4 rounded-2xl border text-left transition-all ${
+                    isSelected
+                      ? 'bg-emerald-950/60 border-emerald-500 shadow-md ring-1 ring-emerald-500'
+                      : 'bg-zinc-900/60 border-zinc-800 hover:border-zinc-700'
                   }`}
                 >
-                  {p.label}
+                  <span className={`text-sm font-bold block ${isSelected ? 'text-emerald-400' : 'text-white'}`}>
+                    {pref.label}
+                  </span>
+                  <span className="text-[11px] text-zinc-400 block mt-1">{pref.desc}</span>
                 </button>
-              ))}
-            </div>
-            <p className="text-[11px] text-zinc-400 italic">
-              * Note: Your preference highlights matching seats in step 4 with a ★ star. You are free to pick any open seat.
-            </p>
-          </div>
-
-          {/* Referral Code */}
-          <div className="p-5 rounded-2xl bg-zinc-900/80 border border-zinc-800 space-y-3">
-            <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-orange-400" />
-              Referral Code (Save 5% – 10%)
-            </span>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                id="input-referral-code"
-                placeholder="e.g. GLA-HIMALAYA10"
-                value={referralCode}
-                onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
-                className="flex-1 px-3.5 py-2.5 rounded-xl bg-zinc-950 border border-zinc-700 text-white text-sm uppercase font-mono tracking-wider focus:border-orange-500 focus:outline-none"
-              />
-              <button
-                type="button"
-                id="btn-apply-referral"
-                onClick={refreshPricing}
-                disabled={isCalculatingPrice}
-                className="px-5 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white text-xs font-bold flex items-center gap-1.5"
-              >
-                {isCalculatingPrice ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply'}
-              </button>
-            </div>
-            {referralMessage && (
-              <p className={`text-xs font-semibold ${referralMessage.type === 'success' ? 'text-emerald-400' : 'text-rose-400'}`}>
-                {referralMessage.text}
-              </p>
-            )}
+              );
+            })}
           </div>
 
           <div className="flex items-center justify-between pt-4">
             <button
-              onClick={() => setCurrentStep(2)}
-              className="px-6 py-2.5 rounded-xl border border-zinc-700 text-zinc-300 hover:text-white text-sm font-semibold"
+              type="button"
+              onClick={() => setCurrentStep(3)}
+              className="px-5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-xs font-bold text-zinc-300 hover:text-white"
             >
               Back
             </button>
             <button
-              id="btn-step3-continue"
-              onClick={() => setCurrentStep(4)}
-              className="flex items-center gap-2 px-8 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm shadow-lg glow-orange"
+              type="button"
+              onClick={() => setCurrentStep(5)}
+              className="px-7 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm flex items-center gap-2 shadow-lg"
             >
-              <span>Choose Bus Seats</span>
+              <span>Continue to Seat Map</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </div>
       )}
 
-      {/* STEP 4: INTERACTIVE BUS SEAT SELECTION */}
-      {currentStep === 4 && (
-        <div className="glass-card rounded-3xl p-6 sm:p-10 border border-white/10 space-y-6">
-          <div className="text-center space-y-1">
-            <h2 className="text-2xl font-black text-white">Select Your Bus Seats</h2>
-            <p className="text-xs text-zinc-400">
-              Please choose exactly <strong className="text-white">{requiredSeatsCount}</strong> seat{requiredSeatsCount > 1 ? 's' : ''} for your {packageType.toLowerCase()} booking.
+      {/* ======================================================== */}
+      {/* STEP 5: BUS & SEAT SELECTION                              */}
+      {/* ======================================================== */}
+      {currentStep === 5 && (
+        <div className="glass-card rounded-3xl p-6 sm:p-10 border border-white/10 space-y-8 animate-in fade-in duration-300">
+          <div className="space-y-2">
+            <span className="text-xs font-bold text-orange-400 uppercase tracking-widest">
+              STEP 5 OF 8 • BOOKMYSHOW SEAT SELECTOR
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-black text-white">Select Your Coach & Seats</h2>
+            <p className="text-xs sm:text-sm text-zinc-400">
+              Please select exactly <strong className="text-emerald-400">{travellersCount}</strong> {travellersCount === 1 ? 'seat' : 'seats'}. 
+              Seats are held for 10 minutes while you complete reservation.
             </p>
           </div>
 
-          {/* Interactive Bus Seat Map Component */}
           <BusSeatMap
-            requiredSeatsCount={requiredSeatsCount}
+            requiredSeatsCount={travellersCount}
             selectedSeats={selectedSeats}
             selectedBusId={selectedBusId}
-            onSeatSelect={(busId, seats) => {
-              setSelectedBusId(busId);
-              setSelectedSeats(seats);
-            }}
+            onSeatSelect={handleSeatSelect}
             bookingSessionId={bookingSessionId}
             preference={sittingPreference}
-            packageType={packageType}
           />
 
-          {/* Selected Seat Summary Bar */}
-          <div className="p-4 rounded-2xl bg-zinc-900 border border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div>
-              <span className="text-xs font-bold text-zinc-400 uppercase">Selected Seats:</span>
-              <div className="flex items-center gap-2 mt-1">
-                {selectedSeats.length > 0 ? (
-                  selectedSeats.map((s) => (
-                    <span key={s} className="px-3 py-1 rounded-lg bg-sky-500 text-white font-black text-xs shadow">
-                      {s}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-xs text-zinc-500 italic">None selected yet</span>
-                )}
-                <span className="text-xs text-zinc-400">
-                  ({selectedSeats.length} of {requiredSeatsCount} selected)
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <button
-                onClick={() => setCurrentStep(3)}
-                className="flex-1 sm:flex-none px-6 py-2.5 rounded-xl border border-zinc-700 text-zinc-300 hover:text-white text-xs font-semibold"
-              >
-                Back
-              </button>
-              <button
-                id="btn-step4-continue"
-                disabled={selectedSeats.length !== requiredSeatsCount}
-                onClick={() => {
-                  if (selectedSeats.length !== requiredSeatsCount) {
-                    alert(`Please select all ${requiredSeatsCount} required seats.`);
-                    return;
-                  }
-                  refreshPricing();
-                  setCurrentStep(5);
-                }}
-                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-8 py-3 rounded-xl font-bold text-xs shadow-lg transition-all ${
-                  selectedSeats.length === requiredSeatsCount
-                    ? 'bg-orange-500 hover:bg-orange-600 text-white glow-orange'
-                    : 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700'
-                }`}
-              >
-                <span>Review & Pay</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* STEP 5: REVIEW & PAY ₹1,000 RESERVATION */}
-      {currentStep === 5 && (
-        <div className="glass-card rounded-3xl p-6 sm:p-10 border border-white/10 space-y-6">
-          <div className="text-center space-y-1">
-            <h2 className="text-2xl sm:text-3xl font-black text-white">Booking Review & Payment</h2>
-            <p className="text-xs text-zinc-400">
-              Verify your booking details and confirm with ₹1,000 reservation deposit.
-            </p>
-          </div>
-
-          {paymentError && (
-            <div className="p-4 rounded-xl bg-rose-950/70 border border-rose-600/50 flex items-center gap-3 text-rose-300 text-xs">
-              <AlertCircle className="w-5 h-5 shrink-0 text-rose-400" />
-              <span>{paymentError}</span>
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Trip & Traveller Summary */}
-            <div className="p-5 rounded-2xl bg-zinc-900/80 border border-zinc-800 space-y-3 text-xs">
-              <h3 className="font-bold text-white uppercase tracking-wider text-sm border-b border-zinc-800 pb-2">
-                Expedition Summary
-              </h3>
-              <div className="flex justify-between py-1">
-                <span className="text-zinc-400">Trip:</span>
-                <span className="font-semibold text-white">GLA Himalayan Escape (6D/5N)</span>
-              </div>
-              <div className="flex justify-between py-1">
-                <span className="text-zinc-400">Route:</span>
-                <span className="font-semibold text-white">Mathura → Manali → Kasol → Mathura</span>
-              </div>
-              <div className="flex justify-between py-1">
-                <span className="text-zinc-400">Package:</span>
-                <span className="font-bold text-emerald-400">{packageType}</span>
-              </div>
-              <div className="flex justify-between py-1">
-                <span className="text-zinc-400">Seats Reserved:</span>
-                <span className="font-bold text-sky-400">{selectedSeats.join(', ')}</span>
-              </div>
-              <div className="flex justify-between py-1">
-                <span className="text-zinc-400">Primary Contact:</span>
-                <span className="font-semibold text-white">{travellers[0]?.fullName} ({travellers[0]?.phone})</span>
-              </div>
-            </div>
-
-            {/* Transparent Server-Calculated Price Breakdown */}
-            <div className="p-5 rounded-2xl bg-zinc-900/80 border border-zinc-800 space-y-3 text-xs">
-              <h3 className="font-bold text-white uppercase tracking-wider text-sm border-b border-zinc-800 pb-2 flex items-center justify-between">
-                <span>Price Breakdown</span>
-                <span className="text-[10px] text-zinc-500 font-normal">Server-Calculated</span>
-              </h3>
-
-              {pricing && (
-                <>
-                  <div className="flex justify-between py-1">
-                    <span className="text-zinc-400">Package Base Price:</span>
-                    <span className="font-semibold text-white">₹{pricing.baseAmount.toLocaleString('en-IN')}</span>
-                  </div>
-
-                  {pricing.groupDiscountAmount > 0 && (
-                    <div className="flex justify-between py-1 text-amber-400">
-                      <span>5+1 Group Offer Discount:</span>
-                      <span className="font-bold">-₹{pricing.groupDiscountAmount.toLocaleString('en-IN')}</span>
-                    </div>
-                  )}
-
-                  {pricing.referralDiscountAmount > 0 && (
-                    <div className="flex justify-between py-1 text-emerald-400">
-                      <span>Referral Discount ({pricing.referralDiscountPercent}%):</span>
-                      <span className="font-bold">-₹{pricing.referralDiscountAmount.toLocaleString('en-IN')}</span>
-                    </div>
-                  )}
-
-                  <div className="flex justify-between py-1.5 border-t border-zinc-800 font-bold text-white">
-                    <span>Total Expedition Price:</span>
-                    <span className="text-sm">₹{pricing.finalAmount.toLocaleString('en-IN')}</span>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-orange-950/40 border border-orange-600/30 flex justify-between items-center text-sm font-bold text-orange-400">
-                    <span>Reservation Deposit Payable Now:</span>
-                    <span className="text-base text-white font-black">₹{pricing.reservationAmount.toLocaleString('en-IN')}</span>
-                  </div>
-
-                  <div className="flex justify-between py-1 text-zinc-400 text-[11px]">
-                    <span>Remaining Balance (Due before departure):</span>
-                    <span className="font-semibold text-zinc-300">₹{pricing.remainingBalance.toLocaleString('en-IN')}</span>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Terms Agreement */}
-          <div className="p-4 rounded-xl bg-zinc-950 border border-zinc-800 flex items-start gap-3">
-            <input
-              type="checkbox"
-              id="terms"
-              checked={termsAccepted}
-              onChange={(e) => setTermsAccepted(e.target.checked)}
-              className="mt-1 w-4 h-4 rounded border-zinc-700 text-orange-500 focus:ring-orange-500"
-            />
-            <label htmlFor="terms" className="text-xs text-zinc-400 leading-relaxed cursor-pointer">
-              I agree to the <a href="/terms" target="_blank" className="text-orange-400 underline">Terms & Conditions</a>, <a href="/cancellation-policy" target="_blank" className="text-orange-400 underline">Cancellation Policy</a>, and understand that itinerary activities to Atal Tunnel / Sissu are weather and road condition dependent.
-            </label>
-          </div>
-
-          <div className="flex items-center justify-between pt-4">
+          <div className="flex items-center justify-between pt-4 border-t border-zinc-800">
             <button
+              type="button"
               onClick={() => setCurrentStep(4)}
-              disabled={isProcessingPayment}
-              className="px-6 py-2.5 rounded-xl border border-zinc-700 text-zinc-300 hover:text-white text-sm font-semibold"
+              className="px-5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-xs font-bold text-zinc-300 hover:text-white"
             >
               Back
             </button>
             <button
-              id="btn-pay-deposit"
-              onClick={handlePayReservation}
-              disabled={isProcessingPayment || !termsAccepted}
-              className={`flex items-center gap-2.5 px-8 py-3.5 rounded-xl font-bold text-sm shadow-xl transition-all ${
-                termsAccepted && !isProcessingPayment
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 text-white glow-orange hover:scale-105'
-                  : 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700'
-              }`}
+              type="button"
+              disabled={selectedSeats.length !== travellersCount}
+              onClick={() => setCurrentStep(6)}
+              className="px-7 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-bold text-sm flex items-center gap-2 shadow-lg"
+            >
+              <span>Continue to Summary ({selectedSeats.length}/{travellersCount} Seats)</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* STEP 6: BOOKING SUMMARY (SECTION 22 MINIMAL DESIGN)      */}
+      {/* ======================================================== */}
+      {currentStep === 6 && (
+        <div className="glass-card rounded-3xl p-6 sm:p-10 border border-white/10 space-y-8 animate-in fade-in duration-300">
+          <div className="space-y-2 text-center max-w-lg mx-auto">
+            <span className="text-xs font-bold text-orange-400 uppercase tracking-widest">
+              STEP 6 OF 8 • REVIEW & CONFIRM
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-black text-white">Booking Summary</h2>
+            <p className="text-xs sm:text-sm text-zinc-400">
+              Review your trip reservation details before completing payment.
+            </p>
+          </div>
+
+          {/* Minimal Essential Card */}
+          <div className="max-w-md mx-auto p-6 sm:p-8 rounded-3xl bg-zinc-950 border border-white/15 space-y-5 shadow-2xl">
+            <div className="border-b border-zinc-800 pb-3">
+              <span className="text-[10px] font-black text-zinc-500 uppercase tracking-wider block">TRIP</span>
+              <p className="text-base font-black text-white mt-0.5">GLA → Manali → Kasol → GLA</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 border-b border-zinc-800 pb-3 text-xs">
+              <div>
+                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-wider block">DURATION</span>
+                <p className="font-bold text-zinc-200 mt-0.5">6 Days / 5 Nights</p>
+              </div>
+              <div>
+                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-wider block">TRAVELLERS</span>
+                <p className="font-bold text-zinc-200 mt-0.5">{travellersCount} Person(s)</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 border-b border-zinc-800 pb-3 text-xs">
+              <div>
+                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-wider block">COACH</span>
+                <p className="font-bold text-emerald-400 mt-0.5">Luxury 2x2 AC Coach</p>
+              </div>
+              <div>
+                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-wider block">SEATS</span>
+                <p className="font-black text-emerald-400 mt-0.5">{selectedSeats.join(', ')}</p>
+              </div>
+            </div>
+
+            <div className="space-y-2 pt-1 text-xs">
+              <div className="flex justify-between text-zinc-400">
+                <span>PRICE:</span>
+                <span className="font-bold text-white">₹{(travellersCount * 6200).toLocaleString('en-IN')}</span>
+              </div>
+              <div className="flex justify-between text-emerald-400 font-bold text-sm">
+                <span>RESERVATION TODAY:</span>
+                <span className="text-base text-emerald-300">₹{(travellersCount * 1000).toLocaleString('en-IN')}</span>
+              </div>
+              <div className="flex justify-between text-zinc-400 text-[11px]">
+                <span>REMAINING BALANCE:</span>
+                <span className="text-zinc-300">₹{(travellersCount * 5200).toLocaleString('en-IN')}</span>
+              </div>
+            </div>
+
+            {paymentError && (
+              <div className="p-3 rounded-xl bg-rose-950/80 border border-rose-600/50 flex items-center gap-2 text-rose-300 text-xs">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{paymentError}</span>
+              </div>
+            )}
+
+            <button
+              type="button"
+              disabled={isProcessingPayment}
+              onClick={handleProceedToPayment}
+              className="w-full py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-base shadow-xl flex items-center justify-center gap-2 transition-all hover:scale-[1.02]"
             >
               {isProcessingPayment ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Verifying Payment...</span>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Processing Reservation...</span>
                 </>
               ) : (
-                <>
-                  <CreditCard className="w-4 h-4" />
-                  <span>PAY ₹1,000 RESERVATION</span>
-                </>
+                <span>PAY ₹{(travellersCount * 1000).toLocaleString('en-IN')}</span>
               )}
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between pt-4">
+            <button
+              type="button"
+              disabled={isProcessingPayment}
+              onClick={() => setCurrentStep(5)}
+              className="px-5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-xs font-bold text-zinc-300 hover:text-white"
+            >
+              Back to Seats
             </button>
           </div>
         </div>
       )}
 
-      {/* STEP 6: BOOKING CONFIRMED & DIGITAL QR TICKET */}
-      {currentStep === 6 && confirmedBooking && (
-        <div className="glass-card rounded-3xl p-6 sm:p-10 border border-emerald-500/30 space-y-8 animate-in fade-in duration-500">
-          <div className="text-center space-y-2">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto shadow-lg glow-emerald">
-              <CheckCircle2 className="w-10 h-10" />
+      {/* ======================================================== */}
+      {/* STEP 8: CONFIRMATION & DIGITAL QR BOARDING PASS           */}
+      {/* ======================================================== */}
+      {currentStep === 8 && confirmedBooking && (
+        <div className="glass-card rounded-3xl p-6 sm:p-10 border border-white/10 space-y-8 animate-in fade-in duration-500">
+          <div className="text-center space-y-2 max-w-md mx-auto">
+            <div className="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/40 shadow-lg">
+              <CheckCircle2 className="w-8 h-8" />
             </div>
-            <h2 className="text-3xl sm:text-4xl font-black text-white">
-              You&apos;re Going to the Mountains!
-            </h2>
-            <p className="text-sm text-zinc-300">
-              Booking Confirmed • Seats Locked • QR Ticket Issued
+            <span className="text-xs font-black text-emerald-400 uppercase tracking-widest block">
+              BOOKING CONFIRMED
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-black text-white">Himalayan Escape Locked!</h2>
+            <p className="text-xs text-zinc-400">
+              Booking Ref: <strong className="font-mono text-white">#{confirmedBooking.bookingId}</strong>
             </p>
           </div>
 
-          {/* Ticket Card Preview */}
-          <div className="max-w-xl mx-auto rounded-3xl bg-zinc-950 border-2 border-emerald-600/40 p-6 sm:p-8 space-y-6 shadow-2xl relative overflow-hidden">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
+          {/* Minimal Ticket Card */}
+          <div className="max-w-md mx-auto p-6 rounded-3xl bg-zinc-950 border border-zinc-800 space-y-5 text-xs">
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
               <div>
-                <span className="text-[10px] font-bold text-orange-400 uppercase tracking-widest">
-                  OFFICIAL BOARDING PASS
-                </span>
-                <h3 className="text-lg font-black text-white">GLA HIMALAYAN ESCAPE</h3>
-                <p className="text-xs text-zinc-400">MANALI × KASOL • 6 DAYS / 5 NIGHTS</p>
+                <span className="text-[10px] font-black text-orange-400 uppercase tracking-wider block">EXPEDITION</span>
+                <span className="font-black text-white text-sm">GLA HIMALAYAN ESCAPE</span>
+                <p className="text-[10px] text-zinc-500">MANALI × KASOL • 6D / 5N</p>
               </div>
               <div className="text-right">
-                <span className="text-[10px] font-bold text-zinc-500 uppercase">Booking ID</span>
-                <p className="text-base font-mono font-black text-emerald-400">{confirmedBooking.bookingId}</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-              <div>
-                <span className="text-zinc-500">Traveller</span>
-                <p className="font-bold text-white truncate">{confirmedBooking.primaryTravellerName}</p>
-              </div>
-              <div>
-                <span className="text-zinc-500">Coach</span>
-                <p className="font-bold text-white">{confirmedBooking.bus?.busNumber || 'Bus 01'}</p>
-              </div>
-              <div>
-                <span className="text-zinc-500">Seat(s)</span>
-                <p className="font-bold text-sky-400">
-                  {confirmedBooking.travellers?.map((t: any) => t.assignedSeatNumber).join(', ')}
-                </p>
-              </div>
-              <div>
-                <span className="text-zinc-500">Deposit Paid</span>
-                <p className="font-bold text-emerald-400">₹{confirmedBooking.reservationAmount}</p>
-              </div>
-            </div>
-
-            {/* QR Code Container */}
-            <div className="p-6 rounded-2xl bg-white text-zinc-950 flex flex-col items-center justify-center space-y-2">
-              {confirmedBooking.tickets?.[0]?.qrToken ? (
-                <div className="space-y-2 text-center">
-                  <div className="w-48 h-48 mx-auto bg-zinc-100 flex items-center justify-center rounded-xl p-2 border">
-                    <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-                        `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/verify/${confirmedBooking.tickets[0].qrToken}`
-                      )}`}
-                      alt="Digital Ticket QR"
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                  <span className="font-mono text-[11px] font-bold text-zinc-700">
-                    {confirmedBooking.tickets[0].qrToken}
-                  </span>
-                  <p className="text-[10px] text-zinc-500 font-medium">
-                    Present this secure QR at GLA University Mathura boarding gate
-                  </p>
-                </div>
-              ) : (
-                <div className="p-4 text-xs font-semibold text-zinc-600">Generating QR...</div>
-              )}
-            </div>
-
-            <div className="pt-2 border-t border-zinc-800 flex justify-between text-xs text-zinc-400">
-              <span>Remaining Balance: ₹{confirmedBooking.remainingBalance?.toLocaleString('en-IN')}</span>
-              <span className="text-emerald-400 font-bold">STATUS: CONFIRMED</span>
-            </div>
-          </div>
-
-          {/* Referral Code Share Box */}
-          {newReferralCode && (
-            <div className="max-w-xl mx-auto p-5 rounded-2xl bg-amber-950/40 border border-amber-500/40 space-y-2 text-xs">
-              <span className="font-bold text-amber-300 flex items-center gap-2">
-                <Sparkles className="w-4 h-4" /> Share Your Referral Code & Earn Rewards
-              </span>
-              <p className="text-zinc-300">
-                Give your referral code to fellow GLA students. Each friend who reserves gives you an additional 5% discount (up to 10% total)!
-              </p>
-              <div className="flex items-center gap-2 pt-1">
-                <span className="font-mono text-base font-bold text-amber-400 bg-zinc-950 px-3 py-1.5 rounded-lg border border-amber-500/40">
-                  {newReferralCode}
+                <span className="text-[10px] font-black text-zinc-500 uppercase block">COACH</span>
+                <span className="font-bold text-emerald-400 text-xs">
+                  {confirmedBooking.bus?.busNumber || 'Bus 01'}
                 </span>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(newReferralCode);
-                    setCopiedRef(true);
-                    setTimeout(() => setCopiedRef(false), 2000);
-                  }}
-                  className="px-3 py-1.5 rounded-lg bg-amber-500 text-zinc-950 font-bold flex items-center gap-1 hover:bg-amber-400"
-                >
-                  {copiedRef ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  <span>{copiedRef ? 'Copied!' : 'Copy Code'}</span>
-                </button>
               </div>
             </div>
-          )}
 
-          {/* Actions */}
-          <div className="max-w-xl mx-auto flex flex-col sm:flex-row items-center gap-3">
-            <button
-              onClick={() => window.print()}
-              className="w-full sm:flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs border border-zinc-700"
-            >
-              <Download className="w-4 h-4" />
-              <span>Print / Download Ticket</span>
-            </button>
+            <div className="space-y-2 text-zinc-300">
+              <div className="flex justify-between">
+                <span className="text-zinc-500">Primary Traveller:</span>
+                <span className="font-bold text-white">{confirmedBooking.primaryTravellerName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-zinc-500">Confirmed Seats:</span>
+                <span className="font-bold text-emerald-400">
+                  {confirmedBooking.travellers?.map((t: any) => t.assignedSeatNumber).join(', ')}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-zinc-500">Reservation Paid:</span>
+                <span className="font-bold text-white">₹{confirmedBooking.reservationAmount?.toLocaleString('en-IN')}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-zinc-500">Remaining Balance:</span>
+                <span className="font-bold text-amber-400">₹{confirmedBooking.remainingBalance?.toLocaleString('en-IN')}</span>
+              </div>
+            </div>
 
-            <button
-              onClick={() => router.push(`/my-booking?id=${confirmedBooking.bookingId}`)}
-              className="w-full sm:flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-lg"
-            >
-              <Ticket className="w-4 h-4" />
-              <span>View My Booking</span>
-            </button>
+            <div className="p-3.5 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-between">
+              <span className="text-xs font-semibold text-zinc-300">Digital Boarding Ticket:</span>
+              <Link
+                href={`/ticket?bookingId=${confirmedBooking.bookingId}`}
+                className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs"
+              >
+                View Ticket
+              </Link>
+            </div>
           </div>
 
-          <div className="text-center pt-2">
-            <p className="text-xs text-zinc-400">
-              Need assistance? Call coordinator at <a href={`tel:${CONTACT_INFO.coordinatorPhone1}`} className="text-emerald-400 font-bold">{CONTACT_INFO.coordinatorPhone1}</a> or WhatsApp at <a href={`https://wa.me/${CONTACT_INFO.whatsapp1}`} className="text-green-400 font-bold">{CONTACT_INFO.coordinatorPhone1}</a>.
-            </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <Link
+              href={`/ticket?bookingId=${confirmedBooking.bookingId}`}
+              className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-lg text-center"
+            >
+              VIEW DIGITAL TICKET
+            </Link>
+            <Link
+              href={`/my-booking?bookingId=${confirmedBooking.bookingId}`}
+              className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-white font-bold text-sm text-center"
+            >
+              MY BOOKING DASHBOARD
+            </Link>
           </div>
         </div>
       )}

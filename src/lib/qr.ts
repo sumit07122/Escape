@@ -30,11 +30,3 @@ export function generateTicketNumber(): string {
   return `TKT-GHE-${num}`;
 }
 
-/**
- * Generate unique Referral Code for traveller: GLA-NAME-XX
- */
-export function generateReferralCode(travellerName: string): string {
-  const cleanName = travellerName.replace(/[^a-zA-Z]/g, '').slice(0, 5).toUpperCase() || 'GLA';
-  const rand = Math.floor(10 + Math.random() * 90);
-  return `GLA-${cleanName}${rand}`;
-}

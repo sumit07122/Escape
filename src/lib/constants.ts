@@ -14,13 +14,11 @@ export const TRIP_METADATA = {
 };
 
 export const PRICING_DEFAULTS = {
-  singlePrice: 6200, // per person
-  couplePrice: 6500, // TOTAL FOR TWO TRAVELLERS
-  reservationAmount: 1000, // reservation deposit to confirm seat
-  groupPaidCount: 5,
-  groupFreeCount: 1, // 5 + 1 Group Offer (6 travellers for price of 5)
-  referralPercent: 5, // 5% per referral
-  maxReferralDiscountPercent: 10, // 10% maximum
+  pricePerTraveller: 6200, // ₹6,200 PER TRAVELLER - single source of truth
+  singlePrice: 6200,
+  reservationAmountPerTraveller: 1000, // ₹1,000 reservation deposit per traveller
+  reservationAmount: 1000,
+  remainingBalancePerTraveller: 5200, // ₹5,200 remaining balance per traveller
   seatHoldMinutes: 10, // 10-minute hold duration
 };
 
@@ -239,7 +237,7 @@ export const PACKING_LIST = [
 export const FAQ_ITEMS = [
   {
     q: 'How much is the reservation amount to lock my seat?',
-    a: 'You only pay ₹1,000 per person/booking today to confirm your reservation and lock your bus seat. The remaining balance can be cleared closer to the departure date as scheduled by the coordinators.',
+    a: 'You only pay ₹1,000 per traveller today to confirm your reservation and lock your bus seat. The remaining balance (₹5,200 per traveller) can be cleared closer to the departure date as scheduled by the coordinators.',
   },
   {
     q: 'Can I select my exact bus seat like BookMyShow?',
@@ -247,19 +245,15 @@ export const FAQ_ITEMS = [
   },
   {
     q: 'How does seat holding work?',
-    a: 'When you tap a seat, our server places a temporary 10-minute hold. A countdown timer displays on your screen. Complete the ₹1,000 payment within 10 minutes to make it permanently BOOKED. If payment is abandoned, the seat automatically becomes available again for other travellers.',
+    a: 'When you tap a seat, our server places a temporary 10-minute hold. A countdown timer displays on your screen. Complete the ₹1,000 reservation payment per traveller within 10 minutes to make it permanently BOOKED. If payment is abandoned, the seat automatically becomes available again for other travellers.',
   },
   {
-    q: 'What is the pricing for Single vs Couple?',
-    a: 'Single traveller package is ₹6,200. Couple package is ₹6,500 TOTAL for two travellers (including two adjacent seats and couple accommodation).',
+    q: 'What is the pricing per traveller?',
+    a: 'The trip price is ₹6,200 per traveller. Total price is simply the number of travellers × ₹6,200 (e.g. 1 traveller = ₹6,200, 2 travellers = ₹12,400, 6 travellers = ₹37,200).',
   },
   {
-    q: 'What is the 5+1 Group Offer?',
-    a: 'When you book as a group of 6 travellers, you only pay for 5 travellers! The 6th traveller travels completely free. All 6 travellers get reserved seats, hotel stay, and individual digital QR tickets.',
-  },
-  {
-    q: 'How does the referral discount work?',
-    a: 'Every traveller receives a unique referral code. When a fellow GLA student books using your code and completes their ₹1,000 reservation, you get 5% discount (up to maximum 10% total discount). Self-referrals and duplicate claims are strictly prevented server-side.',
+    q: 'Can I book for a group of friends?',
+    a: 'Yes! You can book for multiple travellers (1 to 6+ people) under a single booking ID. You will be able to select seats for all travellers together on the same bus where available, with a unified dashboard and individual digital QR boarding tickets for everyone.',
   },
   {
     q: 'What happens if weather causes road blockage to Sissu/Atal Tunnel?',
@@ -267,6 +261,6 @@ export const FAQ_ITEMS = [
   },
   {
     q: 'What happens immediately after successful payment?',
-    a: 'The server verifies the Razorpay payment signature atomically, confirms your booking, locks your seat permanently, and generates your high-security Digital QR Ticket and invoice. You can download your ticket immediately and view it in your dashboard anytime.',
+    a: 'The server verifies the Razorpay payment signature atomically, confirms your booking, locks your seats permanently, and generates your high-security Digital QR Ticket and invoice. You can download your ticket immediately and view it in your dashboard anytime.',
   },
 ];
