@@ -4,7 +4,7 @@ import { Users, Calendar, Bus, CheckCircle2, ArrowRight } from 'lucide-react';
 import { PACKING_LIST } from '@/lib/constants';
 
 export const metadata = {
-  title: 'Trip Overview | GLA Himalayan Escape',
+  title: 'Trip Overview | Himalayan Escape — Student Mountain Expedition',
   description: 'Complete expedition specifications, vehicle configuration, packing list, and trip guidelines for Manali & Kasol.',
 };
 
@@ -20,7 +20,7 @@ export default function TripOverviewPage() {
           Trip Overview
         </h1>
         <p className="text-sm text-[#646864]">
-          GLA University, Mathura → Manali → Solang Valley → Kasol → Manikaran → GLA
+          Pickup & Reporting: Near GLA Main Gate, Mathura → Manali → Solang Valley → Kasol → Manikaran → Mathura
         </p>
       </div>
 
@@ -31,15 +31,15 @@ export default function TripOverviewPage() {
             <Calendar className="w-5 h-5" />
           </div>
           <h3 className="font-bold text-[#171918] text-base">Duration & Schedule</h3>
-          <p className="text-xs text-[#646864]">6 Days / 5 Nights total duration. Departure from GLA University Mathura campus gates.</p>
+          <p className="text-xs text-[#646864]">6 Days / 5 Nights total duration. Pickup & Reporting: Near GLA Main Gate, Mathura.</p>
         </div>
 
         <div className="p-6 rounded-2xl bg-white border border-[#D8D2C4] space-y-2">
           <div className="w-10 h-10 rounded-xl bg-[#D87945]/10 text-[#D87945] flex items-center justify-center">
             <Users className="w-5 h-5" />
           </div>
-          <h3 className="font-bold text-[#171918] text-base">Trip Capacity</h3>
-          <p className="text-xs text-[#646864]">Strictly 75 total travellers maximum across 4 luxury tourist coaches.</p>
+          <h3 className="font-bold text-[#171918] text-base">Expedition Capacity</h3>
+          <p className="text-xs text-[#646864]">Dedicated passenger capacity limit across luxury tourist coaches.</p>
         </div>
 
         <div className="p-6 rounded-2xl bg-white border border-[#D8D2C4] space-y-2">

@@ -16,14 +16,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Booking session ID is required' }, { status: 400 });
     }
 
-    // 1. Clean expired holds first
+    // 1. Auto-purge expired holds before checking availability
     await cleanExpiredHolds();
 
     const now = new Date();
+    // Enforce an atomic 10-minute hold
     const expiresAt = calculateHoldExpiration(10); // 10 minutes from now
 
     // 2. Perform atomic transaction
     const result = await db.$transaction(async (tx) => {
+      // Fetch bus to get tripId
+      const bus = await tx.bus.findUnique({
+        where: { id: busId },
+        select: { id: true, tripId: true },
+      });
+
+      if (!bus) {
+        throw new Error('Bus not found');
+      }
+
       // Fetch all requested seats
       const seats = await tx.busSeat.findMany({
         where: {
@@ -46,17 +57,19 @@ export async function POST(request: NextRequest) {
         }
 
         if (seat.status === 'BOOKED' || seat.seatBooking) {
-          throw new Error(`Sorry, seat ${seat.seatNumber} was just booked by another traveller.`);
+          throw new Error(`Sorry, seat ${seat.seatNumber} was just booked by another student.`);
         }
 
+        // If seat has an active hold by another user, reject
         if (seat.seatHold && seat.seatHold.status === 'ACTIVE' && seat.seatHold.expiresAt > now) {
           if (seat.seatHold.bookingSessionId !== bookingSessionId) {
-            throw new Error(`Seat ${seat.seatNumber} is temporarily held by another traveller.`);
+            throw new Error(`Seat ${seat.seatNumber} is currently held by another student`);
           }
+          // If the same user requests the same seat, lease will be refreshed below
         }
       }
 
-      // First release any previous seats held by this session on this bus that are not in the new selection
+      // Release any previous seats held by this session on this bus that are not in the new selection
       const previousHolds = await tx.seatHold.findMany({
         where: {
           bookingSessionId,
@@ -79,11 +92,14 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Now create or update holds for all requested seats
+      // Now create or update holds for all requested seats (refreshes 10-minute lease for same user)
       for (const seat of seats) {
         await tx.seatHold.upsert({
           where: { busSeatId: seat.id },
           update: {
+            tripId: bus.tripId,
+            busId: bus.id,
+            seatId: seat.id,
             bookingSessionId,
             travellerName: travellerName || 'Traveller',
             heldAt: now,
@@ -91,6 +107,9 @@ export async function POST(request: NextRequest) {
             status: 'ACTIVE',
           },
           create: {
+            tripId: bus.tripId,
+            busId: bus.id,
+            seatId: seat.id,
             busSeatId: seat.id,
             bookingSessionId,
             travellerName: travellerName || 'Traveller',

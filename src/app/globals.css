@@ -1,33 +1,189 @@
 @import "tailwindcss";
 
+@theme {
+  /* Alpine Editorial Design Palette */
+  --color-pine-deep: #0E2620;
+  --color-pine-forest: #163C32;
+  --color-terracotta-clay: #D87945;
+  --color-terracotta-dark: #B85F30;
+  --color-stone-cream: #F7F5EF;
+  --color-stone-sand: #EFECE4;
+  --color-mist-green: #8FA69F;
+
+  /* Aliases & Complementary Tokens */
+  --color-pine: #163C32;
+  --color-terracotta: #D87945;
+}
+
 :root {
+  /* Core Color Variables: Alpine Editorial */
+  --pine-deep: #0E2620;
+  --pine-forest: #163C32;
+  --terracotta-clay: #D87945;
+  --terracotta-dark: #B85F30;
+  --stone-cream: #F7F5EF;
+  --stone-sand: #EFECE4;
+  --mist-green: #8FA69F;
+
+  /* Semantic UI Tokens & Backward Compatibility */
   --bg-primary: #F7F5EF;
-  --text-primary: #171918;
-  --text-muted: #646864;
+  --text-primary: #0E2620;
+  --text-muted: #8FA69F;
   --forest-dark: #163C32;
-  --forest-deep: #0F2A23;
+  --forest-deep: #0E2620;
   --forest-light: #205648;
-  --stone-bg: #E7E2D8;
-  --stone-border: #D8D2C4;
+  --stone-bg: #EFECE4;
+  --stone-border: #EFECE4;
   --orange-accent: #D87945;
-  --orange-hover: #C26735;
+  --orange-hover: #B85F30;
   --white: #FFFFFF;
 }
 
+/* Base Typography & Background */
 body {
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
+  background-color: #F7F5EF;
+  color: #0E2620;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Restrained Editorial Card & Panel Utilities */
+/* Editorial Headings: Tight tracking and high contrast */
+h1, h2, h3, h4, h5, h6 {
+  color: #0E2620;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+h1 {
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+}
+
+h2 {
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+}
+
+h3 {
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+}
+
+/* ======================================================== */
+/* CUSTOM UTILITY CLASSES                                   */
+/* ======================================================== */
+
+/* 1. Ticket Perforation: Realistic cut line with punch notches */
+.ticket-perforation {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin: 1.5rem 0;
+  border-top: 2px dashed #D8D2C4;
+}
+
+.ticket-perforation::before,
+.ticket-perforation::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  background-color: var(--stone-cream, #F7F5EF);
+  border-radius: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  box-shadow: inset 0 0 0 1px #D8D2C4;
+}
+
+.ticket-perforation::before {
+  left: -11px;
+}
+
+.ticket-perforation::after {
+  right: -11px;
+}
+
+/* Vertical Perforation Variant */
+.ticket-perforation-v {
+  position: relative;
+  height: 100%;
+  border-left: 2px dashed #D8D2C4;
+  border-top: none;
+  margin: 0 1.25rem;
+}
+
+.ticket-perforation-v::before,
+.ticket-perforation-v::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: 22px;
+  height: 22px;
+  background-color: var(--stone-cream, #F7F5EF);
+  border-radius: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  box-shadow: inset 0 0 0 1px #D8D2C4;
+}
+
+.ticket-perforation-v::before {
+  top: -11px;
+  left: -11px;
+}
+
+.ticket-perforation-v::after {
+  bottom: -11px;
+  left: -11px;
+}
+
+/* 2. Coach Grid: Topographic subtle SVG line pattern overlay for cabin seating */
+.coach-grid {
+  background-color: #FFFFFF;
+  background-image: 
+    radial-gradient(ellipse at 50% 0%, rgba(22, 60, 50, 0.03) 0%, transparent 75%),
+    url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,30 C30,20 60,45 120,25 M0,60 C40,75 80,45 120,60 M0,90 C30,105 75,80 120,95 M0,15 C45,5 75,35 120,10 M0,45 C35,35 65,65 120,40 M0,75 C45,90 85,60 120,75 M0,105 C50,115 80,95 120,110' stroke='%23163C32' stroke-width='0.8' stroke-opacity='0.06' fill='none'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+}
+
+/* 3. Seat Shadow: Subtle elevation shadow for interactive bus seats */
+.seat-shadow {
+  box-shadow: 
+    0 1px 2px 0 rgba(14, 38, 32, 0.06), 
+    0 2px 6px -1px rgba(14, 38, 32, 0.08);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.seat-shadow:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 4px 8px -2px rgba(14, 38, 32, 0.10), 
+    0 8px 16px -2px rgba(14, 38, 32, 0.08);
+}
+
+.seat-shadow:active {
+  transform: translateY(0);
+  box-shadow: 
+    0 1px 2px 0 rgba(14, 38, 32, 0.12);
+}
+
+.seat-shadow-selected {
+  box-shadow: 
+    0 0 0 2px #D87945,
+    0 4px 14px -2px rgba(216, 121, 69, 0.35);
+}
+
+/* Editorial Stone Cards & Panels */
 .stone-card {
   background-color: #FFFFFF;
-  border: 1px solid var(--stone-border);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--stone-sand);
+  box-shadow: 0 1px 3px rgba(14, 38, 32, 0.04);
 }
 
 .stone-card-hover {
@@ -36,13 +192,13 @@ body {
 
 .stone-card-hover:hover {
   transform: translateY(-2px);
-  border-color: #C0B8A8;
+  border-color: #D8D2C4;
   box-shadow: 0 8px 20px -6px rgba(22, 60, 50, 0.1);
 }
 
 .forest-card {
-  background-color: var(--forest-dark);
-  color: #F7F5EF;
+  background-color: var(--pine-forest);
+  color: var(--stone-cream);
   border: 1px solid #205648;
 }
 
@@ -53,7 +209,7 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #F7F5EF;
+  background: var(--stone-cream);
 }
 
 ::-webkit-scrollbar-thumb {
@@ -62,25 +218,94 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #163C32;
+  background: var(--pine-forest);
 }
 
 /* Print Styles for Digital Boarding Pass */
 @media print {
-  nav, footer, .no-print, button {
+  @page {
+    size: auto;
+    margin: 6mm 8mm;
+  }
+  nav, footer, .no-print, button, .mobile-bottom-bar {
     display: none !important;
   }
-  body {
-    background: white !important;
-    color: black !important;
+  body, html {
+    background: #ffffff !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   .print-ticket-container {
-    border: 2px solid #000 !important;
+    border: 1.5px solid #163C32 !important;
     box-shadow: none !important;
-    background: white !important;
-    color: black !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    padding: 16px !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    max-width: 680px !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    page-break-inside: avoid !important;
+  }
+  .print-banner {
+    background-color: #163C32 !important;
+    color: #ffffff !important;
+    padding: 14px 18px !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    border-bottom: 2px solid #0E2620 !important;
+  }
+  .print-banner h1, .print-banner span, .print-banner p {
+    color: #ffffff !important;
+  }
+  .print-bus-box {
+    background-color: #F7FAF8 !important;
+    color: #0E2620 !important;
+    border: 2px solid #163C32 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .print-bus-box * {
+    color: #0E2620 !important;
+  }
+  .print-balance-notice {
+    border: 2px solid #D87945 !important;
+    background-color: #FFFAF5 !important;
+    color: #0E2620 !important;
+    padding: 10px 14px !important;
+    border-radius: 8px !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .print-balance-notice * {
+    color: #0E2620 !important;
+  }
+  .print-qr-frame {
+    border: 2px solid #163C32 !important;
+    background-color: #ffffff !important;
+    padding: 8px !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+  }
+  .ticket-perforation {
+    border-top: 2px dashed #8FA69F !important;
+    margin: 12px 0 !important;
+    background: transparent !important;
+  }
+  .ticket-perforation::before,
+  .ticket-perforation::after {
+    background-color: #ffffff !important;
+    border: 1px solid #8FA69F !important;
+  }
+  .print-disclaimer {
+    display: block !important;
+    font-size: 10px !important;
+    color: #444444 !important;
+    text-align: center !important;
+    margin-top: 8px !important;
   }
 }

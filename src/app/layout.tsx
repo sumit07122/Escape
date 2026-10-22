@@ -5,31 +5,31 @@ import Footer from '@/components/Footer';
 import MobileBottomBar from '@/components/MobileBottomBar';
 
 export const metadata: Metadata = {
-  title: 'GLA Himalayan Escape — Manali & Kasol',
+  title: 'Himalayan Escape — Student Mountain Expedition',
   description:
-    '6 Days / 5 Nights Himalayan trip from GLA University, Mathura to Manali and Kasol. Reserve your seat for ₹1,000 per traveller.',
+    '6 Days / 5 Nights student expedition departing near GLA Main Gate, Mathura to Manali and Kasol. Reserve your seat for ₹1,000 per traveller.',
   keywords: [
-    'GLA University',
+    'Himalayan Escape',
+    'Student Mountain Expedition',
     'Manali Kasol Trip',
-    'GLA Himalayan Escape',
-    'College Group Tour',
+    'Student Group Tour',
     'Solang Valley',
     'Atal Tunnel',
     'Kasol Riverside',
     'Manikaran Sahib',
-    'Mathura to Manali',
+    'GLA Main Gate Mathura',
   ],
-  authors: [{ name: 'GLA Expedition Team' }],
+  authors: [{ name: 'Student Trip Organizers' }],
   openGraph: {
-    title: 'GLA Himalayan Escape — Manali & Kasol',
-    description: '6 Days / 5 Nights Himalayan trip from GLA University, Mathura to Manali and Kasol. Reserve your seat for ₹1,000 per traveller.',
+    title: 'Himalayan Escape — Student Mountain Expedition',
+    description: '6 Days / 5 Nights student expedition departing near GLA Main Gate, Mathura to Manali and Kasol. Reserve your seat for ₹1,000 per traveller.',
     type: 'website',
     images: [
       {
         url: '/images/hero-himalayas.jpg',
         width: 1200,
         height: 675,
-        alt: 'GLA Himalayan Escape - Manali & Kasol',
+        alt: 'Himalayan Escape — Student Mountain Expedition',
       },
     ],
   },

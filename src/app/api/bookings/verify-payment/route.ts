@@ -131,8 +131,10 @@ export async function POST(request: NextRequest) {
           where: { travellerId: traveller.id },
           update: {
             status: 'VALID',
+            tripId: booking.tripId,
           },
           create: {
+            tripId: booking.tripId,
             ticketNumber,
             bookingId: booking.id,
             travellerId: traveller.id,

@@ -4,7 +4,7 @@ import { Check, ArrowRight, Users, User } from 'lucide-react';
 import { INCLUSIONS_LIST } from '@/lib/constants';
 
 export const metadata = {
-  title: 'Pricing | GLA Himalayan Escape',
+  title: 'Pricing | Himalayan Escape — Student Mountain Expedition',
   description: 'Simple, transparent ₹6,200 per traveller pricing. Reserve your seat with ₹1,000 today.',
 };
 
@@ -29,7 +29,7 @@ export default function PricingPage() {
           One price. No surprises.
         </h1>
         <p className="text-xs sm:text-sm text-[#646864] max-w-xl mx-auto">
-          One fixed rate for every explorer. Lock your reserved bus seat today with a ₹1,000 reservation deposit. Remaining ₹5,200 payable before campus departure.
+          One fixed rate for every explorer. Lock your reserved bus seat today with a ₹1,000 reservation deposit. Remaining ₹5,200 payable before departure.
         </p>
       </div>
 

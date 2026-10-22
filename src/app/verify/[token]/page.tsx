@@ -49,7 +49,7 @@ export default function VerifyTicketPage({
           </p>
           <div className="pt-4">
             <Link href="/" className="text-xs font-bold text-emerald-400 underline">
-              Return to GLA Himalayan Escape
+              Return to Himalayan Escape
             </Link>
           </div>
         </div>
@@ -61,7 +61,7 @@ export default function VerifyTicketPage({
 
           <div>
             <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest px-3 py-1 rounded-full bg-emerald-950 border border-emerald-600/30">
-              OFFICIAL VERIFIED BOARDING PASS
+              VERIFIED EXPEDITION PASS
             </span>
             <h1 className="text-2xl font-black text-white mt-2">
               {ticketData.traveller?.fullName || 'Confirmed Traveller'}

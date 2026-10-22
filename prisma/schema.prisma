@@ -1,5 +1,5 @@
 // Prisma Schema for GLA Himalayan Escape
-// Manali x Kasol 6D/5N Full-Stack Travel Booking Platform
+// Multi-Trip Architecture with Trip as the Central Root Boundary
 
 generator client {
   provider = "prisma-client-js"
@@ -11,25 +11,89 @@ datasource db {
 }
 
 model Trip {
-  id              String         @id @default(cuid())
-  title           String         @default("GLA HIMALAYAN ESCAPE")
-  subtitle        String         @default("MANALI × KASOL")
-  duration        String         @default("6 DAYS / 5 NIGHTS")
-  origin          String         @default("GLA University, Mathura")
-  destination     String         @default("Manali & Kasol, Himachal Pradesh")
-  capacity        Int            @default(75)
-  startDate       DateTime
-  endDate         DateTime
-  status          String         @default("OPEN") // OPEN, FULL, COMPLETED, CANCELLED
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  id                             String            @id @default(cuid())
+  slug                           String            @unique @default("manali-kasol")
+  name                           String            @default("GLA Himalayan Escape (Manali × Kasol)")
+  title                          String            @default("GLA HIMALAYAN ESCAPE")
+  shortName                      String?           @default("Manali + Kasol")
+  subtitle                       String            @default("Mountains. Friends. Adventure. Memories.")
+  description                    String?           @default("Experience 6 days of pure mountain freedom across snow-capped Himalayan peaks, Rohtang foothills, pine forests, and Parvati riverbanks with fellow GLA students.")
+  duration                       String            @default("6 DAYS / 5 NIGHTS")
+  origin                         String            @default("GLA University, Mathura")
+  destination                    String            @default("Manali & Kasol, Himachal Pradesh")
+  startingLocation               String            @default("GLA University, Mathura")
+  category                       String            @default("Himalayan") // Himalayan, Adventure, Beach, Educational, Cultural, Custom
+  capacity                       Int               @default(75)
+  featured                       Boolean           @default(true)
+  heroImage                      String?           @default("/images/hero-himalayas.jpg")
+  thumbnailImage                 String?           @default("/images/solang-valley.jpg")
+  galleryImages                  String?           // JSON array string of photo URLs
 
-  buses           Bus[]
-  packages        Package[]
-  itineraryDays   ItineraryDay[]
-  expenses        Expense[]
-  bookings        Booking[]
-  hotels          Hotel[]
+  // Pricing Fields
+  packagePricePerTraveller       Int               @default(6200)
+  reservationAmountPerTraveller  Int               @default(1000)
+  packagePrice                   Float             @default(6200)
+  reservationAmount              Float             @default(1000)
+  balanceDueDatePolicy           String            @default("BEFORE_BOARDING") // BEFORE_BOARDING, DAYS_BEFORE_DEPARTURE, SPECIFIC_DATE
+  balanceDueDate                 DateTime?
+  balanceDueType                 String            @default("BEFORE_BOARDING")
+  balanceDueDaysBefore           Int?              @default(2)
+
+  // Booking Rule Fields
+  minTravellersPerBooking        Int               @default(1)
+  maxTravellersPerBooking        Int               @default(6)
+  seatSelectionEnabled           Boolean           @default(true)
+  seatHoldDurationMinutes        Int               @default(10)
+  seatHoldMinutes                Int               @default(10)
+  seatAssignmentMode             String            @default("MANUAL_SELECTION") // MANUAL_SELECTION, ADMIN_ASSIGNED, AUTO_RECOMMENDED
+  bookingDeadline                DateTime?
+  cancellationDeadline           DateTime?
+  balanceDeadline                DateTime?
+
+  // Content Fields
+  inclusions                     String?           // JSON array string
+  exclusions                     String?           // JSON array string
+  importantNotes                 String?           // Free-form markdown/plain text
+  importantInfo                  String?           // JSON string object
+  cancellationPolicy             String?           // Free-form cancellation terms
+  pickupPoints                   String?           // JSON array string
+  sittingPreferences             String?           // JSON array string
+
+  // Status & Timestamps
+  startDate                      DateTime
+  endDate                        DateTime
+  status                         String            @default("OPEN_FOR_BOOKING") // DRAFT, OPEN_FOR_BOOKING, PAUSED, FULL, COMPLETED, CANCELLED, ARCHIVED
+  createdAt                      DateTime          @default(now())
+  updatedAt                      DateTime          @updatedAt
+
+  // Root Relationships
+  buses                          Bus[]
+  packages                       Package[]
+  itineraryDays                  ItineraryDay[]
+  expenses                       Expense[]
+  bookings                       Booking[]
+  hotels                         Hotel[]
+  hotelAllocations               HotelAllocation[]
+  transports                     Transport[]
+  tickets                        Ticket[]
+  seatHolds                      SeatHold[]
+}
+
+model BusTemplate {
+  id                String    @id @default(cuid())
+  name              String    @default("Standard Tourist Coach (25 Seats)")
+  slug              String    @unique @default("standard-coach-25")
+  layoutType        String    @default("2x2_STANDARD")
+  totalSeats        Int       @default(25)
+  passengerCapacity Int       @default(23)
+  driverSeats       Int       @default(1)
+  conductorSeats    Int       @default(1)
+  description       String?   @default("Standard 2x2 luxury AC coach with 23 passenger seats, 1 driver, and 1 conductor seat.")
+  seatLayoutJson    String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  buses             Bus[]
 }
 
 model Package {
@@ -54,6 +118,8 @@ model Bus {
   id                String       @id @default(cuid())
   tripId            String
   trip              Trip         @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  templateId        String?
+  template          BusTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
   busNumber         String       // "Bus 01", "Bus 02", "Bus 03", "Bus 04"
   vehicleName       String       @default("Himalayan Luxury Express (2x2 AC)")
   vehicleNumber     String       @default("UP-85-GLA-001")
@@ -66,6 +132,7 @@ model Bus {
   conductorName     String?      @default("Amit Verma")
   conductorPhone    String?      @default("9368287947")
   status            String       @default("ACTIVE") // ACTIVE, MAINTENANCE, DISABLED
+  layoutType        String       @default("2x2_STANDARD") // 2x2_STANDARD, MINI_16, CUSTOM
   orderIndex        Int          @default(1)
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
@@ -73,6 +140,7 @@ model Bus {
   seats             BusSeat[]
   bookings          Booking[]
   transports        Transport[]
+  seatHolds         SeatHold[]
 }
 
 model BusSeat {
@@ -100,8 +168,13 @@ model BusSeat {
 
 model SeatHold {
   id               String    @id @default(cuid())
+  tripId           String?
+  trip             Trip?     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  busId            String?
+  bus              Bus?      @relation(fields: [busId], references: [id], onDelete: Cascade)
   busSeatId        String    @unique
   busSeat          BusSeat   @relation(fields: [busSeatId], references: [id], onDelete: Cascade)
+  seatId           String?
   bookingSessionId String
   userId           String?
   travellerName    String?
@@ -111,8 +184,11 @@ model SeatHold {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
+  @@unique([busId, seatId])
   @@index([bookingSessionId])
   @@index([expiresAt, status])
+  @@index([expiresAt])
+  @@index([tripId])
 }
 
 model Booking {
@@ -161,6 +237,7 @@ model Booking {
   @@index([primaryPhone])
   @@index([bookingStatus])
   @@index([paymentStatus])
+  @@index([tripId])
 }
 
 model Traveller {
@@ -175,6 +252,8 @@ model Traveller {
   emergencyContactPhone  String?
   assignedSeatNumber     String?
   assignedBusNumber      String?
+  collegeId              String?
+  rollNumber             String?
   checkInStatus          String          @default("PENDING") // PENDING, CHECKED_IN
   checkedInAt            DateTime?
   createdAt              DateTime        @default(now())
@@ -223,6 +302,8 @@ model Payment {
 
 model Ticket {
   id                String     @id @default(cuid())
+  tripId            String?
+  trip              Trip?      @relation(fields: [tripId], references: [id], onDelete: Cascade)
   ticketNumber      String     @unique // e.g. "TKT-GHE-10101"
   bookingId         String
   booking           Booking    @relation(fields: [bookingId], references: [id], onDelete: Cascade)
@@ -239,6 +320,7 @@ model Ticket {
 
   @@index([ticketNumber])
   @@index([qrToken])
+  @@index([tripId])
 }
 
 model CheckIn {
@@ -256,7 +338,6 @@ model CheckIn {
   @@index([bookingId])
 }
 
-
 model Hotel {
   id             String    @id @default(cuid())
   tripId         String
@@ -272,6 +353,22 @@ model Hotel {
   updatedAt      DateTime  @updatedAt
 
   rooms          Room[]
+}
+
+model HotelAllocation {
+  id             String    @id @default(cuid())
+  tripId         String
+  trip           Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  hotelName      String    @default("Snow Valley Resort Manali")
+  location       String    @default("Manali")
+  roomType       String    @default("Triple Sharing") // Double, Triple, Quad
+  allocatedRooms Int       @default(20)
+  capacity       Int       @default(3)
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([tripId])
 }
 
 model Room {
@@ -306,11 +403,14 @@ model ItineraryDay {
   tripId         String
   trip           Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade)
   dayNumber      Int             // 1 to 6
+  date           DateTime?
   title          String          // "DAY 1 — GLA TO MANALI"
   subtitle       String?
   description    String?
   stayLocation   String?         // "Bus / overnight journey", "Manali", "Kasol"
   mealsConfig    String?         // "Dinner Included"
+  images         String?         // JSON array of image URLs
+  notes          String?
   isPublic       Boolean         @default(true)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
@@ -339,6 +439,8 @@ model ItineraryItem {
 
 model Transport {
   id             String    @id @default(cuid())
+  tripId         String?
+  trip           Trip?     @relation(fields: [tripId], references: [id], onDelete: Cascade)
   busId          String?
   bus            Bus?      @relation(fields: [busId], references: [id], onDelete: SetNull)
   vehicleType    String    @default("Luxury 2x2 AC Tourist Coach")
@@ -356,6 +458,8 @@ model Transport {
   status         String    @default("READY")
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+
+  @@index([tripId])
 }
 
 model Expense {
@@ -419,6 +523,14 @@ model Settings {
   category    String    @default("GENERAL") // GENERAL, PRICING, BUS, CONTACTS, POLICIES
   description String?
   updatedAt   DateTime  @updatedAt
+}
+
+model GlobalSettings {
+  id           String    @id @default("global_default")
+  tripCapacity Int       @default(75)
+  siteName     String?   @default("Himalayan Escape — Student Mountain Expedition")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }
 
 model Admin {

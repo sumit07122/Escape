@@ -41,6 +41,13 @@ yarn-error.log*
 *.db-journal
 *.db-wal
 *.db-shm
+*.bak
+*.backup*
+
+# scratch & test scripts
+scratch/
+test-flow.js
+test-updates.js
 
 # vercel
 .vercel
@@ -48,3 +55,4 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+

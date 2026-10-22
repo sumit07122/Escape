@@ -1,8 +1,8 @@
 import React from 'react';
 
 export const metadata = {
-  title: 'Cancellation & Refund Policy | GLA Himalayan Escape',
-  description: 'Official cancellation timelines, refund rules, and reservation policies.',
+  title: 'Cancellation & Refund Policy | Himalayan Escape — Student Mountain Expedition',
+  description: 'Cancellation timelines, refund rules, and reservation policies for the independent student expedition.',
 };
 
 export default function CancellationPolicyPage() {
@@ -22,7 +22,7 @@ export default function CancellationPolicyPage() {
         <section className="space-y-2">
           <h2 className="text-base font-bold text-[#171918]">1. Reservation Amount (₹1,000)</h2>
           <p>
-            The ₹1,000 reservation fee immediately commits bus seats, resort room blocks, and administrative logistics. It is non-refundable upon cancellation by the traveller. However, seat transfers to another verified GLA student are permitted up to 7 days before departure subject to coordinator approval.
+            The ₹1,000 reservation fee immediately commits bus seats, resort room blocks, and administrative logistics. It is non-refundable upon cancellation by the traveller. However, seat transfers to another verified student are permitted up to 7 days before departure subject to coordinator approval.
           </p>
         </section>
 

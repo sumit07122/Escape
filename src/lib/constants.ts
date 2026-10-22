@@ -1,16 +1,16 @@
-// Brand, Trip and Business Constants for GLA HIMALAYAN ESCAPE
+// Brand, Trip and Business Constants for HIMALAYAN ESCAPE — STUDENT MOUNTAIN EXPEDITION
 
 export const TRIP_METADATA = {
-  name: 'GLA HIMALAYAN ESCAPE',
-  title: 'MANALI × KASOL',
+  name: 'Himalayan Escape — Student Mountain Expedition',
+  title: 'HIMALAYAN ESCAPE (MANALI × KASOL)',
   duration: '6 DAYS • 5 NIGHTS',
   tagline: 'Mountains. Friends. Adventure. Memories.',
-  origin: 'GLA University, Mathura',
+  origin: 'Pickup & Reporting: Near GLA Main Gate, Mathura',
   destination: 'Manali & Kasol, Himachal Pradesh',
   capacity: 75,
   dates: 'November 15 - November 20, 2026',
-  reportingLocation: 'GLA University Main Gate / Bus Bay, Mathura',
-  disclaimer: 'Trip itinerary may change due to weather, road conditions, traffic, permits, government restrictions, local conditions, or safety requirements. Weather-dependent and road-dependent activities (such as Atal Tunnel / Sissu snow trails and river rafting) are subject to official clearances and cannot be guaranteed.',
+  reportingLocation: 'Pickup & Reporting: Near GLA Main Gate, Mathura',
+  disclaimer: 'Independent student-organized expedition. Not an officially sponsored university event. Trip itinerary may change due to weather, road conditions, traffic, permits, government restrictions, local conditions, or safety requirements. Weather-dependent and road-dependent activities (such as Atal Tunnel / Sissu snow trails and river rafting) are subject to official clearances and cannot be guaranteed.',
 };
 
 export const PRICING_DEFAULTS = {
@@ -204,7 +204,7 @@ export const INCLUSIONS_LIST = [
   'Solang Valley & Atal Tunnel excursion (subject to road & weather clearance)',
   'Kasol & Manikaran Sahib Gurudwara with natural hot spring visit',
   'Evening campfire & group bonding session in Kasol',
-  'Dedicated 24/7 GLA trip coordinators & experienced mountain chauffeurs',
+  'Dedicated 24/7 Student Trip Organizers / Lead Coordinators & experienced mountain chauffeurs',
   'Interactive seat booking with guaranteed reserved bus seat',
   'Digital QR ticket & live verification pass for hassle-free boarding',
   'First aid kit & primary emergency coordination assistance',
@@ -231,7 +231,7 @@ export const PACKING_LIST = [
   { item: 'Small daypack backpack (15-20L)', essential: true, note: 'For day trips to Solang and Kasol' },
   { item: 'Rain protection (Foldable umbrella/poncho)', essential: false, note: 'Himalayan weather can be unpredictable' },
   { item: 'Cash & Digital UPI', essential: true, note: 'Some remote Kasol cafes only accept cash' },
-  { item: 'Valid College / Govt ID & Digital QR Ticket', essential: true, note: 'Required at GLA boarding gate' },
+  { item: 'Valid College / Govt ID & Digital QR Ticket', essential: true, note: 'Required at pickup point (Near GLA Main Gate, Mathura)' },
 ];
 
 export const FAQ_ITEMS = [

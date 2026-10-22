@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { calculateBookingPricing } from '@/lib/pricing';
 import { createRazorpayOrder } from '@/lib/razorpay';
 import { generateBookingId } from '@/lib/qr';
 import { cleanExpiredHolds, createAuditLog } from '@/lib/server-utils';
@@ -39,31 +38,35 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // 1. Clean expired holds first
+    // 1. Auto-purge expired holds before checking availability
     await cleanExpiredHolds();
 
-    // 2. Fetch master trip and check capacity limit (75)
-    const trip = await db.trip.findFirst({
-      include: {
-        packages: true,
-      },
-    });
+    // 2. Fetch master trip and check dynamic capacity limit from GlobalSettings
+    const [trip, globalSettings] = await Promise.all([
+      db.trip.findFirst({
+        include: {
+          packages: true,
+        },
+      }),
+      db.globalSettings.findFirst(),
+    ]);
 
     if (!trip) {
       return NextResponse.json({ error: 'Trip not found' }, { status: 404 });
     }
 
-    // Count currently confirmed travellers across the entire trip
+    const capacityLimit = globalSettings?.tripCapacity ?? trip.capacity ?? 75;
+
+    // Capacity ceiling: confirmed travellers count across trip
     const confirmedCount = await db.seatBooking.count({
       where: {
-        busSeat: { bus: { tripId: trip.id } },
         status: 'CONFIRMED',
       },
     });
 
-    if (confirmedCount + travellers.length > trip.capacity) {
+    if (confirmedCount + travellers.length > capacityLimit) {
       return NextResponse.json({
-        error: `Sorry, this trip has reached capacity. Only ${Math.max(0, trip.capacity - confirmedCount)} seats remain.`,
+        error: 'Booking limit reached for this expedition. Please contact trip leads.',
       }, { status: 409 });
     }
 
@@ -90,21 +93,25 @@ export async function POST(request: NextRequest) {
 
     const primaryTraveller = travellers[0];
 
-    // 4. Server-side calculate pricing strictly: ₹6,200 total, ₹1,000 reservation deposit per traveller
-    const pricing = calculateBookingPricing({
-      travellersCount: travellers.length,
-    });
+    // 4. Strict Server-Side Calculation (Never trust client pricing)
+    // depositAmount = travellers.length * 1000
+    // totalPackage = travellers.length * 6200
+    // balanceDue = totalPackage - depositAmount
+    const travellersCount = travellers.length;
+    const depositAmount = travellersCount * 1000;
+    const totalPackage = travellersCount * 6200;
+    const balanceDue = totalPackage - depositAmount;
 
     // 5. Generate unique booking ID
     const bookingId = generateBookingId();
 
-    // 6. Create Razorpay order for ₹1,000 * travellersCount reservation amount
+    // 6. Create Razorpay order strictly for (depositAmount * 100) paise
     const orderResult = await createRazorpayOrder({
-      amountInRupees: pricing.reservationAmount,
+      amountInRupees: depositAmount,
       receipt: `RCPT-${bookingId}`,
       notes: {
         bookingId,
-        travellersCount: String(travellers.length),
+        travellersCount: String(travellersCount),
         seats: selectedSeats.join(','),
       },
     });
@@ -118,116 +125,115 @@ export async function POST(request: NextRequest) {
     // Check customer user session if available
     const customerUser = await getUserSessionFromRequest(request);
 
-    // 8. Persist pending Booking and Travellers in database
-    const txResult = await db.$transaction(async (tx) => {
-      // Find or create User for customer if needed
-      let linkedUserId = customerUser?.id;
-      if (!linkedUserId && primaryTraveller.email) {
-        const existing = await tx.user.findUnique({ where: { email: primaryTraveller.email.toLowerCase().trim() } });
-        if (existing) {
-          linkedUserId = existing.id;
-        } else {
-          const newUser = await tx.user.create({
-            data: {
-              email: primaryTraveller.email.toLowerCase().trim(),
-              name: primaryTraveller.fullName,
-              phone: primaryTraveller.phone,
-              role: 'TRAVELLER',
-            },
-          });
-          linkedUserId = newUser.id;
-        }
-      }
-
-      const booking = await tx.booking.create({
-        data: {
-          bookingId,
-          tripId: trip.id,
-          packageId: selectedPackage.id,
-          userId: linkedUserId,
-          primaryTravellerName: primaryTraveller.fullName,
-          primaryEmail: primaryTraveller.email.toLowerCase().trim(),
-          primaryPhone: primaryTraveller.phone,
-          gender: primaryTraveller.gender || 'NOT_SPECIFIED',
-          emergencyContactName: emergencyContactName || primaryTraveller.emergencyContactName || primaryTraveller.fullName,
-          emergencyContactPhone: emergencyContactPhone || primaryTraveller.emergencyContactPhone || primaryTraveller.phone,
-          sittingPreference,
-          travellersCount: travellers.length,
-          totalAmount: pricing.totalAmount,
-          reservationAmount: pricing.reservationAmount,
-          discountAmount: 0,
-          finalAmount: pricing.finalAmount,
-          remainingBalance: pricing.remainingBalance,
-          paymentStatus: 'PENDING',
-          bookingStatus: 'PENDING',
-          busId,
+    // 8. Create booking record in database
+    const booking = await db.booking.create({
+      data: {
+        bookingId,
+        tripId: trip.id,
+        packageId: selectedPackage.id,
+        userId: customerUser?.id || null,
+        primaryTravellerName: primaryTraveller.fullName || 'Primary Student',
+        primaryEmail: primaryTraveller.email || customerUser?.email || 'student@gla.ac.in',
+        primaryPhone: primaryTraveller.phone || '0000000000',
+        gender: primaryTraveller.gender || 'NOT_SPECIFIED',
+        emergencyContactName: emergencyContactName || primaryTraveller.emergencyContactName || 'University Coordinator',
+        emergencyContactPhone: emergencyContactPhone || primaryTraveller.emergencyContactPhone || '7017936338',
+        sittingPreference: sittingPreference || 'NO_PREFERENCE',
+        travellersCount,
+        totalAmount: totalPackage,
+        reservationAmount: depositAmount,
+        discountAmount: 0, // Profit-safe: Zero discounts
+        finalAmount: totalPackage,
+        remainingBalance: balanceDue,
+        paymentStatus: 'PENDING',
+        bookingStatus: 'PENDING',
+        busId,
+        travellers: {
+          create: travellers.map((t: TravellerInput, index: number) => ({
+            fullName: t.fullName || `Student ${index + 1}`,
+            phone: t.phone || primaryTraveller.phone || '',
+            email: t.email || primaryTraveller.email || '',
+            gender: t.gender || 'NOT_SPECIFIED',
+            collegeId: t.collegeId || (t as any).rollNumber || null,
+            rollNumber: (t as any).rollNumber || t.collegeId || null,
+            emergencyContactName: emergencyContactName || t.emergencyContactName || primaryTraveller.emergencyContactName || '',
+            emergencyContactPhone: emergencyContactPhone || t.emergencyContactPhone || primaryTraveller.emergencyContactPhone || '',
+            assignedSeatNumber: selectedSeats[index],
+            assignedBusNumber: heldSeats[0]?.busId === busId ? 'Assigned' : null,
+          })),
         },
-      });
-
-      // Create travellers
-      for (let i = 0; i < travellers.length; i++) {
-        const t = travellers[i];
-        const assignedSeat = selectedSeats[i];
-
-        await tx.traveller.create({
-          data: {
-            bookingId: booking.id,
-            fullName: t.fullName,
-            phone: t.phone,
-            email: t.email,
-            gender: t.gender,
-            emergencyContactName: t.emergencyContactName || emergencyContactName,
-            emergencyContactPhone: t.emergencyContactPhone || emergencyContactPhone,
-            assignedSeatNumber: assignedSeat,
+        payments: {
+          create: {
+            razorpayOrderId: orderResult.orderId,
+            amount: depositAmount,
+            currency: 'INR',
+            paymentType: 'RESERVATION',
+            status: 'PENDING',
           },
+        },
+      },
+      include: {
+        travellers: true,
+        bus: true,
+        package: true,
+      },
+    });
+
+    // 9. Link seat holds to this newly created booking
+    for (const seat of heldSeats) {
+      if (seat.seatHold) {
+        await db.seatHold.update({
+          where: { id: seat.seatHold.id },
+          data: { travellerName: primaryTraveller.fullName },
         });
       }
+    }
 
-      // Record pending payment
-      await tx.payment.create({
-        data: {
-          bookingId: booking.id,
-          razorpayOrderId: orderResult.orderId,
-          amount: pricing.reservationAmount,
-          currency: 'INR',
-          paymentType: 'RESERVATION',
-          status: 'PENDING',
-        },
-      });
-
-      return {
-        bookingDbId: booking.id,
-      };
-    }, { timeout: 15000, maxWait: 10000 });
-
-    // Asynchronously log outside transaction
-    createAuditLog({
+    // 10. Audit log
+    await createAuditLog({
       action: 'BOOKING_INITIATED',
       entityType: 'BOOKING',
-      entityId: txResult.bookingDbId,
-      bookingId,
-      performedBy: primaryTraveller.fullName,
-      metadata: {
-        seats: selectedSeats,
-        amount: pricing.reservationAmount,
-        orderId: orderResult.orderId,
-      },
-    }).catch((e) => console.error('Audit log error:', e));
+      entityId: booking.id,
+      bookingId: booking.bookingId,
+      performedBy: primaryTraveller.email || customerUser?.email || 'STUDENT',
+      newValue: `Reservation Order created for ${travellersCount} travellers. Deposit: ₹${depositAmount}`,
+      metadata: { orderId: orderResult.orderId, seats: selectedSeats },
+    });
 
     return NextResponse.json({
       success: true,
-      bookingId,
+      bookingId: booking.bookingId,
       razorpayOrderId: orderResult.orderId,
-      amount: pricing.reservationAmount,
-      amountInPaise: Math.round(pricing.reservationAmount * 100),
-      currency: 'INR',
+      amount: depositAmount,
+      amountInPaise: Math.round(depositAmount * 100),
+      currency: orderResult.currency,
       keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_YourTestKeyHere',
       isMock: orderResult.isMock,
-      pricing,
+      pricing: {
+        travellersCount,
+        pricePerTraveller: 6200,
+        totalAmount: totalPackage,
+        totalPackage,
+        depositAmount,
+        reservationAmount: depositAmount,
+        balanceDue,
+        remainingBalance: balanceDue,
+        discount: 0,
+      },
+      booking: {
+        id: booking.id,
+        bookingId: booking.bookingId,
+        primaryTravellerName: booking.primaryTravellerName,
+        primaryEmail: booking.primaryEmail,
+        primaryPhone: booking.primaryPhone,
+        travellersCount: booking.travellersCount,
+        busId: booking.busId,
+        selectedSeats,
+      },
     });
   } catch (error: unknown) {
     console.error('Error creating booking order:', error);
-    const message = error instanceof Error ? error.message : 'Failed to create booking order';
+    const message = error instanceof Error ? error.message : 'Internal server error while creating booking';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

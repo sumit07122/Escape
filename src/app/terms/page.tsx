@@ -2,8 +2,8 @@ import { AlertTriangle } from 'lucide-react';
 import { TRIP_METADATA } from '@/lib/constants';
 
 export const metadata = {
-  title: 'Terms & Conditions | GLA Himalayan Escape',
-  description: 'Official terms of participation, behavioral guidelines, and safety conditions.',
+  title: 'Terms & Conditions | Himalayan Escape — Student Mountain Expedition',
+  description: 'Terms of participation, behavioral guidelines, and safety conditions for the independent student expedition.',
 };
 
 export default function TermsPage() {
@@ -49,7 +49,7 @@ export default function TermsPage() {
         <section className="space-y-2">
           <h2 className="text-base font-bold text-[#171918]">4. Digital Boarding Passes</h2>
           <p>
-            Each traveller receives a unique digital QR boarding pass upon confirmation. This pass must be presented at the GLA University boarding gate for check-in.
+            Each traveller receives a unique digital QR boarding pass upon confirmation. This pass must be presented at the departure point (Near GLA Main Gate, Mathura) for check-in.
           </p>
         </section>
       </div>

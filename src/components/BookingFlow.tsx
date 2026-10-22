@@ -247,8 +247,23 @@ export default function BookingFlow() {
             });
           },
           modal: {
-            ondismiss: function () {
+            ondismiss: async function () {
               setIsProcessingPayment(false);
+              try {
+                await fetch('/api/seats/release-batch', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    bookingSessionId,
+                    busId: selectedBusId,
+                    seatNumbers: selectedSeats,
+                    bookingId: orderData.bookingId,
+                  }),
+                });
+              } catch (err) {
+                console.error('Error rolling back abandoned seats:', err);
+              }
+              setPaymentError('Payment window was closed. Your temporary seat hold has been released.');
             },
           },
         };
@@ -589,6 +604,23 @@ export default function BookingFlow() {
                       <option value="Other">Other</option>
                     </select>
                   </div>
+                </div>
+
+                <div className="space-y-1 pt-1">
+                  <label className="font-bold text-[#171918] text-xs">
+                    Student ID / College Roll No (Optional / For ID Verification)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 2115000123 / College Roll No"
+                    value={traveller.collegeId || ''}
+                    onChange={(e) => {
+                      const updated = [...travellers];
+                      updated[idx].collegeId = e.target.value;
+                      setTravellers(updated);
+                    }}
+                    className="w-full sm:w-1/2 px-3 py-2 rounded-xl bg-white border border-[#D8D2C4] text-xs text-[#171918] focus:border-[#163C32] focus:outline-none"
+                  />
                 </div>
               </div>
             ))}

@@ -64,7 +64,7 @@ function BookingTrackerContent() {
           My Trip & Boarding Pass
         </h1>
         <p className="text-xs text-[#646864] max-w-md mx-auto">
-          Access your confirmed seat reservation, view your QR boarding pass, and prepare for campus departure.
+          Access your confirmed seat reservation, view your QR boarding pass, and prepare for departure near GLA Main Gate, Mathura.
         </p>
       </div>
 
@@ -218,8 +218,16 @@ function BookingTrackerContent() {
 
                     <div className="space-y-1 text-xs text-[#646864]">
                       <p><strong>Coach:</strong> {booking.bus?.busNumber || 'Bus 01'}</p>
-                      <p><strong>Gate:</strong> GLA Main Campus Gate</p>
-                      <p><strong>Status:</strong> {t.ticket?.checkInStatus === 'CHECKED_IN' ? 'Boarded' : 'Ready for Check-in'}</p>
+                      <p><strong>Reporting:</strong> GLA Main Gate (04:30 PM)</p>
+                      <p><strong>Deposit Paid:</strong> ₹1,000 | <strong>Balance Due:</strong> ₹5,200</p>
+                      {t.ticket?.qrToken && (
+                        <Link
+                          href={`/ticket/${t.ticket.qrToken}`}
+                          className="inline-block mt-1 font-bold text-[#163C32] hover:text-[#D87945] underline text-[11px]"
+                        >
+                          Open Full Boarding Pass →
+                        </Link>
+                      )}
                     </div>
                   </div>
                 </div>

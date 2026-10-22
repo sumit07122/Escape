@@ -15,12 +15,12 @@ export default function Footer() {
                 <Mountain className="w-4 h-4 text-white" />
               </div>
               <div>
-                <span className="font-black text-[#171918] text-sm tracking-tight">GLA HIMALAYAN ESCAPE</span>
-                <p className="text-[10px] text-[#D87945] font-bold uppercase tracking-wider">MANALI × KASOL • 6D / 5N</p>
+                <span className="font-black text-[#171918] text-sm tracking-tight">HIMALAYAN ESCAPE</span>
+                <p className="text-[10px] text-[#D87945] font-bold uppercase tracking-wider">STUDENT EXPEDITION • MANALI × KASOL</p>
               </div>
             </div>
             <p className="text-[#171918]/70 text-[11px] leading-relaxed">
-              Official student expedition starting and ending at GLA University, Mathura. Flat ₹6,200 package with ₹1,000 reservation deposit.
+              Independent student mountain expedition. Pickup & Reporting: Near GLA Main Gate, Mathura. Flat ₹6,200 package with ₹1,000 reservation deposit.
             </p>
           </div>
 
@@ -70,7 +70,7 @@ export default function Footer() {
               </div>
               <div className="flex items-center gap-2 text-[#171918]/70">
                 <MapPin className="w-3.5 h-3.5 text-[#D87945] shrink-0" />
-                <span>GLA University, Mathura (NH-19)</span>
+                <span>Pickup & Reporting: Near GLA Main Gate, Mathura</span>
               </div>
             </div>
           </div>
@@ -78,8 +78,8 @@ export default function Footer() {
 
         {/* Bottom copyright */}
         <div className="pt-6 border-t border-[#D8D2C4] flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-[#171918]/60">
-          <p>© {new Date().getFullYear()} GLA Himalayan Escape. All rights reserved.</p>
-          <p>GLA University, Mathura → Manali → Kasol → GLA • 75 Capacity</p>
+          <p>© {new Date().getFullYear()} Himalayan Escape — Student Mountain Expedition. All rights reserved.</p>
+          <p>Independent student-organized expedition. Not an officially sponsored university event.</p>
         </div>
       </div>
     </footer>

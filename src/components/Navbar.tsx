@@ -51,10 +51,10 @@ export default function Navbar() {
             </div>
             <div>
               <span className="font-black text-base sm:text-lg tracking-tight text-[#171918] block leading-tight">
-                GLA HIMALAYAN ESCAPE
+                HIMALAYAN ESCAPE
               </span>
               <p className="text-[10px] font-bold tracking-widest text-[#D87945] uppercase">
-                MANALI × KASOL • 6D / 5N
+                STUDENT EXPEDITION • MANALI × KASOL
               </p>
             </div>
           </Link>

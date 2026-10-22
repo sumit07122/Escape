@@ -55,59 +55,67 @@ export default function HomePage() {
         </div>
 
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center text-center space-y-8 z-20 text-white">
-          {/* Metadata pill */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-xs font-semibold tracking-wider uppercase text-stone-100">
-            <span className="w-2 h-2 rounded-full bg-[#D87945]" />
-            <span>GLA HIMALAYAN ESCAPE • 6 DAYS • 5 NIGHTS</span>
+          {/* Live Seat Counter & Status Pill */}
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-black/45 backdrop-blur-md border border-white/20 text-xs font-bold tracking-wide text-white shadow-xl">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              </span>
+              <span className="text-emerald-400 font-black tracking-wider uppercase">
+                {Math.max(0, totalCapacity - (busesData?.trip?.totalBooked || 0))} of {totalCapacity} Seats Remaining
+              </span>
+            </div>
           </div>
 
           {/* Large Hero Title */}
           <div className="space-y-3">
+            <div className="text-xs sm:text-sm font-extrabold uppercase tracking-widest text-[#D87945]">
+              Student Mountain Expedition 2026
+            </div>
             <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight uppercase leading-none">
-              MANALI × KASOL
+              HIMALAYAN ESCAPE
             </h1>
             <p className="text-lg sm:text-2xl font-light text-stone-200 tracking-wide">
-              Mountains. Friends. Adventure. Memories.
+              Manali × Kasol • Mountains. Friends. Adventure. Memories.
             </p>
           </div>
 
-          {/* Pricing Highlight */}
-          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 pt-2">
-            <div className="text-center">
-              <span className="block text-3xl sm:text-4xl font-black tracking-tight text-white">
-                ₹6,200
-              </span>
-              <span className="text-[11px] font-bold tracking-widest uppercase text-stone-300">
-                PER PERSON
-              </span>
+          {/* Clean Pricing Breakdown Card */}
+          <div className="w-full max-w-lg p-5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/25 shadow-2xl space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/15 pb-4">
+              <div className="text-left">
+                <span className="text-[11px] font-bold tracking-widest uppercase text-stone-300 block">
+                  ALL-INCLUSIVE EXPEDITION
+                </span>
+                <span className="text-3xl sm:text-4xl font-black tracking-tight text-white">
+                  ₹6,200
+                </span>
+                <span className="text-[10px] text-stone-300 ml-1 font-semibold">/ student</span>
+              </div>
+              <div className="text-right">
+                <span className="text-[11px] font-bold tracking-widest uppercase text-amber-300 block">
+                  ONLINE RESERVATION
+                </span>
+                <span className="text-3xl sm:text-4xl font-black tracking-tight text-[#D87945]">
+                  ₹1,000
+                </span>
+              </div>
             </div>
-            <div className="h-8 w-px bg-white/30 hidden sm:block" />
-            <div className="text-center">
-              <span className="block text-3xl sm:text-4xl font-black tracking-tight text-[#D87945]">
-                ₹1,000
-              </span>
-              <span className="text-[11px] font-bold tracking-widest uppercase text-stone-300">
-                TO RESERVE
-              </span>
-            </div>
-            <div className="h-8 w-px bg-white/30 hidden sm:block" />
-            <div className="text-center">
-              <span className="block text-3xl sm:text-4xl font-black tracking-tight text-white">
-                75
-              </span>
-              <span className="text-[11px] font-bold tracking-widest uppercase text-stone-300">
-                TOTAL CAPACITY
-              </span>
+            <div className="flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold text-stone-100">
+              <span className="text-[#D87945] font-bold">₹1,000 to Reserve Seat</span>
+              <span className="text-white/40">•</span>
+              <span className="text-stone-200">₹5,200 Balance at Departure</span>
             </div>
           </div>
 
           {/* Action CTAs */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2 w-full sm:w-auto">
             <Link
               href="/book"
-              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[#D87945] hover:bg-[#C26735] text-white font-extrabold text-sm shadow-lg transition-all tracking-wider text-center"
+              className="w-full sm:w-auto px-9 py-4 rounded-xl bg-[#D87945] hover:bg-[#B85F30] text-white font-black text-sm shadow-xl transition-all tracking-wider text-center"
             >
-              BOOK YOUR SEAT
+              SELECT YOUR SEAT
             </Link>
             <Link
               href="#trip-overview"
@@ -119,7 +127,7 @@ export default function HomePage() {
 
           {/* Origin & Route Text */}
           <p className="text-xs text-stone-300 font-medium tracking-wide pt-2">
-            GLA UNIVERSITY, MATHURA → MANALI → KASOL → GLA
+            PICKUP & REPORTING: NEAR GLA MAIN GATE, MATHURA → MANALI → KASOL
           </p>
         </div>
       </section>
@@ -137,13 +145,13 @@ export default function HomePage() {
           </h2>
           <div className="space-y-3 text-base text-[#171918]/80 leading-relaxed font-normal">
             <p>
-              GLA Himalayan Escape is an official student expedition departing directly from the main campus gates of GLA University, Mathura. Designed for comfort and adventure, travellers journey across the plains of North India and climb into the high valleys of Himachal Pradesh aboard dedicated 2x2 luxury tourist coaches.
+              Himalayan Escape is an independent student mountain expedition departing near the GLA Main Gate, Mathura. Designed for comfort and adventure, travellers journey across the plains of North India and climb into the high valleys of Himachal Pradesh aboard dedicated 2x2 luxury tourist coaches.
             </p>
             <p>
               From the snowy heights of Solang Valley and the engineering marvel of the Atal Tunnel to the mystical cedar forests and riverside cafés of Kasol and the spiritual hot springs of Manikaran Sahib, every day offers a balance of curated group exploration and independent freedom.
             </p>
             <p className="text-sm font-medium text-[#163C32]">
-              Route: GLA University, Mathura → Manali → Solang Valley → Atal Tunnel → Sissu → Kasol → Manikaran → GLA University
+              Pickup & Reporting: Near GLA Main Gate, Mathura → Manali → Solang Valley → Atal Tunnel → Sissu → Kasol → Manikaran → Mathura
             </p>
           </div>
         </div>
@@ -416,7 +424,7 @@ export default function HomePage() {
               <h3 className="font-bold text-base text-[#171918]">QR Digital Boarding Pass & Safety</h3>
             </div>
             <p className="text-xs text-[#646864] pl-7.5 leading-relaxed">
-              Pre-allocated bus seat numbers, instant digital ticket with QR code for gate check-in at GLA campus, and 24/7 student coordinators.
+              Pre-allocated bus seat numbers, instant digital ticket with QR code for boarding check-in, and 24/7 student coordinators.
             </p>
           </div>
         </div>
@@ -472,11 +480,14 @@ export default function HomePage() {
           <div className="flex items-center gap-2 text-[#163C32]">
             <ShieldCheck className="w-5 h-5 shrink-0" />
             <h3 className="font-black text-lg text-[#171918]">
-              GLA University Campus Departure Guidelines
+              Departure Reporting & Pickup Guidelines
             </h3>
           </div>
           <p className="text-xs sm:text-sm text-[#171918]/80 leading-relaxed">
-            All travellers report at GLA University Mathura Main Campus Gate at the scheduled departure time with valid college ID and digital QR pass. Luggage tags will be assigned during gate check-in. For coordination assistance, contact tour leads directly at <strong>{CONTACT_INFO.coordinatorPhone1}</strong> or <strong>{CONTACT_INFO.coordinatorPhone2}</strong>.
+            All travellers report Near GLA Main Gate, Mathura at the scheduled departure time with valid student/college ID and digital QR pass. Luggage tags will be assigned during boarding check-in. For coordination assistance, contact Student Trip Organizers / Lead Coordinators directly at <strong>{CONTACT_INFO.coordinatorPhone1}</strong> or <strong>{CONTACT_INFO.coordinatorPhone2}</strong>.
+          </p>
+          <p className="text-[11px] text-[#171918]/60 italic border-t border-[#D8D2C4] pt-2">
+            * Note: Independent student-organized expedition. Not an officially sponsored university event.
           </p>
         </div>
       </section>

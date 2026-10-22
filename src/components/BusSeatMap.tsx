@@ -50,6 +50,14 @@ interface BusSeatMapProps {
   onAdminSeatClick?: (seat: SeatData, busId: string) => void;
 }
 
+// Canonical Coach Titles
+const COACH_NAMES: Record<string, string> = {
+  'Bus 01': 'Himalayan Eagle',
+  'Bus 02': 'Parvati Cruiser',
+  'Bus 03': 'Solang Glider',
+  'Bus 04': 'Rohtang Explorer',
+};
+
 export default function BusSeatMap({
   requiredSeatsCount,
   selectedSeats,
@@ -138,6 +146,7 @@ export default function BusSeatMap({
         return prev - 1;
       });
     }, 1000);
+
     return () => clearInterval(interval);
   }, [holdTimerSeconds, activeBusId, loadSeats, onSeatSelect]);
 
@@ -188,7 +197,7 @@ export default function BusSeatMap({
 
         const data = await res.json();
         if (!res.ok) {
-          setErrorMessage(data.error || 'This seat was just held by another traveller.');
+          setErrorMessage(data.error || 'Seat currently held by another student');
           loadSeats(activeBusId);
           return;
         }
@@ -247,25 +256,43 @@ export default function BusSeatMap({
     const isSelected = selectedSeats.includes(seat.seatNumber);
     const isRecommended = preference !== 'NO_PREFERENCE' && isSeatRecommended(seat, preference);
 
-    let bgColor = 'bg-white border-[#D8D2C4] text-[#171918] hover:border-[#163C32] hover:bg-[#F7F5EF]';
-    const label = seat.seatNumber;
+    let bgColor = 'bg-white border-[#D8D2C4] text-[#1C1C1C] hover:border-[#163C32] hover:bg-[#F7F5EF]';
+    let label = seat.seatNumber;
     let isDisabled = false;
 
     if (!seat.isBookable) {
-      bgColor = 'bg-[#E7E2D8] border-[#D8D2C4] text-[#9A9589] cursor-not-allowed';
+      bgColor = 'bg-[#E7E2D8] text-[#9A9589] border-[#D8D2C4] cursor-not-allowed';
       isDisabled = true;
     } else if (seat.status === 'BOOKED') {
-      bgColor = 'bg-[#E7E2D8] border-[#D8D2C4] text-[#9A9589] cursor-not-allowed line-through';
-      isDisabled = !isAdmin;
+      bgColor = 'bg-[#EFECE4] text-[#8FA69F] border-[#D8D2C4] line-through cursor-not-allowed opacity-60';
+      isDisabled = true;
     } else if (seat.status === 'UNAVAILABLE') {
-      bgColor = 'bg-[#E7E2D8] border-[#D8D2C4] text-[#9A9589] cursor-not-allowed';
-      isDisabled = !isAdmin;
-    } else if (seat.status === 'HELD' && !seat.isMyHold) {
-      bgColor = 'bg-[#FDF4E7] border-[#D87945] text-[#D87945] cursor-not-allowed';
-      isDisabled = !isAdmin;
-    } else if (isSelected || seat.isMyHold) {
-      bgColor = 'bg-[#163C32] border-[#163C32] text-white font-bold shadow-sm scale-105';
+      bgColor = 'bg-stone-200 text-stone-400 border-stone-300 cursor-not-allowed';
+      isDisabled = true;
+    } else if (seat.status === 'HELD') {
+      if (seat.isMyHold || isSelected) {
+        bgColor = 'bg-[#163C32] text-white border-[#163C32] font-black shadow-md';
+      } else {
+        bgColor = 'bg-[#FDF4E7] border-[#D87945] text-[#D87945] cursor-not-allowed';
+        isDisabled = true;
+      }
+    } else if (isSelected) {
+      bgColor = 'bg-[#163C32] text-white border-[#163C32] font-black shadow-md';
     }
+
+    // Preference Highlight Ring
+    const isPreferenceMatch =
+      preference !== 'NO_PREFERENCE' &&
+      ((preference === 'WINDOW' && seat.position === 'WINDOW') ||
+        (preference === 'AISLE' && seat.position === 'AISLE') ||
+        (preference === 'BACK' && (seat.side === 'REAR' || seat.rowNumber >= 4)) ||
+        (preference === 'FRONT' && seat.rowNumber <= 2));
+
+    const ringClasses = isSelected
+      ? 'ring-2 ring-[#D87945] ring-offset-2'
+      : isPreferenceMatch && seat.status === 'AVAILABLE'
+      ? 'ring-2 ring-[#D87945]/70 ring-offset-1'
+      : '';
 
     return (
       <button
@@ -276,13 +303,11 @@ export default function BusSeatMap({
         disabled={isDisabled && !isAdmin}
         onClick={() => handleSeatClick(seat)}
         aria-label={`Seat ${seat.seatNumber}, ${seat.position}, status: ${seat.status}`}
-        className={`relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl border flex flex-col items-center justify-center transition-all ${bgColor} ${
-          isRecommended && !isSelected && seat.status === 'AVAILABLE' ? 'ring-2 ring-[#D87945] ring-offset-1' : ''
-        }`}
+        className={`relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl border flex flex-col items-center justify-center transition-all seat-shadow ${bgColor} ${ringClasses}`}
         title={`${seat.seatNumber} (${seat.position} • Row ${seat.rowNumber}) - ${seat.status}`}
       >
         {isRecommended && seat.status === 'AVAILABLE' && !isSelected && (
-          <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[#D87945] flex items-center justify-center text-[9px] text-white font-black">
+          <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[#D87945] flex items-center justify-center text-[9px] text-white font-black shadow-xs">
             ★
           </span>
         )}
@@ -301,8 +326,8 @@ export default function BusSeatMap({
   };
 
   return (
-    <div className="w-full flex flex-col items-center text-[#171918]">
-      {/* Bus Selector Tabs */}
+    <div className="w-full flex flex-col items-center text-[#1C1C1C]">
+      {/* Bus Selector Tabs: Bus 01 through Bus 04 with Full Names */}
       <div className="w-full max-w-xl mb-6">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-bold text-[#646864] uppercase tracking-wider">
@@ -313,7 +338,7 @@ export default function BusSeatMap({
               loadBuses();
               if (activeBusId) loadSeats(activeBusId);
             }}
-            className="flex items-center gap-1.5 text-xs text-[#163C32] hover:text-[#0F2A23] font-semibold transition-colors"
+            className="flex items-center gap-1.5 text-xs text-[#163C32] hover:text-[#0E2620] font-semibold transition-colors"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             <span>Refresh Availability</span>
@@ -323,6 +348,8 @@ export default function BusSeatMap({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {buses.map((bus) => {
             const isActive = bus.id === activeBusId;
+            const coachName = COACH_NAMES[bus.busNumber] || bus.vehicleName.split('(')[0].trim() || 'Himalayan Express';
+
             return (
               <button
                 key={bus.id}
@@ -333,50 +360,33 @@ export default function BusSeatMap({
                     onSeatSelect(bus.id, []);
                   }
                 }}
-                className={`p-3 rounded-xl border text-left transition-all ${
+                className={`p-3 rounded-2xl border text-left transition-all ${
                   isActive
-                    ? 'bg-[#163C32] border-[#163C32] text-white shadow-sm'
-                    : 'bg-white border-[#D8D2C4] text-[#171918] hover:border-[#B4AA96]'
+                    ? 'bg-[#163C32] border-[#163C32] text-white shadow-md'
+                    : 'bg-white border-[#D8D2C4] text-[#1C1C1C] hover:border-[#163C32]'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-extrabold text-sm">{bus.busNumber}</span>
+                  <span className="font-black text-sm">{bus.busNumber}</span>
                   {bus.stats.isFull ? (
-                    <span className="text-[10px] font-bold text-red-500 uppercase">FULL</span>
+                    <span className="text-[9px] font-bold text-red-500 uppercase">FULL</span>
                   ) : (
-                    <span className={`text-[10px] font-semibold ${isActive ? 'text-[#D87945]' : 'text-[#163C32]'}`}>
+                    <span className={`text-[10px] font-bold ${isActive ? 'text-[#D87945]' : 'text-[#163C32]'}`}>
                       {bus.stats.availableCount} free
                     </span>
                   )}
                 </div>
-                <p className={`text-[11px] truncate mt-0.5 ${isActive ? 'text-stone-300' : 'text-[#646864]'}`}>
-                  {bus.stats.bookedCount}/{bus.stats.totalSeats} booked
+                <div className={`text-[11px] font-medium truncate mt-0.5 ${isActive ? 'text-amber-200' : 'text-[#646864]'}`}>
+                  {coachName}
+                </div>
+                <p className={`text-[10px] mt-0.5 ${isActive ? 'text-stone-300' : 'text-[#8FA69F]'}`}>
+                  {bus.stats.bookedCount}/{bus.stats.totalSeats} seats
                 </p>
               </button>
             );
           })}
         </div>
       </div>
-
-      {/* Seat Hold Live Countdown Alert */}
-      {holdTimerSeconds > 0 && (
-        <div className="w-full max-w-xl mb-4 p-3.5 rounded-xl bg-[#FDF4E7] border border-[#D87945] flex items-center justify-between shadow-sm">
-          <div className="flex items-center gap-2.5">
-            <Clock className="w-5 h-5 text-[#D87945]" />
-            <div>
-              <p className="text-xs font-bold text-[#171918]">
-                Your seats are reserved
-              </p>
-              <p className="text-[11px] text-[#646864]">
-                Complete checkout before hold expires:
-              </p>
-            </div>
-          </div>
-          <div className="px-3 py-1 rounded-lg bg-white font-mono text-base font-black text-[#D87945] border border-[#D87945]/40 shadow-xs">
-            {formatHoldCountdown(holdTimerSeconds)}
-          </div>
-        </div>
-      )}
 
       {/* Error / Alert Message */}
       {errorMessage && (
@@ -388,16 +398,16 @@ export default function BusSeatMap({
 
       {/* Preference recommendation indicator */}
       {preference !== 'NO_PREFERENCE' && (
-        <div className="w-full max-w-xl mb-4 p-2.5 rounded-xl bg-white border border-[#D8D2C4] flex items-center gap-2 text-xs text-[#171918]">
+        <div className="w-full max-w-xl mb-4 p-2.5 rounded-xl bg-white border border-[#D8D2C4] flex items-center gap-2 text-xs text-[#1C1C1C]">
           <Sparkles className="w-4 h-4 text-[#D87945] shrink-0" />
           <span>
-            Highlighting recommended <strong className="text-[#D87945]">{preference.toLowerCase()}</strong> seats with a ★ badge. You may choose any seat.
+            Highlighting recommended <strong className="text-[#D87945]">{preference.toLowerCase()}</strong> seats with amber rings. You may pick any seat.
           </span>
         </div>
       )}
 
-      {/* Bus Visual Chassis Container */}
-      <div className="w-full max-w-md bg-white rounded-3xl p-5 sm:p-7 border border-[#D8D2C4] shadow-sm relative">
+      {/* Bus Visual Chassis Container with Topographic Grid */}
+      <div className="w-full max-w-md bg-white coach-grid rounded-3xl p-5 sm:p-7 border border-[#D8D2C4] shadow-sm relative">
         {/* Front Bus Cabin / Windshield */}
         <div className="mb-6 pt-1 pb-4 border-b-2 border-dashed border-[#D8D2C4] text-center">
           <div className="w-full h-8 rounded-t-2xl bg-[#F7F5EF] border-t-2 border-[#163C32] flex items-center justify-center mb-4">
@@ -411,24 +421,24 @@ export default function BusSeatMap({
             <div className="p-2.5 rounded-xl bg-[#F7F5EF] border border-[#D8D2C4] flex items-center justify-between">
               <span className="text-xs font-bold text-[#646864]">DRIVER</span>
               <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-white text-[#646864] border border-[#D8D2C4] uppercase">
-                RESERVED
+                NON-BOOKABLE
               </span>
             </div>
             <div className="p-2.5 rounded-xl bg-[#F7F5EF] border border-[#D8D2C4] flex items-center justify-between">
               <span className="text-xs font-bold text-[#646864]">CONDUCTOR</span>
               <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-white text-[#646864] border border-[#D8D2C4] uppercase">
-                RESERVED
+                NON-BOOKABLE
               </span>
             </div>
           </div>
         </div>
 
-        {/* Passenger Seating Layout */}
+        {/* Passenger Seating Layout (2x2 Geometry) */}
         <div className="space-y-3.5">
           <div className="flex items-center justify-between px-2 text-[10px] font-bold text-[#646864] uppercase tracking-wider">
-            <span>LEFT WINDOW / AISLE</span>
-            <span className="tracking-widest text-[#B4AA96]">AISLE</span>
-            <span>RIGHT AISLE / WINDOW</span>
+            <span>LEFT (WINDOW / AISLE)</span>
+            <span className="tracking-widest text-[#8FA69F]">AISLE</span>
+            <span>RIGHT (AISLE / WINDOW)</span>
           </div>
 
           {/* Rows 1 through 4 (2+2) */}
@@ -444,7 +454,7 @@ export default function BusSeatMap({
                 </div>
 
                 <div className="flex-1 flex justify-center items-center">
-                  <div className="w-6 h-px bg-[#E7E2D8]" />
+                  <div className="w-6 h-px bg-[#EFECE4]" />
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -463,7 +473,7 @@ export default function BusSeatMap({
             </div>
 
             <div className="flex-1 flex justify-center items-center">
-              <span className="text-[9px] text-[#B4AA96] font-mono uppercase">WALKWAY</span>
+              <span className="text-[9px] text-[#8FA69F] font-mono uppercase">AISLE WALKWAY</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -476,7 +486,7 @@ export default function BusSeatMap({
           <div className="pt-3 border-t-2 border-dashed border-[#D8D2C4]">
             <div className="text-center mb-2">
               <span className="text-[10px] font-bold text-[#646864] uppercase tracking-widest">
-                REAR 5-SEAT BENCH
+                REAR 5-SEAT BENCH (B1 - B5)
               </span>
             </div>
             <div className="flex items-center justify-between gap-1.5">
@@ -486,36 +496,58 @@ export default function BusSeatMap({
         </div>
 
         <div className="mt-6 pt-3 text-center border-t border-[#D8D2C4]">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-[#B4AA96]">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-[#8FA69F]">
             REAR OF COACH
           </span>
         </div>
       </div>
 
+      {/* Live 10-Minute Hold Countdown Timer at Bottom of Seat Selector */}
+      {holdTimerSeconds > 0 && (
+        <div className="w-full max-w-xl mt-4 p-4 rounded-2xl bg-[#FDF4E7] border-2 border-[#D87945] flex items-center justify-between shadow-lg">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-[#D87945]/20 flex items-center justify-center text-[#D87945]">
+              <Clock className="w-5 h-5 animate-pulse" />
+            </div>
+            <div>
+              <p className="text-xs font-black text-[#1C1C1C] uppercase tracking-wide">
+                Atomic Seat Lease Active ({selectedSeats.join(', ')})
+              </p>
+              <p className="text-[11px] text-[#646864]">
+                Complete ₹1,000 reservation payment before timer expires:
+              </p>
+            </div>
+          </div>
+          <div className="px-3.5 py-1.5 rounded-xl bg-white font-mono text-lg font-black text-[#D87945] border border-[#D87945] shadow-xs">
+            {formatHoldCountdown(holdTimerSeconds)}
+          </div>
+        </div>
+      )}
+
       {/* Legend & Seat Status Guide */}
-      <div className="w-full max-w-xl mt-6 p-4 rounded-2xl bg-white border border-[#D8D2C4]">
+      <div className="w-full max-w-xl mt-6 p-4 rounded-2xl bg-white border border-[#D8D2C4] shadow-xs">
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
           <div className="flex items-center gap-2">
-            <span className="w-4 h-4 rounded bg-white border border-[#D8D2C4] shrink-0" />
+            <span className="w-4 h-4 rounded-md bg-white border border-[#D8D2C4] seat-shadow shrink-0" />
             <span className="text-[#646864]">Available</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-4 h-4 rounded bg-[#163C32] shrink-0" />
-            <span className="text-[#171918] font-bold">Selected</span>
+            <span className="w-4 h-4 rounded-md bg-[#163C32] shrink-0" />
+            <span className="text-[#1C1C1C] font-bold">Selected</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-4 h-4 rounded bg-[#FDF4E7] border border-[#D87945] shrink-0" />
-            <span className="text-[#646864]">Held (10m)</span>
+            <span className="w-4 h-4 rounded-md bg-[#FDF4E7] border border-[#D87945] shrink-0" />
+            <span className="text-[#D87945] font-semibold">Held (10m)</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-4 h-4 rounded bg-[#E7E2D8] text-[#9A9589] line-through flex items-center justify-center text-[10px] shrink-0">
+            <span className="w-4 h-4 rounded-md bg-[#EFECE4] text-[#8FA69F] line-through flex items-center justify-center text-[10px] shrink-0">
               ✕
             </span>
             <span className="text-[#646864]">Booked</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-4 h-4 rounded bg-[#E7E2D8] shrink-0" />
-            <span className="text-[#9A9589]">Cabin Crew</span>
+            <span className="w-4 h-4 rounded-md bg-[#E7E2D8] shrink-0" />
+            <span className="text-[#8FA69F]">Cabin Crew</span>
           </div>
         </div>
       </div>
