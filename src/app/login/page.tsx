@@ -18,9 +18,6 @@ function LoginFormContent() {
   const [adminLoading, setAdminLoading] = useState(false);
   const [adminError, setAdminError] = useState<string | null>(null);
 
-  // Demo customer loading
-  const [demoLoading, setDemoLoading] = useState(false);
-
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAdminLoading(true);
@@ -44,13 +41,6 @@ function LoginFormContent() {
     } finally {
       setAdminLoading(false);
     }
-  };
-
-  const handleDemoTravellerLogin = () => {
-    setDemoLoading(true);
-    const email = 'aryan.sharma@gla.ac.in';
-    const name = 'Aryan Sharma';
-    window.location.href = `/api/auth/google?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}&returnUrl=${encodeURIComponent(returnUrl)}`;
   };
 
   return (
@@ -150,34 +140,6 @@ function LoginFormContent() {
                 </svg>
                 <span>Continue with Google</span>
               </a>
-
-              {process.env.NODE_ENV === 'development' && (
-                <>
-                  <div className="relative flex py-2 items-center">
-                    <div className="flex-grow border-t border-[#D8D2C4]" />
-                    <span className="flex-shrink mx-3 text-[10px] text-[#646864] uppercase font-bold tracking-wider">
-                      Dev Sandbox
-                    </span>
-                    <div className="flex-grow border-t border-[#D8D2C4]" />
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handleDemoTravellerLogin}
-                    disabled={demoLoading}
-                    className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#F7F5EF] hover:bg-[#E7E2D8] border border-[#D8D2C4] text-[#163C32] font-bold text-xs transition-colors"
-                  >
-                    {demoLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin text-[#163C32]" />
-                    ) : (
-                      <>
-                        <span>1-Click Test Login (Aryan Sharma)</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </>
-                    )}
-                  </button>
-                </>
-              )}
             </div>
 
             <p className="text-[11px] text-[#646864] text-center leading-relaxed">

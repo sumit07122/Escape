@@ -137,7 +137,7 @@ export default function BusSeatMap({
 
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/buses/${activeBusId}/seats?bookingSessionId=${encodeURIComponent(bookingSessionId)}`);
+        const res = await fetch(`/api/seats/status?tripId=manali-kasol&busId=${activeBusId}&bookingSessionId=${encodeURIComponent(bookingSessionId)}`);
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data.seats)) {
@@ -153,7 +153,7 @@ export default function BusSeatMap({
               const stillHeldByMe = data.seats.filter((s: SeatData) => selectedSeats.includes(s.seatNumber) && s.isMyHold);
               if (stillHeldByMe.length < selectedSeats.length) {
                 onSeatSelect(activeBusId, stillHeldByMe.map((s: SeatData) => s.seatNumber));
-                setErrorMessage('Your 10-minute hold has expired. Please select your seats again.');
+                setErrorMessage('Your 10-minute reservation hold has expired. Please pick your seat again.');
               }
             }
           }
@@ -175,7 +175,7 @@ export default function BusSeatMap({
           clearInterval(interval);
           if (activeBusId) loadSeats(activeBusId);
           onSeatSelect(activeBusId, []);
-          setErrorMessage('Your 10-minute seat hold has expired. Please select your seats again.');
+          setErrorMessage('Your 10-minute reservation hold has expired. Please pick your seat again.');
           return 0;
         }
         return prev - 1;

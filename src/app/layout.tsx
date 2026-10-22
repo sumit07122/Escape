@@ -5,9 +5,10 @@ import Footer from '@/components/Footer';
 import MobileBottomBar from '@/components/MobileBottomBar';
 
 export const metadata: Metadata = {
-  title: 'Himalayan Escape — Student Mountain Expedition',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
+  title: 'Himalayan Escape 2026 | Manali × Kasol Student Expedition',
   description:
-    '6 Days / 5 Nights student expedition departing near GLA Main Gate, Mathura to Manali and Kasol. Reserve your seat for ₹1,000 per traveller.',
+    'Official booking portal for Himalayan Escape. Reserve your seat, select your bus cabin, and generate your boarding pass.',
   keywords: [
     'Himalayan Escape',
     'Student Mountain Expedition',
@@ -21,17 +22,25 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'Student Trip Organizers' }],
   openGraph: {
-    title: 'Himalayan Escape — Student Mountain Expedition',
-    description: '6 Days / 5 Nights student expedition departing near GLA Main Gate, Mathura to Manali and Kasol. Reserve your seat for ₹1,000 per traveller.',
+    title: 'Himalayan Escape 2026 | Manali × Kasol Student Expedition',
+    description:
+      'Official booking portal for Himalayan Escape. Reserve your seat, select your bus cabin, and generate your boarding pass.',
     type: 'website',
     images: [
       {
         url: '/images/hero-himalayas.jpg',
         width: 1200,
         height: 675,
-        alt: 'Himalayan Escape — Student Mountain Expedition',
+        alt: 'Himalayan Escape 2026 | Manali × Kasol Student Expedition',
       },
     ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Himalayan Escape 2026 | Manali × Kasol Student Expedition',
+    description:
+      'Official booking portal for Himalayan Escape. Reserve your seat, select your bus cabin, and generate your boarding pass.',
+    images: ['/images/hero-himalayas.jpg'],
   },
 };
 

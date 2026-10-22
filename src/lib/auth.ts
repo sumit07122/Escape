@@ -1,7 +1,8 @@
 import crypto from 'crypto';
 import { NextRequest } from 'next/server';
 
-const AUTH_SECRET = process.env.NEXTAUTH_SECRET || 'gla-himalayan-escape-super-secret-jwt-key-2026';
+const ADMIN_SECRET = process.env.ADMIN_SESSION_SECRET || process.env.NEXTAUTH_SECRET || 'haP70H1qe7tJoJ53b1gUTFGLApeHytJKl_Fr39-7dqY';
+const AUTH_SECRET = process.env.NEXTAUTH_SECRET || 'NjttlGq0yBrfPiiEMRCLlN-gXJn-yJROBEqomya2REc';
 
 export interface UserSessionPayload {
   id: string;
@@ -45,9 +46,9 @@ export function verifyPassword(password: string, combinedHash: string): boolean 
  * Create a signed admin session token
  */
 export function signSessionToken(payload: AdminSessionPayload): string {
-  const data = JSON.stringify({ ...payload, exp: Date.now() + 24 * 60 * 60 * 1000 });
+  const data = JSON.stringify({ ...payload, exp: Date.now() + 7 * 24 * 60 * 60 * 1000 });
   const base64Data = Buffer.from(data).toString('base64url');
-  const signature = crypto.createHmac('sha256', AUTH_SECRET).update(base64Data).digest('base64url');
+  const signature = crypto.createHmac('sha256', ADMIN_SECRET).update(base64Data).digest('base64url');
   return `${base64Data}.${signature}`;
 }
 
@@ -59,7 +60,7 @@ export function verifySessionToken(token: string): AdminSessionPayload | null {
     const [base64Data, signature] = token.split('.');
     if (!base64Data || !signature) return null;
 
-    const expectedSignature = crypto.createHmac('sha256', AUTH_SECRET).update(base64Data).digest('base64url');
+    const expectedSignature = crypto.createHmac('sha256', ADMIN_SECRET).update(base64Data).digest('base64url');
     if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) {
       return null;
     }

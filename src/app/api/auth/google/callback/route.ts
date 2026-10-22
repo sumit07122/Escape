@@ -2,44 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { signUserSession } from '@/lib/auth';
 
-async function handleFallbackSandboxSession(returnUrl: string, request: NextRequest) {
-  const email = 'aryan.sharma@gla.ac.in';
-  const name = 'Aryan Sharma';
-  const googleId = 'google_sandbox_' + Buffer.from(email).toString('hex').slice(0, 16);
-
-  let user = await db.user.findUnique({ where: { email } });
-  if (!user) {
-    user = await db.user.create({
-      data: {
-        email,
-        name,
-        googleId,
-        image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
-        role: 'TRAVELLER',
-      },
-    });
-  }
-
-  const sessionToken = signUserSession({
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    image: user.image,
-    role: user.role,
-  });
-
-  const response = NextResponse.redirect(new URL(returnUrl, request.url));
-  response.cookies.set('gla_user_session', sessionToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 7 * 24 * 60 * 60,
-  });
-
-  return response;
-}
-
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
@@ -52,7 +14,7 @@ export async function GET(request: NextRequest) {
       const decoded = JSON.parse(Buffer.from(stateParam, 'base64url').toString('utf-8'));
       if (decoded.returnUrl) returnUrl = decoded.returnUrl;
     } catch {
-      // Ignore
+      // Ignore invalid state
     }
   }
 
@@ -76,8 +38,7 @@ export async function GET(request: NextRequest) {
     clientId.trim().length > 5;
 
   if (!isRealClientId || !isRealSecret) {
-    console.warn('Google OAuth secret not fully configured locally. Using development sandbox session.');
-    return handleFallbackSandboxSession(returnUrl, request);
+    return NextResponse.redirect(new URL('/login?error=Google+OAuth+not+configured', request.url));
   }
 
   try {
@@ -95,11 +56,6 @@ export async function GET(request: NextRequest) {
     });
 
     if (!tokenRes.ok) {
-      const errData = await tokenRes.text();
-      console.error('Google token exchange error:', errData);
-      if (process.env.NODE_ENV !== 'production') {
-        return handleFallbackSandboxSession(returnUrl, request);
-      }
       return NextResponse.redirect(new URL('/login?error=Token+exchange+failed', request.url));
     }
 
@@ -142,7 +98,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // 4. Create signed session token
+    // 4. Create signed session token with internal user.id
     const sessionToken = signUserSession({
       id: user.id,
       email: user.email,
@@ -157,12 +113,12 @@ export async function GET(request: NextRequest) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: 7 * 24 * 60 * 60,
+      maxAge: 7 * 24 * 60 * 60, // 7 days
     });
 
     return response;
   } catch (err: unknown) {
-    console.error('Google OAuth callback error:', err);
+    console.error('Google OAuth callback error');
     return NextResponse.redirect(new URL('/login?error=Authentication+failed', request.url));
   }
 }

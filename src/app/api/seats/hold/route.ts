@@ -17,6 +17,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 1. Auto-purge expired holds before checking availability
+    await db.seatHold.deleteMany({ where: { expiresAt: { lt: new Date() } } });
     await cleanExpiredHolds();
 
     const now = new Date();
