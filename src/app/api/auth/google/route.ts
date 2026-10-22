@@ -13,11 +13,21 @@ export async function GET(request: NextRequest) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
   const redirectUri = `${appUrl}/api/auth/google/callback`;
 
+  const isRealSecret =
+    clientSecret &&
+    !clientSecret.includes('<PASTE_') &&
+    !clientSecret.startsWith('<') &&
+    clientSecret.trim().length > 5;
+  const isRealClientId =
+    clientId &&
+    !clientId.startsWith('<') &&
+    clientId.trim().length > 5;
+
   // 1. If real Google credentials exist and not explicit demo request:
-  if (clientId && clientSecret && !demoEmail) {
+  if (isRealClientId && isRealSecret && !demoEmail) {
     const state = Buffer.from(JSON.stringify({ returnUrl })).toString('base64url');
     const googleAuthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-    googleAuthUrl.searchParams.set('client_id', clientId);
+    googleAuthUrl.searchParams.set('client_id', clientId!);
     googleAuthUrl.searchParams.set('redirect_uri', redirectUri);
     googleAuthUrl.searchParams.set('response_type', 'code');
     googleAuthUrl.searchParams.set('scope', 'openid email profile');

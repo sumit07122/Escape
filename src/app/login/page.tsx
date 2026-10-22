@@ -81,9 +81,32 @@ function LoginFormContent() {
         </div>
 
         {urlError && (
-          <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{urlError}</span>
+          <div
+            className={`p-3.5 rounded-xl border text-xs flex items-start gap-2.5 ${
+              urlError.toLowerCase().includes('google oauth not configured')
+                ? 'bg-amber-50 border-amber-200 text-amber-900'
+                : 'bg-red-50 border-red-200 text-red-700'
+            }`}
+          >
+            <AlertCircle
+              className={`w-4 h-4 shrink-0 mt-0.5 ${
+                urlError.toLowerCase().includes('google oauth not configured')
+                  ? 'text-amber-600'
+                  : 'text-red-500'
+              }`}
+            />
+            <div>
+              <p className="font-bold">
+                {urlError.toLowerCase().includes('google oauth not configured')
+                  ? 'OAuth Setup Notice'
+                  : 'Authentication Alert'}
+              </p>
+              <p className="mt-0.5 text-[11px] leading-relaxed opacity-90">
+                {urlError.toLowerCase().includes('google oauth not configured')
+                  ? 'Google OAuth credentials are being verified. You can use 1-Click Test Login below to sign in immediately, or paste GOOGLE_CLIENT_SECRET in .env.local.'
+                  : urlError}
+              </p>
+            </div>
           </div>
         )}
 
