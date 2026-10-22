@@ -13,7 +13,6 @@ export async function cleanExpiredHolds(): Promise<number> {
   // Find expired active holds
   const expiredHolds = await db.seatHold.findMany({
     where: {
-      status: 'ACTIVE',
       expiresAt: { lt: now },
     },
     select: { id: true, busSeatId: true },
@@ -25,12 +24,11 @@ export async function cleanExpiredHolds(): Promise<number> {
   const seatIds = expiredHolds.map((h) => h.busSeatId);
 
   await db.$transaction([
-    // Mark holds as EXPIRED
-    db.seatHold.updateMany({
+    // Eagerly delete expired holds
+    db.seatHold.deleteMany({
       where: { id: { in: holdIds } },
-      data: { status: 'EXPIRED' },
     }),
-    // Reset seats to AVAILABLE if not already booked
+    // Reset seats to AVAILABLE if currently HELD and not booked
     db.busSeat.updateMany({
       where: {
         id: { in: seatIds },

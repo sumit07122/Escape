@@ -72,9 +72,9 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ message: 'No associated booking found for payment event' }, { status: 200 });
       }
 
-      // If already CONFIRMED, no duplicate action needed
+      // If already CONFIRMED, return idempotent already_processed response
       if (booking.bookingStatus === 'CONFIRMED') {
-        return NextResponse.json({ status: 'ok', message: 'Booking already confirmed' });
+        return NextResponse.json({ status: 'already_processed', message: 'Booking already confirmed' });
       }
 
       // Atomically transition to CONFIRMED, assign traveller seatIds, generate QR tickets, and purge holds

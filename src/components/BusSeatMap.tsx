@@ -131,6 +131,41 @@ export default function BusSeatMap({
     }
   }, [activeBusId, loadSeats]);
 
+  // Real-time polling every 4000ms to synchronize live seat map occupancy
+  useEffect(() => {
+    if (!activeBusId) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/buses/${activeBusId}/seats?bookingSessionId=${encodeURIComponent(bookingSessionId)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.seats)) {
+            setSeats(data.seats);
+
+            // Sync remaining hold seconds
+            const myHeld = data.seats.filter((s: SeatData) => s.isMyHold && s.heldSecondsRemaining > 0);
+            if (myHeld.length > 0) {
+              const maxRemaining = Math.max(...myHeld.map((s: SeatData) => s.heldSecondsRemaining));
+              setHoldTimerSeconds(maxRemaining);
+            } else if (selectedSeats.length > 0) {
+              // Current user hold expired or was taken
+              const stillHeldByMe = data.seats.filter((s: SeatData) => selectedSeats.includes(s.seatNumber) && s.isMyHold);
+              if (stillHeldByMe.length < selectedSeats.length) {
+                onSeatSelect(activeBusId, stillHeldByMe.map((s: SeatData) => s.seatNumber));
+                setErrorMessage('Your 10-minute hold has expired. Please select your seats again.');
+              }
+            }
+          }
+        }
+      } catch {
+        // Silently continue on background poll drop
+      }
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [activeBusId, bookingSessionId, selectedSeats, onSeatSelect]);
+
   // 3. Countdown timer for seat hold
   useEffect(() => {
     if (holdTimerSeconds <= 0) return;

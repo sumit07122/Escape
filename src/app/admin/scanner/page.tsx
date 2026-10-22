@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   QrCode, CheckCircle2, XCircle, ShieldCheck, Camera,
-  AlertCircle, Loader2, RefreshCw, Bus, Ticket, DollarSign, CameraOff
+  AlertCircle, Loader2, RefreshCw, Bus, Ticket, DollarSign,
+  CameraOff, Search, User, Phone, ArrowRight
 } from 'lucide-react';
 
 interface ScannedTicket {
@@ -18,6 +19,8 @@ interface ScannedTicket {
     fullName: string;
     gender: string;
     phone: string;
+    rollNumber?: string;
+    collegeId?: string;
     assignedSeatNumber?: string;
     assignedBusNumber?: string;
   };
@@ -38,6 +41,53 @@ interface ScannedTicket {
   } | null;
 }
 
+interface SearchTraveller {
+  travellerId: string;
+  ticketId: string | null;
+  ticketNumber: string;
+  qrToken: string | null;
+  fullName: string;
+  rollNumber: string;
+  phone: string;
+  busNumber: string;
+  seatNumber: string;
+  checkInStatus: string;
+  checkedInAt: string | null;
+  bookingId: string;
+  remainingBalance: number;
+}
+
+function playAudioFeedback(type: 'SUCCESS' | 'ERROR') {
+  try {
+    if (typeof window === 'undefined') return;
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    if (type === 'SUCCESS') {
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.15);
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.2);
+      navigator.vibrate?.(150);
+    } else {
+      osc.frequency.setValueAtTime(320, ctx.currentTime);
+      osc.frequency.setValueAtTime(200, ctx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.25);
+      navigator.vibrate?.([100, 50, 100]);
+    }
+  } catch {
+    // Audio Context fallback
+  }
+}
+
 export default function AdminScannerPage() {
   const [tokenInput, setTokenInput] = useState('');
   const [scannedResult, setScannedResult] = useState<ScannedTicket | null>(null);
@@ -46,6 +96,12 @@ export default function AdminScannerPage() {
   const [checkInLoading, setCheckInLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Manual Search State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchTraveller[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [checkingInTravellerId, setCheckingInTravellerId] = useState<string | null>(null);
 
   // Camera State
   const [cameraActive, setCameraActive] = useState(false);
@@ -121,6 +177,30 @@ export default function AdminScannerPage() {
     };
   }, []);
 
+  // Fetch / Search passengers
+  const executeSearch = useCallback(async (query: string) => {
+    try {
+      setSearchLoading(true);
+      const res = await fetch(`/api/admin/tickets/search?q=${encodeURIComponent(query)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSearchResults(data.travellers || []);
+      }
+    } catch (err) {
+      console.error('Search error:', err);
+    } finally {
+      setSearchLoading(false);
+    }
+  }, []);
+
+  // Initial and debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      executeSearch(searchQuery);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [searchQuery, executeSearch]);
+
   const handleScan = async (rawCode?: string) => {
     const code = rawCode || tokenInput;
     if (!code.trim()) return;
@@ -142,59 +222,76 @@ export default function AdminScannerPage() {
       if (!res.ok || !data.ticket) {
         setScanStatus('INVALID');
         setErrorMessage('INVALID TOKEN — No matching student record found');
+        playAudioFeedback('ERROR');
       } else {
         const ticketData: ScannedTicket = data.ticket;
         setScannedResult(ticketData);
 
         if (ticketData.isCheckedIn || ticketData.status === 'CHECKED_IN') {
           setScanStatus('ALREADY_CHECKED_IN');
+          playAudioFeedback('ERROR');
         } else {
           setScanStatus('VALID');
+          playAudioFeedback('SUCCESS');
         }
       }
     } catch {
       setScanStatus('INVALID');
       setErrorMessage('Network error communicating with gate verification server.');
+      playAudioFeedback('ERROR');
     } finally {
       setLoading(false);
     }
   };
 
   // Confirm Check-In & Balance Collected
-  const handleConfirmCheckIn = async () => {
-    if (!scannedResult) return;
+  const handleConfirmCheckIn = async (overrideTicketId?: string) => {
+    const ticketIdToUse = overrideTicketId || scannedResult?.id;
+    if (!ticketIdToUse) return;
+
     setCheckInLoading(true);
     try {
       const res = await fetch('/api/admin/tickets/checkin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ticketId: scannedResult.id,
+          ticketId: ticketIdToUse,
           notes: '₹5,200 balance collected and verified at GLA departure desk.',
         }),
       });
 
       const data = await res.json();
       if (res.ok) {
+        playAudioFeedback('SUCCESS');
         setSuccessMessage(`Check-in recorded! Boarding authorized at ${new Date(data.checkInTime || Date.now()).toLocaleTimeString()}.`);
-        setScannedResult((prev) =>
-          prev
-            ? {
-                ...prev,
-                status: 'CHECKED_IN',
-                isCheckedIn: true,
-                checkInTime: data.checkInTime || new Date().toISOString(),
-              }
-            : null
-        );
-        setScanStatus('ALREADY_CHECKED_IN');
+        
+        // Refresh local scan result if matching
+        if (scannedResult && scannedResult.id === ticketIdToUse) {
+          setScannedResult((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  status: 'CHECKED_IN',
+                  isCheckedIn: true,
+                  checkInTime: data.checkInTime || new Date().toISOString(),
+                }
+              : null
+          );
+          setScanStatus('ALREADY_CHECKED_IN');
+        }
+
+        // Refresh manual search list
+        executeSearch(searchQuery);
       } else {
+        playAudioFeedback('ERROR');
         alert(data.error || 'Check-in failed to record.');
       }
     } catch {
+      playAudioFeedback('ERROR');
       alert('Network failure recording check-in.');
     } finally {
       setCheckInLoading(false);
+      setCheckingInTravellerId(null);
     }
   };
 
@@ -209,7 +306,7 @@ export default function AdminScannerPage() {
   const checkedInAdminName = scannedResult?.lastCheckIn?.adminName || 'Gate Officer';
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-3xl mx-auto space-y-6">
       {/* Header */}
       <div className="text-center space-y-2">
         <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest flex items-center justify-center gap-1.5">
@@ -219,7 +316,7 @@ export default function AdminScannerPage() {
           Departure QR Gate Scanner
         </h1>
         <p className="text-xs text-zinc-400">
-          Scan digital boarding pass QR codes with device camera or USB scanner gun to authorize student boarding.
+          Fast QR verification with instant manual passenger search fallback for frictionless bus boarding.
         </p>
       </div>
 
@@ -227,7 +324,7 @@ export default function AdminScannerPage() {
       <div className="glass-card rounded-3xl p-6 border border-white/10 space-y-4">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-2">
-            <Camera className="w-4 h-4 text-emerald-400" /> HTML5 Camera Scanner
+            <Camera className="w-4 h-4 text-emerald-400" /> Live Camera Scanner
           </span>
           <button
             type="button"
@@ -274,7 +371,7 @@ export default function AdminScannerPage() {
           </div>
         )}
 
-        {/* Manual Input Fallback */}
+        {/* Quick Token / Barcode Gun Input */}
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -283,14 +380,14 @@ export default function AdminScannerPage() {
           className="space-y-3 pt-2 border-t border-zinc-800"
         >
           <label className="block text-xs font-bold text-zinc-300 uppercase tracking-wider">
-            Or Enter Token / Booking Reference:
+            USB Scanner Gun / Token Input:
           </label>
           <div className="flex gap-2">
             <div className="relative flex-1">
               <QrCode className="w-5 h-5 text-zinc-500 absolute left-3.5 top-3.5" />
               <input
                 type="text"
-                placeholder="Paste token (e.g. GHE-VERIFY-XXXX) or Booking ID (e.g. GHE-101010)"
+                placeholder="Paste token or scan barcode (e.g. GHE-VERIFY-XXXX / GHE-101010)"
                 value={tokenInput}
                 onChange={(e) => setTokenInput(e.target.value)}
                 className="w-full pl-11 pr-4 py-3 rounded-xl bg-zinc-950 border border-zinc-700 text-white font-mono text-xs focus:border-emerald-500 focus:outline-none"
@@ -301,14 +398,122 @@ export default function AdminScannerPage() {
               disabled={loading}
               className="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-lg flex items-center gap-1.5 transition-all cursor-pointer"
             >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Scan</span>}
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Scan Token</span>}
             </button>
           </div>
         </form>
       </div>
 
       {/* ======================================================== */}
-      {/* 3 SPECIFIED INSTANT VISUAL SCAN RESPONSE BANNERS          */}
+      {/* 2. MANUAL SEARCH FALLBACK (ZERO-CAMERA FALLBACK)          */}
+      {/* ======================================================== */}
+      <div className="glass-card rounded-3xl p-6 border border-white/10 space-y-4">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-2">
+            <Search className="w-4 h-4 text-emerald-400" /> Manual Search Fallback (Zero-Camera)
+          </span>
+          <span className="text-[11px] font-mono text-zinc-400">
+            {searchResults.length} {searchResults.length === 1 ? 'Passenger' : 'Passengers'}
+          </span>
+        </div>
+
+        <div className="relative">
+          <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-3.5" />
+          <input
+            type="text"
+            placeholder="Search by Roll Number, Name, or Phone..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 rounded-xl bg-zinc-950 border border-zinc-700 text-white text-xs focus:border-emerald-500 focus:outline-none"
+          />
+          {searchLoading && (
+            <Loader2 className="w-4 h-4 text-emerald-400 animate-spin absolute right-3.5 top-3.5" />
+          )}
+        </div>
+
+        {/* Live Filtered Passenger Rows */}
+        <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+          {searchResults.length === 0 ? (
+            <div className="p-6 text-center text-xs text-zinc-500">
+              No confirmed passengers found matching &quot;{searchQuery}&quot;
+            </div>
+          ) : (
+            searchResults.map((p) => {
+              const isCheckedIn = p.checkInStatus === 'CHECKED_IN';
+              return (
+                <div
+                  key={p.travellerId}
+                  className={`p-3.5 rounded-2xl border transition-all flex flex-wrap items-center justify-between gap-3 ${
+                    isCheckedIn
+                      ? 'bg-zinc-900/60 border-zinc-800 text-zinc-400'
+                      : 'bg-zinc-950 border-zinc-800 text-white hover:border-emerald-500/50'
+                  }`}
+                >
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-sm text-white">{p.fullName}</span>
+                      <span className="px-2 py-0.5 rounded bg-zinc-800 text-[10px] font-mono text-zinc-300">
+                        {p.rollNumber}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-zinc-400">
+                      <span>Coach: <strong className="text-emerald-400">{p.busNumber}</strong></span>
+                      <span>Seat: <strong className="text-emerald-400">{p.seatNumber}</strong></span>
+                      <span>Phone: {p.phone}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2.5">
+                    {/* Status Badge */}
+                    <span
+                      className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                        isCheckedIn
+                          ? 'bg-emerald-950 text-emerald-300 border border-emerald-600/40'
+                          : 'bg-amber-950 text-amber-300 border border-amber-600/40'
+                      }`}
+                    >
+                      {isCheckedIn ? 'Checked In' : 'Pending Gate'}
+                    </span>
+
+                    {/* Single Check In Button */}
+                    {!isCheckedIn ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (p.ticketId) {
+                            setCheckingInTravellerId(p.travellerId);
+                            handleConfirmCheckIn(p.ticketId);
+                          } else {
+                            alert('No valid ticket record found for traveller.');
+                          }
+                        }}
+                        disabled={checkInLoading && checkingInTravellerId === p.travellerId}
+                        className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black shadow-md transition-all flex items-center gap-1 cursor-pointer"
+                      >
+                        {checkInLoading && checkingInTravellerId === p.travellerId ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <>
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>Check In</span>
+                          </>
+                        )}
+                      </button>
+                    ) : (
+                      <span className="text-[11px] text-zinc-500 font-mono">
+                        {p.checkedInAt ? new Date(p.checkedInAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Verified'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      {/* ======================================================== */}
+      {/* VISUAL SCAN RESPONSE BANNERS                             */}
       {/* ======================================================== */}
 
       {/* 1. GREEN BANNER: VALID PASS */}
@@ -339,7 +544,7 @@ export default function AdminScannerPage() {
             {/* One-Click Action Button */}
             <button
               type="button"
-              onClick={handleConfirmCheckIn}
+              onClick={() => handleConfirmCheckIn()}
               disabled={checkInLoading}
               className="px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs shadow-lg flex items-center gap-2 cursor-pointer transition-all uppercase tracking-wide"
             >

@@ -66,6 +66,15 @@ function BookingTrackerContent() {
         <p className="text-xs text-[#646864] max-w-md mx-auto">
           Access your confirmed seat reservation, view your QR boarding pass, and prepare for departure near GLA Main Gate, Mathura.
         </p>
+        <div className="pt-2">
+          <Link
+            href="/my-bookings"
+            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#163C32]/10 hover:bg-[#163C32]/15 text-[#163C32] text-xs font-bold transition-colors"
+          >
+            <span>Signed in with Google? View All My Bookings Dashboard</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
       </div>
 
       {/* Lookup Form */}

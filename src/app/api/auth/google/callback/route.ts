@@ -125,36 +125,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/login?error=Google+account+missing+verified+email', request.url));
     }
 
-    // 3. Upsert user in database
-    let user = await db.user.findFirst({
-      where: {
-        OR: [
-          { googleId },
-          { email },
-        ],
+    // 3. Atomically upsert user in database
+    const user = await db.user.upsert({
+      where: { email },
+      update: {
+        name,
+        image: image || undefined,
+        googleId: googleId || undefined,
+      },
+      create: {
+        googleId,
+        email,
+        name,
+        image,
+        role: 'TRAVELLER',
       },
     });
-
-    if (!user) {
-      user = await db.user.create({
-        data: {
-          googleId,
-          email,
-          name,
-          image,
-          role: 'TRAVELLER',
-        },
-      });
-    } else {
-      user = await db.user.update({
-        where: { id: user.id },
-        data: {
-          googleId: googleId || user.googleId,
-          name: user.name || name,
-          image: image || user.image,
-        },
-      });
-    }
 
     // 4. Create signed session token
     const sessionToken = signUserSession({

@@ -76,6 +76,13 @@ export default function DigitalTicketPage({
     loadTicket();
   }, [token]);
 
+  const [passUrl, setPassUrl] = useState('');
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setPassUrl(window.location.href);
+    }
+  }, []);
+
   if (loading) {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 bg-[#F7F5EF] text-[#1C1C1C]">
@@ -97,10 +104,10 @@ export default function DigitalTicketPage({
         <p className="text-xs text-red-600 font-medium">{error}</p>
         <div className="pt-4">
           <Link
-            href="/my-booking"
+            href="/my-bookings"
             className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#163C32] text-white text-xs font-bold hover:bg-[#0E2620]"
           >
-            <ArrowLeft className="w-4 h-4" /> Search By Booking ID
+            <ArrowLeft className="w-4 h-4" /> Go to My Bookings
           </Link>
         </div>
       </div>
@@ -115,22 +122,43 @@ export default function DigitalTicketPage({
   const seatPositionText = isWindow ? 'Window' : seatNumber.startsWith('B') ? 'Rear Bench' : 'Aisle';
   const rollNumberDisplay = traveller?.rollNumber || traveller?.collegeId || 'ID Verified';
 
+  const shareText =
+    `🏔️ Himalayan Escape 2026 - My Boarding Pass\n` +
+    `Passenger: ${traveller?.fullName || booking?.primaryTravellerName || 'Student'}\n` +
+    `Bus: ${busNumber} | Seat: ${seatNumber}\n` +
+    `Balance Due at Gate: ₹5,200\n` +
+    `Boarding Pass Link: ${passUrl}`;
+  const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+
   return (
     <div className="min-h-screen py-10 px-4 bg-[#F7F5EF] text-[#1C1C1C]">
       {/* Control Bar (No-Print) */}
-      <div className="max-w-2xl mx-auto mb-6 flex items-center justify-between no-print">
+      <div className="max-w-2xl mx-auto mb-6 flex flex-wrap items-center justify-between gap-3 no-print">
         <Link
-          href="/"
+          href="/my-bookings"
           className="inline-flex items-center gap-1.5 text-xs font-bold text-[#163C32] hover:text-[#0E2620]"
         >
-          <ArrowLeft className="w-4 h-4" /> Return to Expedition Home
+          <ArrowLeft className="w-4 h-4" /> Back to My Bookings
         </Link>
-        <button
-          onClick={() => window.print()}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#163C32] hover:bg-[#0E2620] text-white text-xs font-black shadow-md transition-all cursor-pointer"
-        >
-          <Printer className="w-4 h-4" /> Download Pass / Print
-        </button>
+        <div className="flex items-center gap-2">
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-sm transition-all"
+          >
+            <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+              <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86.173.086.275.071.376-.043.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.099.824z" />
+            </svg>
+            <span>Share Pass to WhatsApp</span>
+          </a>
+          <button
+            onClick={() => window.print()}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#163C32] hover:bg-[#0E2620] text-white text-xs font-black shadow-md transition-all cursor-pointer"
+          >
+            <Printer className="w-4 h-4" /> Save Pass / Print
+          </button>
+        </div>
       </div>
 
       {/* Main Boarding Pass Card */}
@@ -232,9 +260,9 @@ export default function DigitalTicketPage({
                     Deposit Paid: ₹1,000
                   </span>
                 </div>
-                <div className="p-2.5 rounded-xl bg-white border border-[#D87945]/40 text-center">
+                <div className="p-3 rounded-xl bg-white border border-[#D87945]/40 text-center">
                   <span className="text-xs sm:text-sm font-black text-[#B85F30] uppercase tracking-wide block">
-                    ⚠️ Collect ₹5,200 Balance at Gate
+                    ⚠️ Balance Payable at Gate: ₹5,200 (Cash/UPI)
                   </span>
                   <span className="text-[10px] text-[#646864] block mt-0.5">
                     Remaining cash or UPI balance to be settled at gate verification desk before boarding.
@@ -334,9 +362,9 @@ export default function DigitalTicketPage({
                 OFFLINE EMERGENCY CONTACTS (STUDENT TRIP LEADS)
               </div>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span>Lead Coordinator: <strong className="text-[#163C32]">{CONTACT_INFO.coordinatorPhone1}</strong> (Aryan)</span>
-                <span>Trip Coordinator: <strong className="text-[#163C32]">{CONTACT_INFO.coordinatorPhone2}</strong> (Rohan)</span>
-                <span>Emergency Support: <strong className="text-[#163C32]">{CONTACT_INFO.emergencyCoordinator}</strong></span>
+                <span>Lead Coordinator: <a href={`tel:${CONTACT_INFO.coordinatorPhone1}`} className="text-[#163C32] font-bold hover:underline">{CONTACT_INFO.coordinatorPhone1}</a> (Aryan)</span>
+                <span>Trip Coordinator: <a href={`tel:${CONTACT_INFO.coordinatorPhone2}`} className="text-[#163C32] font-bold hover:underline">{CONTACT_INFO.coordinatorPhone2}</a> (Rohan)</span>
+                <span>Emergency Support: <a href={`tel:${CONTACT_INFO.emergencyCoordinator}`} className="text-[#163C32] font-bold hover:underline">{CONTACT_INFO.emergencyCoordinator}</a></span>
               </div>
             </div>
           </div>

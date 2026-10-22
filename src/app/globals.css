@@ -227,7 +227,7 @@ h3 {
     size: auto;
     margin: 6mm 8mm;
   }
-  nav, footer, .no-print, button, .mobile-bottom-bar {
+  header, nav, footer, .no-print, button, .mobile-bottom-bar {
     display: none !important;
   }
   body, html {

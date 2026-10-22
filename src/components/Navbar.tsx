@@ -1,20 +1,26 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Mountain, Menu, X, ArrowRight, User as UserIcon } from 'lucide-react';
+import {
+  Mountain, Menu, X, ArrowRight, User as UserIcon,
+  ChevronDown, Ticket, Compass, LogOut
+} from 'lucide-react';
 
 interface AuthUser {
   id: string;
   name?: string;
   email: string;
+  image?: string | null;
 }
 
 export default function Navbar() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [userSession, setUserSession] = useState<AuthUser | null>(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     async function checkAuth() {
@@ -24,6 +30,8 @@ export default function Navbar() {
           const data = await res.json();
           if (data.authenticated && data.user) {
             setUserSession(data.user);
+          } else {
+            setUserSession(null);
           }
         }
       } catch {
@@ -33,11 +41,22 @@ export default function Navbar() {
     checkAuth();
   }, [pathname]);
 
+  // Dismiss dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setUserDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const navLinks = [
     { name: 'Trip', href: '/trip' },
     { name: 'Itinerary', href: '/itinerary' },
     { name: 'Pricing', href: '/pricing' },
-    { name: 'My Booking', href: '/my-booking' },
+    { name: 'My Bookings', href: '/my-bookings' },
   ];
 
   return (
@@ -62,7 +81,7 @@ export default function Navbar() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-1 lg:gap-2">
             {navLinks.map((link) => {
-              const isActive = pathname === link.href;
+              const isActive = pathname === link.href || (link.href === '/my-bookings' && pathname === '/my-booking');
               return (
                 <Link
                   key={link.name}
@@ -79,16 +98,73 @@ export default function Navbar() {
             })}
           </nav>
 
-          {/* Desktop Right: Google Auth / My Booking + Book Now */}
+          {/* Desktop Right: Authenticated User Dropdown OR Continue with Google */}
           <div className="hidden md:flex items-center gap-3">
             {userSession ? (
-              <Link
-                href="/my-booking"
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-[#163C32] bg-[#E7E2D8] hover:bg-[#DDD5C5] transition-colors"
-              >
-                <UserIcon className="w-3.5 h-3.5 text-[#163C32]" />
-                <span>{userSession.name?.split(' ')[0] || 'My Booking'}</span>
-              </Link>
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold text-[#163C32] bg-[#E7E2D8] hover:bg-[#DDD5C5] border border-[#D8D2C4] transition-all cursor-pointer"
+                >
+                  {userSession.image ? (
+                    <img
+                      src={userSession.image}
+                      alt={userSession.name || 'Traveller'}
+                      className="w-6 h-6 rounded-full object-cover border border-[#163C32]/30 shrink-0"
+                    />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-[#163C32] text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+                      {(userSession.name || userSession.email).slice(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                  <span className="max-w-[110px] truncate">{userSession.name?.split(' ')[0] || userSession.email.split('@')[0]}</span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-[#163C32] transition-transform ${userDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* Dropdown Menu */}
+                {userDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white border border-[#D8D2C4] shadow-xl py-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="px-4 py-2.5 border-b border-[#E7E2D8]">
+                      <p className="font-bold text-xs text-[#171918] truncate">{userSession.name || 'Traveller'}</p>
+                      <p className="text-[11px] text-[#646864] truncate">{userSession.email}</p>
+                    </div>
+
+                    <div className="py-1">
+                      <Link
+                        href="/my-bookings"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-[#171918] hover:bg-[#F7F5EF] transition-colors"
+                      >
+                        <Ticket className="w-4 h-4 text-[#163C32]" />
+                        <span>My Bookings</span>
+                      </Link>
+                      <Link
+                        href="/book"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-[#171918] hover:bg-[#F7F5EF] transition-colors"
+                      >
+                        <Compass className="w-4 h-4 text-[#D87945]" />
+                        <span>Book Seats</span>
+                      </Link>
+                    </div>
+
+                    <div className="border-t border-[#E7E2D8] pt-1">
+                      <a
+                        href="/api/auth/logout"
+                        onClick={() => {
+                          setUserDropdownOpen(false);
+                          setUserSession(null);
+                        }}
+                        className="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-rose-700 hover:bg-rose-50 transition-colors w-full text-left"
+                      >
+                        <LogOut className="w-4 h-4 text-rose-600" />
+                        <span>Sign Out</span>
+                      </a>
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : (
               <Link
                 href="/login"
@@ -139,13 +215,56 @@ export default function Navbar() {
                 {link.name}
               </Link>
             ))}
-            <Link
-              href="/login"
-              onClick={() => setMobileMenuOpen(false)}
-              className="px-3.5 py-2.5 rounded-lg text-sm font-semibold text-[#163C32] hover:bg-[#E7E2D8]"
-            >
-              {userSession ? 'My Booking' : 'Continue with Google'}
-            </Link>
+
+            {userSession ? (
+              <div className="p-3 rounded-2xl bg-white border border-[#D8D2C4] space-y-2 mt-2">
+                <div className="flex items-center gap-2.5 pb-2 border-b border-[#E7E2D8]">
+                  {userSession.image ? (
+                    <img src={userSession.image} alt="User" className="w-8 h-8 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-[#163C32] text-white text-xs font-bold flex items-center justify-center">
+                      {(userSession.name || userSession.email).slice(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="truncate">
+                    <p className="text-xs font-bold text-[#171918] truncate">{userSession.name || 'Traveller'}</p>
+                    <p className="text-[10px] text-[#646864] truncate">{userSession.email}</p>
+                  </div>
+                </div>
+                <Link
+                  href="/my-bookings"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-bold text-[#163C32] hover:bg-[#F7F5EF]"
+                >
+                  <Ticket className="w-4 h-4" />
+                  <span>My Bookings</span>
+                </Link>
+                <Link
+                  href="/book"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-bold text-[#D87945] hover:bg-[#F7F5EF]"
+                >
+                  <Compass className="w-4 h-4" />
+                  <span>Book Seats</span>
+                </Link>
+                <a
+                  href="/api/auth/logout"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-bold text-rose-700 hover:bg-rose-50"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Sign Out</span>
+                </a>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3.5 py-2.5 rounded-lg text-sm font-semibold text-[#163C32] hover:bg-[#E7E2D8]"
+              >
+                Continue with Google
+              </Link>
+            )}
           </div>
 
           <Link
