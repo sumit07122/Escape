@@ -5,7 +5,9 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   ShieldCheck, QrCode, LogOut, RefreshCw, LayoutDashboard,
-  Mountain, Lock, User, ArrowLeft
+  Mountain, Lock, User, ArrowLeft, PanelsTopLeft, CalendarDays,
+  Building2, Ticket, Users, CreditCard, Bus, BarChart3, Receipt,
+  Settings, ScrollText, Truck, Tag, ExternalLink
 } from 'lucide-react';
 
 interface AdminStats {
@@ -238,9 +240,69 @@ export default function AdminLayout({
   const activeCap = stats?.confirmedTravellers || 0;
   const revCollected = stats?.reservationRevenue || 0;
   const gatePending = stats?.remainingBalances || 0;
+  const navGroups = [
+    { label: 'Workspace', items: [
+      { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+      { label: 'Site editor', href: '/admin/site-editor', icon: PanelsTopLeft },
+      { label: 'Itinerary', href: '/admin/itinerary', icon: CalendarDays },
+      { label: 'Hotels & stays', href: '/admin/hotels', icon: Building2 },
+    ] },
+    { label: 'Bookings', items: [
+      { label: 'Reservations', href: '/admin/bookings', icon: Ticket },
+      { label: 'Travellers', href: '/admin/travellers', icon: Users },
+      { label: 'Groups', href: '/admin/groups', icon: Users },
+      { label: 'Payments', href: '/admin/payments', icon: CreditCard },
+    ] },
+    { label: 'Operations', items: [
+      { label: 'Fleet & seats', href: '/admin/buses', icon: Bus },
+      { label: 'Gate scanner', href: '/admin/scanner', icon: QrCode },
+      { label: 'Reports', href: '/admin/reports', icon: BarChart3 },
+      { label: 'Expenses', href: '/admin/expenses', icon: Receipt },
+      { label: 'Referrals', href: '/admin/referrals', icon: Tag },
+      { label: 'Transport', href: '/admin/transport', icon: Truck },
+    ] },
+    { label: 'System', items: [
+      { label: 'Settings', href: '/admin/settings', icon: Settings },
+      { label: 'Activity log', href: '/admin/audit-logs', icon: ScrollText },
+    ] },
+  ];
+  const currentPage = navGroups.flatMap((group) => group.items).find((item) =>
+    item.href === '/admin' ? pathname === '/admin' : pathname === item.href || pathname.startsWith(item.href + '/')
+  );
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col selection:bg-amber-500/30 selection:text-amber-200">
+    <div className="min-h-screen bg-[#101916] text-stone-100 selection:bg-emerald-500/30 selection:text-emerald-100 lg:flex">
+      <aside className="hidden w-[252px] shrink-0 flex-col border-r border-white/[0.07] bg-[#0b1512] lg:sticky lg:top-0 lg:flex lg:h-screen">
+        <Link href="/admin" className="flex items-center gap-3 border-b border-white/[0.07] px-5 py-5">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e8b58e] text-lg font-black text-[#18352b] shadow-lg">H</span>
+          <span><strong className="block text-sm font-bold text-white">Escape Admin</strong><span className="mt-0.5 block text-[10px] uppercase tracking-[0.16em] text-stone-500">Site management</span></span>
+        </Link>
+        <div className="flex-1 overflow-y-auto px-3 py-5">
+          {navGroups.map((group) => (
+            <section key={group.label} className="mb-6">
+              <h2 className="mb-2 px-3 text-[9px] font-bold uppercase tracking-[0.2em] text-stone-600">{group.label}</h2>
+              <nav className="space-y-1" aria-label={group.label}>
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  const active = item.href === '/admin' ? pathname === '/admin' : pathname === item.href || pathname.startsWith(item.href + '/');
+                  return <Link key={item.href} href={item.href} aria-current={active ? 'page' : undefined} className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition ${active ? 'bg-[#1d382e] text-[#f4c49b] shadow-inner' : 'text-stone-400 hover:bg-white/[0.05] hover:text-stone-100'}`}>
+                    <Icon className={`h-4 w-4 shrink-0 ${active ? 'text-[#f0b78c]' : 'text-stone-500 group-hover:text-stone-300'}`} />
+                    <span>{item.label}</span>
+                    {item.label === 'Gate scanner' && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-emerald-400" />}
+                  </Link>;
+                })}
+              </nav>
+            </section>
+          ))}
+        </div>
+        <div className="border-t border-white/[0.07] p-4">
+          <div className="flex items-center gap-3 rounded-xl bg-white/[0.04] p-3">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1f3c31] text-xs font-bold text-emerald-100">{(adminUser?.name || 'A').slice(0, 1).toUpperCase()}</span>
+            <span><strong className="block text-[11px] text-stone-200">{adminUser?.name || 'Administrator'}</strong><span className="mt-0.5 block text-[9px] uppercase tracking-wider text-stone-500">Site administrator</span></span>
+          </div>
+        </div>
+      </aside>
+      <div className="min-w-0 flex-1">
       {/* ======================================================== */}
       {/* SECTION 2: STICKY TOP BAR (ALPINE MOUNTAIN AESTHETIC)   */}
       {/* ======================================================== */}
@@ -265,7 +327,7 @@ export default function AdminLayout({
               <div className="flex flex-col">
                 <div className="flex items-center gap-2">
                   <span className="font-serif font-black text-sm sm:text-base text-stone-100 tracking-tight">
-                    Operations Command Desk
+                    {currentPage?.label || 'Site manager'}
                   </span>
                   <span className="hidden sm:inline-block px-1.5 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/30 text-[9px] font-mono font-bold text-emerald-400 uppercase">
                     Live
@@ -367,10 +429,19 @@ export default function AdminLayout({
         </div>
       </header>
 
+      <nav className="flex gap-1 overflow-x-auto border-t border-white/5 bg-[#0d1713] px-3 py-2 lg:hidden" aria-label="Admin navigation">
+        {navGroups.flatMap((group) => group.items).map((item) => {
+          const Icon = item.icon;
+          const active = item.href === '/admin' ? pathname === '/admin' : pathname === item.href || pathname.startsWith(item.href + '/');
+          return <Link key={item.href} href={item.href} className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-[10px] font-semibold ${active ? 'bg-[#1d382e] text-[#f4c49b]' : 'text-stone-400 hover:bg-white/5'}`}><Icon className="h-3.5 w-3.5" />{item.label}</Link>;
+        })}
+      </nav>
+
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <main className="mx-auto min-h-[calc(100vh-73px)] w-full max-w-[1600px] flex-1 px-4 py-6 sm:px-6 sm:py-8 xl:px-9">
         {children}
       </main>
+    </div>
     </div>
   );
 }

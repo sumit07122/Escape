@@ -216,10 +216,10 @@ export default function TripPricingConfigTab() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight font-serif">
-            Trip Configuration & Squad Pricing
+            Public Site & Trip Settings
           </h2>
           <p className="text-xs text-stone-400 mt-0.5">
-            Configure tiered squad rates, advance deposits, dates, departure logistics, helplines, broadcast banners, and promo codes.
+            Edit the public trip details, schedule, pricing, contact lines, announcements, and promo codes from one place.
           </p>
         </div>
 

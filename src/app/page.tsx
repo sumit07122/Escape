@@ -23,7 +23,7 @@ export default async function HomePage() {
   const availability = await getSeatAvailability();
   const tripConfig = availability.tripConfig;
   const availableSeats = availability.availableSeats;
-  const totalCapacity = availability.totalCapacity;
+  const depPrice = Number(tripConfig.depositPrice) || 1000;
 
   // Retrieve user session from cookie if logged in
   const cookieStore = await cookies();
@@ -32,170 +32,99 @@ export default async function HomePage() {
     cookieStore.get('user_session')?.value;
   const userSession = token ? verifyUserSession(token) : null;
 
-  const pkgPrice = Number(tripConfig.packagePrice) || 6500;
-  const groupPrice = Number(tripConfig.groupPackagePrice) || 6200;
-  const depPrice = Number(tripConfig.depositPrice) || 1000;
-  const balPrice = Math.max(0, pkgPrice - depPrice);
 
   return (
     <div className="w-full flex flex-col bg-[#F7F5EF] text-[#171918]">
       {/* ======================================================== */}
-      {/* 1. HERO SECTION (DREAMY ALPINE PHOTOGRAPHY + PRICING)   */}
-      {/* ======================================================== */}
-      <section className="relative w-full min-h-[92vh] flex items-center justify-center overflow-hidden bg-stone-950 text-center px-4 pt-24 pb-28">
-        {/* Background Mountain Image Container (z-0, Guaranteed Render) */}
-        <div className="absolute inset-0 z-0">
-          <img
-            src="/hero-mountain.jpg"
-            alt="Himalayan Mountain Range"
-            className="w-full h-full object-cover object-[center_35%]"
-          />
-          {/* Multi-layer atmospheric dark & mist overlays */}
-          <div className="absolute inset-0 bg-gradient-to-b from-stone-950/75 via-black/35 to-stone-950" />
-          <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-stone-950 to-transparent pointer-events-none" />
+      <section className="relative isolate min-h-[82vh] overflow-hidden bg-[#091a17] px-5 pb-24 pt-28 text-center text-white sm:min-h-[88vh] sm:px-8 sm:pb-28 sm:pt-32">
+        <div className="absolute inset-0 -z-20">
+          <img src="/hero-mountain.jpg" alt="A forested Himalayan valley and river" className="h-full w-full object-cover object-[center_42%]" />
         </div>
-
-        {/* Subtle Snowflake Particle Layer */}
+        <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(7,19,17,0.58)_0%,rgba(7,19,17,0.25)_36%,rgba(7,19,17,0.58)_68%,#091a17_100%)]" />
+        <div className="absolute inset-x-0 top-0 -z-10 h-40 bg-gradient-to-b from-black/30 to-transparent" />
         <SnowEffect />
 
-        {/* Hero Content on top (z-10) */}
-        <div className="relative z-10 max-w-5xl mx-auto space-y-6 flex flex-col items-center text-white">
-          {/* Live Seat Counter & Status Pill (SSOT DYNAMIC CALCULATION) + Mountain Weather Widget */}
-          <div className="flex flex-col sm:flex-row items-center gap-3">
-            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-xs font-bold tracking-wide text-white shadow-xl">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+        <div className="relative z-10 mx-auto flex max-w-6xl flex-col items-center gap-8">
+          <div className="flex flex-col items-center gap-3 sm:flex-row sm:gap-4">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/25 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-stone-100 shadow-lg backdrop-blur-md sm:text-xs">
+              <Mountain className="h-4 w-4 text-[#f0b588]" />
+              Independent student expedition
+            </span>
+            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200/20 bg-emerald-950/35 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-50 backdrop-blur-md sm:text-xs">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-300 opacity-70" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-300" />
               </span>
-              <span className="text-emerald-400 font-mono font-black tracking-wider uppercase">
-                {availableSeats} OF {totalCapacity} SEATS REMAINING
-              </span>
-            </div>
+              {availableSeats} of {availability.totalCapacity} seats available
+            </span>
+          </div>
 
+          <div className="max-w-5xl space-y-5">
+            {userSession ? (
+              <p className="mx-auto inline-flex items-center gap-2 rounded-full border border-emerald-300/30 bg-emerald-950/55 px-4 py-2 text-xs font-semibold text-emerald-100 shadow-lg backdrop-blur-md sm:text-sm">
+                <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+                Welcome aboard, {userSession.name?.split(' ')[0] || 'traveller'}
+              </p>
+            ) : (
+              <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#f0b588] sm:text-xs">
+                Manali <span className="px-1 text-white/50">/</span> Kasol <span className="px-1 text-white/50">/</span> 2026
+              </p>
+            )}
+            <h1 className="font-sans text-5xl font-semibold leading-[0.98] tracking-[-0.055em] text-white drop-shadow-[0_4px_30px_rgba(0,0,0,0.4)] sm:text-7xl md:text-8xl">
+              {tripConfig.tripTitle || 'Himalayan Escape'}
+            </h1>
+            <p className="mx-auto max-w-2xl text-base font-light leading-relaxed text-stone-100/90 sm:text-xl md:text-2xl">
+              Six days above the ordinary. Follow the mountain roads to snow trails, cedar forests and slow evenings by the Parvati.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] font-medium uppercase tracking-[0.12em] text-white/75 sm:text-xs">
+              <span>6 days</span><span className="h-1 w-1 rounded-full bg-[#f0b588]" />
+              <span>5 nights</span><span className="h-1 w-1 rounded-full bg-[#f0b588]" />
+              <span>Manali to Kasol</span>
+            </div>
+          </div>
+
+          <div className="flex w-full flex-col justify-center gap-3 pt-1 sm:w-auto sm:flex-row">
+            {userSession ? (
+              <>
+                <Link href="/my-bookings" className="inline-flex items-center justify-center gap-2 rounded-full bg-[#f1c39e] px-7 py-4 text-sm font-bold text-[#17231f] shadow-xl transition hover:bg-white">
+                  Go to my bookings <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link href="/book" className="inline-flex items-center justify-center rounded-full border border-white/35 bg-white/10 px-7 py-4 text-sm font-semibold text-white backdrop-blur-md transition hover:bg-white/20">
+                  Book another seat
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/book" className="inline-flex items-center justify-center gap-2 rounded-full bg-[#f1c39e] px-8 py-4 text-sm font-bold text-[#17231f] shadow-xl transition hover:bg-white">
+                  Start your booking <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link href="#trip-overview" className="inline-flex items-center justify-center rounded-full border border-white/35 bg-white/10 px-8 py-4 text-sm font-semibold text-white backdrop-blur-md transition hover:bg-white/20">
+                  Explore the expedition
+                </Link>
+              </>
+            )}
+          </div>
+
+          <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-white/65 sm:text-xs">
+            Departing from {tripConfig.pickupLocation} - {tripConfig.reportingTime}
+          </p>
+          <div className="rounded-full border border-white/15 bg-black/20 p-1 backdrop-blur-md">
             <MountainWeatherWidget />
           </div>
-
-          {/* Large Hero Title & Prominent Official Brand Badge */}
-          <div className="space-y-4 flex flex-col items-center">
-            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden bg-white/95 border-2 border-white/60 shadow-2xl p-0.5 hover:scale-105 transition-transform duration-300">
-              <img
-                src="/logo.png"
-                alt="Himalayan Escape Official Logo"
-                className="w-full h-full object-contain"
-              />
-            </div>
-
-            {userSession ? (
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-xs sm:text-sm font-bold tracking-wide shadow-md">
-                <span>👋 Welcome Aboard, {userSession.name?.split(' ')[0] || 'Traveller'}!</span>
-              </div>
-            ) : (
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-[#D87945] text-xs sm:text-sm font-black tracking-widest uppercase font-mono">
-                🏔️ {tripConfig.subtitle || 'STUDENT EXPEDITION • MANALI × KASOL 2026'}
-              </div>
-            )}
-
-            <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight uppercase leading-none text-white drop-shadow-md">
-              {tripConfig.tripTitle || 'HIMALAYAN ESCAPE'}
-            </h1>
-            <p className="text-base sm:text-xl md:text-2xl font-light text-stone-100 tracking-wide drop-shadow-sm max-w-2xl">
-              6 Days, 5 Nights of Parvati Valley Cafés, Snow Treks & Bonfire Nights.
-            </p>
-          </div>
-
-          {/* Tiered Squad Pricing Breakdown Card (DYNAMIC FROM SSOT) */}
-          <div className="w-full max-w-lg p-5 rounded-2xl bg-black/60 backdrop-blur-md border border-white/25 shadow-2xl space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/15 pb-4">
-              <div className="text-left">
-                <span className="text-[11px] font-bold tracking-widest uppercase text-stone-300 block font-mono">
-                  SOLO RATE (1–4 PAX)
-                </span>
-                <span className="text-3xl sm:text-4xl font-black tracking-tight text-white font-mono">
-                  ₹{pkgPrice.toLocaleString('en-IN')}
-                </span>
-                <span className="text-[10px] text-stone-300 ml-1 font-semibold">/ person</span>
-              </div>
-              <div className="text-right">
-                <span className="text-[11px] font-bold tracking-widest uppercase text-emerald-400 block font-mono">
-                  SQUAD RATE (5+ PAX)
-                </span>
-                <span className="text-3xl sm:text-4xl font-black tracking-tight text-emerald-400 font-mono">
-                  ₹{groupPrice.toLocaleString('en-IN')}
-                </span>
-                <span className="text-[10px] text-emerald-300 ml-1 font-semibold">/ person</span>
-              </div>
-            </div>
-
-            <div className="space-y-1.5 text-center font-mono">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold">
-                <span>Lock Your Seat at just ₹{depPrice.toLocaleString('en-IN')} Deposit</span>
-              </div>
-              <p className="text-xs text-stone-300">
-                ₹{pkgPrice.toLocaleString('en-IN')} / Person • Squad of {tripConfig.groupSizeThreshold || 5}+: ₹{groupPrice.toLocaleString('en-IN')} / Person
-              </p>
-            </div>
-          </div>
-
-          {/* Action CTAs */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2 w-full sm:w-auto">
-            {userSession ? (
-              <>
-                <Link
-                  href="/my-bookings"
-                  className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-[#163C32] to-[#0D241E] hover:from-[#0D241E] hover:to-[#081814] text-white font-black text-sm shadow-xl transition-all tracking-wider text-center border border-white/20"
-                >
-                  Go to My Bookings
-                </Link>
-                <Link
-                  href="/book"
-                  className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-[#D87945] to-[#B85F30] hover:from-[#B85F30] hover:to-[#A34E22] text-white font-black text-sm shadow-xl transition-all tracking-wider text-center"
-                >
-                  Book Another Seat
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/book"
-                  className="w-full sm:w-auto px-9 py-4 rounded-xl bg-gradient-to-r from-[#D87945] to-[#B85F30] hover:from-[#B85F30] hover:to-[#A34E22] text-white font-black text-sm shadow-xl transition-all tracking-wider text-center"
-                >
-                  Reserve Seat (₹{depPrice.toLocaleString('en-IN')} Deposit)
-                </Link>
-                <Link
-                  href="#trip-overview"
-                  className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-sm border border-white/30 backdrop-blur-sm transition-all tracking-wider text-center"
-                >
-                  VIEW THE TRIP
-                </Link>
-              </>
-            )}
-          </div>
-
-          {/* Origin & Route Text (DYNAMIC FROM TRIPCONFIG) */}
-          <p className="text-xs text-stone-200 font-medium tracking-wide pt-1 uppercase">
-            PICKUP: {tripConfig.pickupLocation} ({tripConfig.reportingTime}) → MANALI → KASOL
-          </p>
         </div>
       </section>
 
-      {/* Metric Cards - Positioned cleanly in the transition between hero and content */}
-      <div className="relative z-20 max-w-5xl mx-auto -mt-12 px-4 grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
-        <div className="p-5 rounded-2xl bg-white border border-[#D8D2C4] shadow-md hover:shadow-lg transition-shadow text-center">
-          <span className="block text-2xl font-black text-[#163C32]">6 DAYS</span>
-          <span className="text-xs font-semibold text-[#646864] uppercase tracking-wider font-mono">EXPEDITION</span>
-        </div>
-        <div className="p-5 rounded-2xl bg-white border border-[#D8D2C4] shadow-md hover:shadow-lg transition-shadow text-center">
-          <span className="block text-2xl font-black text-[#163C32]">5 NIGHTS</span>
-          <span className="text-xs font-semibold text-[#646864] uppercase tracking-wider font-mono">ACCOMMODATION</span>
-        </div>
-        <div className="p-5 rounded-2xl bg-white border border-[#D8D2C4] shadow-md hover:shadow-lg transition-shadow text-center">
-          <span className="block text-2xl font-black text-[#D87945] font-mono">₹{pkgPrice.toLocaleString('en-IN')}</span>
-          <span className="text-xs font-semibold text-[#646864] uppercase tracking-wider font-mono">PER PERSON</span>
-        </div>
-        <div className="p-5 rounded-2xl bg-white border border-[#D8D2C4] shadow-md hover:shadow-lg transition-shadow text-center">
-          <span className="block text-2xl font-black text-[#171918] font-mono">{totalCapacity} SEATS</span>
-          <span className="text-xs font-semibold text-[#646864] uppercase tracking-wider font-mono">MAX CAPACITY</span>
-        </div>
+      <div className="relative z-20 mx-auto -mt-10 grid w-full max-w-5xl grid-cols-1 gap-3 px-4 sm:grid-cols-3 sm:px-6">
+        {[
+          { value: '06', label: 'Days on the road', icon: Calendar },
+          { value: '05', label: 'Nights in the mountains', icon: Mountain },
+          { value: String(availableSeats).padStart(2, '0'), label: 'Seats currently available', icon: Bus },
+        ].map(({ value, label, icon: Icon }) => (
+          <div key={label} className="flex items-center gap-4 rounded-2xl border border-[#e7e1d7] bg-white/95 px-5 py-4 shadow-[0_15px_40px_rgba(18,42,34,0.10)] backdrop-blur">
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#edf3ef] text-[#163C32]"><Icon className="h-5 w-5" /></span>
+            <div><strong className="block text-xl font-semibold tracking-tight text-[#163C32]">{value}</strong><span className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#6c756f]">{label}</span></div>
+          </div>
+        ))}
       </div>
 
       {/* Main Content Sections with Standard Spacing */}

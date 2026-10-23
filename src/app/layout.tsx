@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Manrope } from 'next/font/google';
 import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -6,6 +7,8 @@ import MobileBottomBar from '@/components/MobileBottomBar';
 import WhatsAppCommunityButton from '@/components/WhatsAppCommunityButton';
 import SocialProofToast from '@/components/SocialProofToast';
 import { Analytics } from '@vercel/analytics/next';
+
+const manrope = Manrope({ subsets: ['latin'], variable: '--font-manrope' });
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
@@ -67,7 +70,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full scroll-smooth">
+    <html lang="en" className={`${manrope.variable} h-full scroll-smooth`}>
       <head>
         <link rel="icon" href="/icon.png" type="image/png" sizes="any" />
         <link rel="apple-touch-icon" href="/icon.png" />
