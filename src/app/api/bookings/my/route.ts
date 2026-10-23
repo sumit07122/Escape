@@ -13,15 +13,25 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const email = session.email.toLowerCase().trim();
+    const orConditions: any[] = [{ userId: session.id }];
+
+    if (session.email) {
+      const email = session.email.toLowerCase().trim();
+      orConditions.push({ primaryEmail: { equals: email, mode: 'insensitive' } });
+      orConditions.push({ travellers: { some: { email: { equals: email, mode: 'insensitive' } } } });
+    }
+
+    if (session.phone) {
+      const cleanPhone = session.phone.replace(/[^0-9]/g, '').slice(-10);
+      if (cleanPhone) {
+        orConditions.push({ primaryPhone: { contains: cleanPhone } });
+        orConditions.push({ travellers: { some: { phone: { contains: cleanPhone } } } });
+      }
+    }
 
     const bookings = await db.booking.findMany({
       where: {
-        OR: [
-          { userId: session.id },
-          { primaryEmail: { equals: email, mode: 'insensitive' } },
-          { travellers: { some: { email: { equals: email, mode: 'insensitive' } } } },
-        ],
+        OR: orConditions,
       },
       include: {
         travellers: {
@@ -48,7 +58,8 @@ export async function GET(request: NextRequest) {
       success: true,
       user: {
         id: session.id,
-        email: session.email,
+        phone: session.phone || null,
+        email: session.email || null,
         name: session.name,
         image: session.image,
       },

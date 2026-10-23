@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 3. Safeguard the Database User Upsert
-    let dbUser: { id: string; email: string; name: string | null; image?: string | null; role: string } | null = null;
+    let dbUser: { id: string; email: string | null; name: string | null; image?: string | null; role: string } | null = null;
     try {
       dbUser = await db.user.upsert({
         where: { email },

@@ -56,12 +56,21 @@ export default function MyBookingsPage() {
   const [currentUser, setCurrentUser] = useState<{ id: string; name: string; email: string; image?: string | null } | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [tripConfig, setTripConfig] = useState<any>(null);
 
   useEffect(() => {
     async function loadData() {
       try {
         setLoading(true);
         setError(null);
+
+        // Fetch dynamic trip config for logistics & helplines
+        fetch('/api/trip-config')
+          .then((r) => r.json())
+          .then((d) => {
+            if (d?.config) setTripConfig(d.config);
+          })
+          .catch(() => {});
 
         // 1. Check user auth session
         const authRes = await fetch('/api/auth/me');
@@ -95,6 +104,7 @@ export default function MyBookingsPage() {
 
     loadData();
   }, []);
+
 
   if (loading) {
     return (
@@ -378,15 +388,16 @@ export default function MyBookingsPage() {
                   <div className="pt-4 border-t border-[#E7E2D8] flex flex-wrap items-center justify-between gap-3 text-xs text-[#646864]">
                     <div className="flex items-center gap-2">
                       <MapPin className="w-3.5 h-3.5 text-[#163C32]" />
-                      <span>Pickup: Near Main Gate (NH-2), Mathura (04:30 PM)</span>
+                      <span>Pickup: {tripConfig?.pickupLocation || 'Near Main Gate (NH-2), Mathura'} ({tripConfig?.reportingTime || '07:00 PM'})</span>
                     </div>
 
                     <div className="flex items-center gap-2">
                       <Phone className="w-3.5 h-3.5 text-[#163C32]" />
-                      <span>Gate Help: {CONTACT_INFO.coordinatorPhone1}</span>
+                      <span>Gate Help: {tripConfig?.emergencyHelplines?.[0] || CONTACT_INFO.coordinatorPhone1}</span>
                     </div>
                   </div>
                 </div>
+
               );
             })}
           </div>

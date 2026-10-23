@@ -80,10 +80,30 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { seatId, action, travellerId, isBookable, targetSeatId } = body;
+    let { seatId, action, status, newSeatNumber, busId, travellerId, isBookable, targetSeatId } = body;
+
+    // Handle status shorthand (e.g. status: "BLOCKED" | "AVAILABLE")
+    if (!action && status) {
+      if (status === 'BLOCKED' || status === 'UNAVAILABLE') action = 'LOCK';
+      else if (status === 'AVAILABLE') action = 'UNLOCK';
+    }
+
+    // Handle newSeatNumber / busId reassignment shorthand
+    if (newSeatNumber) {
+      const targetSeat = await db.busSeat.findFirst({
+        where: {
+          seatNumber: newSeatNumber,
+          ...(busId ? { busId } : {}),
+        },
+      });
+      if (targetSeat) {
+        targetSeatId = targetSeat.id;
+        action = 'REASSIGN';
+      }
+    }
 
     if (!seatId || !action) {
-      return NextResponse.json({ error: 'seatId and action are required' }, { status: 400 });
+      return NextResponse.json({ error: 'seatId and action or status are required' }, { status: 400 });
     }
 
     const currentSeat = await db.busSeat.findUnique({
@@ -105,6 +125,24 @@ export async function PATCH(request: NextRequest) {
 
     const performedBy = `Admin: ${admin.name} (${admin.email})`;
 
+    // Helper to fetch all updated buses
+    const fetchUpdatedBuses = async () => {
+      return db.bus.findMany({
+        orderBy: { orderIndex: 'asc' },
+        include: {
+          seats: {
+            orderBy: [{ rowNumber: 'asc' }, { seatNumber: 'asc' }],
+            include: {
+              seatBooking: {
+                include: { traveller: true, booking: true },
+              },
+              seatHold: true,
+            },
+          },
+        },
+      });
+    };
+
     // ACTION: LOCK
     // Sets isBookable: false (blocks the seat for luggage, organizers, or offline reservation)
     if (action === 'LOCK') {
@@ -115,28 +153,31 @@ export async function PATCH(request: NextRequest) {
           data: {
             isBookable: false,
             isAvailable: false,
-            status: 'UNAVAILABLE',
+            status: 'BLOCKED',
           },
         });
       });
 
       await createAuditLog({
-        action: 'ADMIN_SEAT_LOCKED',
+        action: 'ADMIN_SEAT_BLOCKED',
         entityType: 'SEAT',
         entityId: seatId,
         performedBy,
         busId: currentSeat.busId,
         seatNumber: currentSeat.seatNumber,
         oldValue: currentSeat.status,
-        newValue: 'LOCKED',
-        metadata: { reason: 'Organizer locked / reserved for luggage or offline' },
+        newValue: 'BLOCKED',
+        metadata: { reason: 'Blocked by coordinator for luggage or staff' },
       });
+
+      const buses = await fetchUpdatedBuses();
 
       return NextResponse.json({
         success: true,
         action: 'LOCK',
-        message: `Seat ${currentSeat.seatNumber} locked for organizers/luggage`,
+        message: `Seat ${currentSeat.seatNumber} blocked for coordinators/luggage`,
         seat: updated,
+        buses,
       });
     }
 
@@ -164,11 +205,14 @@ export async function PATCH(request: NextRequest) {
         newValue: isOccupied ? 'BOOKED' : 'AVAILABLE',
       });
 
+      const buses = await fetchUpdatedBuses();
+
       return NextResponse.json({
         success: true,
         action: 'UNLOCK',
         message: `Seat ${currentSeat.seatNumber} unlocked for booking`,
         seat: updated,
+        buses,
       });
     }
 
@@ -209,10 +253,13 @@ export async function PATCH(request: NextRequest) {
         newValue: 'VACATED',
       });
 
+      const buses = await fetchUpdatedBuses();
+
       return NextResponse.json({
         success: true,
         action: 'CLEAR',
         message: `Seat ${currentSeat.seatNumber} has been vacated`,
+        buses,
       });
     }
 
@@ -333,10 +380,13 @@ export async function PATCH(request: NextRequest) {
         },
       });
 
+      const buses = await fetchUpdatedBuses();
+
       return NextResponse.json({
         success: true,
         action: 'REASSIGN',
         message: `${traveller.fullName} reassigned to ${destSeat.bus.busNumber} — Seat ${destSeat.seatNumber}`,
+        buses,
       });
     }
 
@@ -396,10 +446,13 @@ export async function PATCH(request: NextRequest) {
         newValue: `${traveller.fullName} (${traveller.booking.bookingId})`,
       });
 
+      const buses = await fetchUpdatedBuses();
+
       return NextResponse.json({
         success: true,
         action: 'ASSIGN',
         message: `${traveller.fullName} assigned to Seat ${currentSeat.seatNumber}`,
+        buses,
       });
     }
 

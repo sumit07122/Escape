@@ -2,8 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getCurrentAdmin, cleanExpiredHolds } from '@/lib/server-utils';
-
-
+import { getTripConfig } from '@/lib/trip-config';
 
 export async function GET() {
   try {
@@ -14,8 +13,9 @@ export async function GET() {
 
     await cleanExpiredHolds();
 
-    const trip = await db.trip.findFirst();
-    const capacity = trip?.capacity || 75;
+    const tripConfig = await getTripConfig();
+    const capacity = tripConfig.totalCapacity || 75;
+
 
     // Fetch all confirmed bookings
     const confirmedBookings = await db.booking.findMany({

@@ -47,7 +47,12 @@ export async function GET(
       const user = await getUserSessionFromRequest(request);
       if (user) {
         if (booking.userId && user.id === booking.userId) isAuthorized = true;
-        if (user.email.toLowerCase().trim() === booking.primaryEmail.toLowerCase().trim()) isAuthorized = true;
+        if (user.email && user.email.toLowerCase().trim() === booking.primaryEmail.toLowerCase().trim()) isAuthorized = true;
+        if (user.phone && booking.primaryPhone) {
+          const cleanUserPhone = user.phone.replace(/[^0-9]/g, '').slice(-10);
+          const cleanBookingPhone = booking.primaryPhone.replace(/[^0-9]/g, '').slice(-10);
+          if (cleanUserPhone && cleanBookingPhone && cleanUserPhone === cleanBookingPhone) isAuthorized = true;
+        }
       }
     }
 

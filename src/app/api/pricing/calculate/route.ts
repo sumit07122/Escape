@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import { calculateBookingPricing } from '@/lib/pricing';
+import { calculateDynamicBookingPricing } from '@/lib/pricing';
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const pricing = calculateBookingPricing({ travellersCount });
+    const pricing = await calculateDynamicBookingPricing({ travellersCount });
 
     return NextResponse.json({
       pricing,

@@ -156,7 +156,7 @@ model BusSeat {
   position     String        // WINDOW, AISLE, REAR, CABIN
   isBookable   Boolean       @default(true)
   isAvailable  Boolean       @default(true)
-  status       String        @default("AVAILABLE") // AVAILABLE, SELECTED, HELD, BOOKED, UNAVAILABLE
+  status       String        @default("AVAILABLE") // "AVAILABLE" | "HELD" | "BOOKED" | "BLOCKED" (blocked for luggage/staff)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
@@ -535,6 +535,22 @@ model GlobalSettings {
   updatedAt    DateTime  @updatedAt
 }
 
+model TripConfig {
+  id                     String   @id @default("global")
+  tripTitle              String   @default("Himalayan Escape 2026")
+  subtitle               String   @default("Manali × Kasol Student Expedition")
+  totalCapacity          Int      @default(75)
+  packagePrice           Int      @default(6200)
+  depositPrice           Int      @default(1000)
+  pickupLocation         String   @default("Near Main Gate (NH-2), Mathura")
+  reportingTime          String   @default("07:00 PM")
+  departureDate          String   @default("2026-10-24")
+  emergencyHelplines     String[] @default(["7017936338", "9368287947"])
+  announcementBanner     String?  // Optional emergency broadcast banner
+  announcementActive     Boolean  @default(false)
+  updatedAt              DateTime @updatedAt
+}
+
 model Admin {
   id           String    @id @default(cuid())
   email        String    @unique
@@ -546,11 +562,11 @@ model Admin {
 }
 
 model User {
-  id            String     @id @default(cuid())
-  email         String     @unique
-  passwordHash  String?    // Nullable for Google-only users
+  id            String     @id @default(uuid())
+  phone         String?    @unique
+  email         String?    @unique
+  passwordHash  String?
   name          String?
-  phone         String?
   image         String?
   role          String     @default("USER") // "USER" | "ADMIN"
   googleId      String?    @unique

@@ -1,5 +1,6 @@
 import { PRICING_DEFAULTS } from './constants';
 import { BookingPricing } from '@/types';
+import { getTripConfig } from './trip-config';
 
 export interface PricingCalculationInput {
   travellersCount: number;
@@ -10,17 +11,38 @@ export interface PricingCalculationInput {
 
 /**
  * Server-side Profit-Safe Pricing Engine for HIMALAYAN ESCAPE
- * Single source of truth:
- * - ₹6,200 per traveller (total amount = travellers × 6,200)
- * - ₹1,000 reservation deposit per traveller (pay now = travellers × 1,000)
- * - ₹5,200 remaining balance per traveller (remaining = travellers × 5,200)
- * 
- * STRICT POLICY:
- * - NO referrals
- * - NO 5+1 free travellers
- * - NO couple discount
- * - NO early bird / coupon / festival discounts
- * - Zero discounts guaranteed
+ * Dynamic source of truth loaded from TripConfig with fallback to defaults.
+ */
+export async function calculateDynamicBookingPricing(input: PricingCalculationInput): Promise<BookingPricing> {
+  const config = await getTripConfig();
+  const rawCount = Number(input.travellersCount) || 1;
+  const travellersCount = Math.max(1, Math.min(rawCount, config.totalCapacity || 75));
+
+  const pricePerTraveller = config.packagePrice || PRICING_DEFAULTS.pricePerTraveller;
+  const reservationAmountPerTraveller = config.depositPrice || PRICING_DEFAULTS.reservationAmountPerTraveller;
+  const remainingBalancePerTraveller = Math.max(0, pricePerTraveller - reservationAmountPerTraveller);
+
+  const totalAmount = travellersCount * pricePerTraveller;
+  const reservationAmount = travellersCount * reservationAmountPerTraveller;
+  const remainingBalance = travellersCount * remainingBalancePerTraveller;
+  const discountAmount = 0;
+  const finalAmount = totalAmount;
+
+  return {
+    travellersCount,
+    baseAmount: totalAmount,
+    totalAmount,
+    pricePerTraveller,
+    reservationAmountPerTraveller,
+    reservationAmount,
+    remainingBalance,
+    finalAmount,
+    discountAmount,
+  };
+}
+
+/**
+ * Synchronous fallback pricing calculation
  */
 export function calculateBookingPricing(input: PricingCalculationInput): BookingPricing {
   const rawCount = Number(input.travellersCount) || 1;

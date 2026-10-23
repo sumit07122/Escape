@@ -10,6 +10,7 @@ import {
 import { TRIP_METADATA, PRICING_DEFAULTS, CONTACT_INFO, ITINERARY_DAYS } from '@/lib/constants';
 
 import DestinationCarousel from '@/components/DestinationCarousel';
+import SnowEffect from '@/components/SnowEffect';
 
 interface BusData {
   trip?: {
@@ -18,8 +19,15 @@ interface BusData {
   };
 }
 
+interface AuthUser {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+}
+
 export default function HomePage() {
   const [busesData, setBusesData] = useState<BusData | null>(null);
+  const [userSession, setUserSession] = useState<AuthUser | null>(null);
 
   useEffect(() => {
     async function fetchBuses() {
@@ -33,7 +41,23 @@ export default function HomePage() {
         // Fallback gracefully
       }
     }
+
+    async function checkAuth() {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.authenticated && data.user) {
+            setUserSession(data.user);
+          }
+        }
+      } catch {
+        // Fallback
+      }
+    }
+
     fetchBuses();
+    checkAuth();
   }, []);
 
   const totalCapacity = busesData?.trip?.capacity || 75;
@@ -43,8 +67,8 @@ export default function HomePage() {
       {/* ======================================================== */}
       {/* 1. HERO SECTION (EDITORIAL PHOTOGRAPHY + TRANSPARENT PRICING) */}
       {/* ======================================================== */}
-      <section className="w-full min-h-[85vh] relative overflow-hidden flex items-center justify-center pt-24 pb-28 text-center px-4">
-        {/* Full-width Himalayan Photograph with Seamless Gradient Overlay */}
+      <section className="w-full min-h-[88vh] relative overflow-hidden flex items-center justify-center pt-24 pb-28 text-center px-4">
+        {/* Full-width Himalayan Photograph with Seamless Atmospheric Overlay */}
         <div className="absolute inset-0 -z-10 w-full h-full overflow-hidden">
           <Image
             src="/images/hero-himalayas.jpg"
@@ -54,11 +78,14 @@ export default function HomePage() {
             className="w-full h-full object-cover object-[center_35%]"
             sizes="100vw"
           />
-          {/* Atmospheric multi-stage overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/25 to-stone-950/95" />
+          {/* Multi-layer atmospheric vignette */}
+          <div className="absolute inset-0 bg-gradient-to-b from-stone-950/65 via-black/25 to-stone-950/95" />
           {/* Soft bottom mist blur transitioning smoothly into the page background */}
           <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#F7F5EF] to-transparent pointer-events-none" />
         </div>
+
+        {/* Subtle Snowflake Particle Layer */}
+        <SnowEffect />
 
         {/* Hero Content Layer */}
         <div className="relative z-10 max-w-4xl mx-auto space-y-6 flex flex-col items-center">
@@ -87,14 +114,22 @@ export default function HomePage() {
                 priority
               />
             </div>
-            <div className="text-xs sm:text-sm font-extrabold uppercase tracking-widest text-[#D87945]">
-              Student Mountain Expedition 2026
-            </div>
+
+            {userSession ? (
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-xs sm:text-sm font-bold tracking-wide shadow-md">
+                <span>👋 Welcome Aboard, {userSession.name?.split(' ')[0] || 'Traveller'}!</span>
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-[#D87945] text-xs sm:text-sm font-black tracking-widest uppercase">
+                🏔️ STUDENT EXPEDITION • MANALI × KASOL 2026
+              </div>
+            )}
+
             <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight uppercase leading-none text-white drop-shadow-md">
-              HIMALAYAN ESCAPE 2026
+              HIMALAYAN ESCAPE
             </h1>
-            <p className="text-lg sm:text-2xl font-light text-stone-100 tracking-wide drop-shadow-sm">
-              A Dreamy 6D/5N Expedition Through Manali & Kasol
+            <p className="text-base sm:text-xl md:text-2xl font-light text-stone-100 tracking-wide drop-shadow-sm max-w-2xl">
+              6 Days, 5 Nights of Parvati Valley Cafés, Snow Treks & Bonfire Nights.
             </p>
           </div>
 
@@ -128,18 +163,37 @@ export default function HomePage() {
 
           {/* Action CTAs */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2 w-full sm:w-auto">
-            <Link
-              href="/book"
-              className="w-full sm:w-auto px-9 py-4 rounded-xl bg-gradient-to-r from-[#D87945] to-[#B85F30] hover:from-[#B85F30] hover:to-[#A34E22] text-white font-black text-sm shadow-xl transition-all tracking-wider text-center"
-            >
-              RESERVE YOUR SEAT NOW
-            </Link>
-            <Link
-              href="#trip-overview"
-              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-sm border border-white/30 backdrop-blur-sm transition-all tracking-wider text-center"
-            >
-              VIEW THE TRIP
-            </Link>
+            {userSession ? (
+              <>
+                <Link
+                  href="/my-bookings"
+                  className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-[#163C32] to-[#0D241E] hover:from-[#0D241E] hover:to-[#081814] text-white font-black text-sm shadow-xl transition-all tracking-wider text-center border border-white/20"
+                >
+                  Go to My Bookings
+                </Link>
+                <Link
+                  href="/book"
+                  className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-[#D87945] to-[#B85F30] hover:from-[#B85F30] hover:to-[#A34E22] text-white font-black text-sm shadow-xl transition-all tracking-wider text-center"
+                >
+                  Book Another Seat
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/book"
+                  className="w-full sm:w-auto px-9 py-4 rounded-xl bg-gradient-to-r from-[#D87945] to-[#B85F30] hover:from-[#B85F30] hover:to-[#A34E22] text-white font-black text-sm shadow-xl transition-all tracking-wider text-center"
+                >
+                  Reserve Seat (₹1,000 Deposit)
+                </Link>
+                <Link
+                  href="#trip-overview"
+                  className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-sm border border-white/30 backdrop-blur-sm transition-all tracking-wider text-center"
+                >
+                  VIEW THE TRIP
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Origin & Route Text */}

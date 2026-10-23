@@ -6,7 +6,8 @@ const AUTH_SECRET = process.env.NEXTAUTH_SECRET || 'NjttlGq0yBrfPiiEMRCLlN-gXJn-
 
 export interface UserSessionPayload {
   id: string;
-  email: string;
+  email?: string | null;
+  phone?: string | null;
   name: string;
   image?: string | null;
   role: string;
@@ -106,7 +107,8 @@ export function verifyUserSession(token: string): UserSessionPayload | null {
 
     return {
       id: payload.id,
-      email: payload.email,
+      email: payload.email || null,
+      phone: payload.phone || null,
       name: payload.name,
       image: payload.image || null,
       role: payload.role || 'TRAVELLER',
@@ -165,18 +167,23 @@ export async function getAdminSessionFromRequest(request: NextRequest): Promise<
  */
 export async function canAccessBooking(
   request: NextRequest,
-  booking: { primaryEmail: string; userId?: string | null }
+  booking: { primaryEmail: string; primaryPhone?: string; userId?: string | null }
 ): Promise<boolean> {
   // 1. Admin always has authorization
   const admin = await getAdminSessionFromRequest(request);
   if (admin) return true;
 
-  // 2. Customer must match email or userId
+  // 2. Customer must match email, phone, or userId
   const user = await getUserSessionFromRequest(request);
   if (!user) return false;
 
   if (booking.userId && user.id === booking.userId) return true;
-  if (booking.primaryEmail && user.email.toLowerCase().trim() === booking.primaryEmail.toLowerCase().trim()) return true;
+  if (user.email && booking.primaryEmail && user.email.toLowerCase().trim() === booking.primaryEmail.toLowerCase().trim()) return true;
+  if (user.phone && booking.primaryPhone) {
+    const cleanUserPhone = user.phone.replace(/[^0-9]/g, '').slice(-10);
+    const cleanBookingPhone = booking.primaryPhone.replace(/[^0-9]/g, '').slice(-10);
+    if (cleanUserPhone && cleanBookingPhone && cleanUserPhone === cleanBookingPhone) return true;
+  }
 
   return false;
 }

@@ -13,5 +13,7 @@ export async function GET() {
 export async function POST() {
   const response = NextResponse.json({ success: true, message: 'Logged out successfully' });
   response.cookies.delete('gla_admin_token');
+  response.cookies.delete('admin_session');
   return response;
 }
+
