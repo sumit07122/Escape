@@ -43,7 +43,7 @@ export default function AdminDashboardPage() {
           </span>
           <h1 className="text-3xl font-black text-white">Expedition Dashboard</h1>
           <p className="text-xs text-zinc-400 mt-0.5">
-            GLA Himalayan Escape • Manali × Kasol (75 Capacity)
+            Himalayan Escape • Manali × Kasol (75 Capacity)
           </p>
         </div>
 
@@ -109,7 +109,7 @@ export default function AdminDashboardPage() {
           <div className="text-2xl sm:text-3xl font-black text-sky-400">
             {stats?.checkedInTravellers || 0} <span className="text-xs font-normal text-zinc-400">/ {stats?.confirmedTravellers || 0}</span>
           </div>
-          <p className="text-xs text-zinc-400 pt-1">Boarded at GLA Mathura</p>
+          <p className="text-xs text-zinc-400 pt-1">Boarded at Departure Gate</p>
         </div>
       </div>
 

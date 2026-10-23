@@ -133,7 +133,7 @@ export default function AdminReportsPage() {
             Boarding Check-In Status
           </h3>
           <div className="flex justify-between py-2 border-b border-zinc-900">
-            <span className="text-zinc-400">Checked In at GLA Gate:</span>
+            <span className="text-zinc-400">Checked In at Departure Gate:</span>
             <span className="font-bold text-emerald-400">{summary?.checkedInTravellers || 0}</span>
           </div>
           <div className="flex justify-between py-2 border-b border-zinc-900">

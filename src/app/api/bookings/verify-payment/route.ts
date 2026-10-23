@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { verifyRazorpaySignature } from '@/lib/razorpay';
@@ -188,7 +189,7 @@ export async function POST(request: NextRequest) {
           recipient: booking.primaryEmail,
           channel: 'EMAIL',
           type: 'BOOKING_CONFIRMATION',
-          title: `Confirmed: GLA Himalayan Escape [${booking.bookingId}]`,
+          title: `Confirmed: Himalayan Escape [${booking.bookingId}]`,
           message: `Dear ${booking.primaryTravellerName}, your reservation for Manali x Kasol is confirmed! Bus: ${booking.bus?.busNumber}, Seat(s): ${booking.travellers.map((t) => t.assignedSeatNumber).join(', ')}.`,
           status: 'QUEUED',
         },

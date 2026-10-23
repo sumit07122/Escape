@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getCurrentAdmin, createAuditLog } from '@/lib/server-utils';
@@ -64,7 +65,7 @@ export async function POST(request: NextRequest) {
           ticketId: ticket.id,
           bookingId: ticket.bookingId,
           adminName,
-          location: 'GLA University, Mathura Campus',
+          location: 'Mathura Departure Gate',
           checkInTime: now,
           notes,
         },

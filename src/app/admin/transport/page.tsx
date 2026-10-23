@@ -82,7 +82,7 @@ export default function AdminTransportPage() {
             <div className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 space-y-1.5 text-xs text-zinc-400">
               <div className="flex justify-between">
                 <span>Route:</span>
-                <span className="font-semibold text-white">GLA Mathura → Manali → Kasol → Return</span>
+                <span className="font-semibold text-white">Mathura (NH-2) → Manali → Kasol → Return</span>
               </div>
               <div className="flex justify-between">
                 <span>Physical Capacity:</span>

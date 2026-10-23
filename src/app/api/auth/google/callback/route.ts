@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { signUserSession } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
@@ -25,11 +27,10 @@ export async function GET(request: NextRequest) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   
-  // Standardize Redirect URI Resolution
-  const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || 'localhost:3000';
+  // Standardize Redirect URI Resolution dynamically
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || 'himalaya-escape.vercel.app';
   const proto = request.headers.get('x-forwarded-proto') || (request.url.startsWith('https') ? 'https' : 'http');
-  const origin = process.env.NEXTAUTH_URL || `${proto}://${host}`;
-  const redirectUri = `${origin}/api/auth/google/callback`;
+  const redirectUri = `${proto}://${host}/api/auth/google/callback`;
 
   const isRealSecret =
     clientSecret &&
@@ -90,9 +91,9 @@ export async function GET(request: NextRequest) {
     }
 
     // 3. Safeguard the Database User Upsert
-    let user: { id: string; email: string; name: string; image?: string | null; role: string } | null = null;
+    let dbUser: { id: string; email: string; name: string | null; image?: string | null; role: string } | null = null;
     try {
-      user = await db.user.upsert({
+      dbUser = await db.user.upsert({
         where: { email },
         update: {
           name,
@@ -104,39 +105,41 @@ export async function GET(request: NextRequest) {
           email,
           name,
           image,
-          role: 'TRAVELLER',
+          role: 'USER',
         },
       });
     } catch (dbError) {
       console.error('[AUTH_DB_UPSERT_WARNING]: Failed to upsert user profile', dbError);
-      // Attempt fallback read
       try {
-        user = await db.user.findUnique({ where: { email } });
+        dbUser = await db.user.findUnique({ where: { email } });
       } catch {
         // Continue login session even if db fails
       }
-      if (!user) {
-        user = {
-          id: googleId || `usr_${Date.now()}`,
-          email,
-          name,
-          image,
-          role: 'TRAVELLER',
-        };
-      }
     }
+
+    const finalUserId = dbUser?.id || googleId || `usr_${Date.now()}`;
+    const finalName = dbUser?.name || name || 'Traveller';
+    const finalImage = dbUser?.image || image || null;
+    const finalRole = dbUser?.role || 'USER';
 
     // 4. Create signed session token with internal user.id
     const sessionToken = signUserSession({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      image: user.image,
-      role: user.role,
+      id: finalUserId,
+      email,
+      name: finalName,
+      image: finalImage,
+      role: finalRole,
     });
 
     // 5. Session Cookie Configuration
     const response = NextResponse.redirect(new URL(returnUrl, request.url));
+    response.cookies.set('user_session', sessionToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+    });
     response.cookies.set('gla_user_session', sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

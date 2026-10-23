@@ -378,7 +378,7 @@ export default function MyBookingsPage() {
                   <div className="pt-4 border-t border-[#E7E2D8] flex flex-wrap items-center justify-between gap-3 text-xs text-[#646864]">
                     <div className="flex items-center gap-2">
                       <MapPin className="w-3.5 h-3.5 text-[#163C32]" />
-                      <span>Pickup: Near GLA Main Gate, Mathura (04:30 PM)</span>
+                      <span>Pickup: Near Main Gate (NH-2), Mathura (04:30 PM)</span>
                     </div>
 
                     <div className="flex items-center gap-2">

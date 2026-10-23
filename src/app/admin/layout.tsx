@@ -21,24 +21,56 @@ export default function AdminLayout({
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const [loginUsername, setLoginUsername] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [loginSubmitting, setLoginSubmitting] = useState(false);
+
   useEffect(() => {
     async function checkAuth() {
       try {
         const res = await fetch('/api/admin/auth/me');
-        if (!res.ok) {
-          router.push('/login');
-          return;
+        if (res.ok) {
+          const data = await res.json();
+          setAdminUser(data.admin);
+        } else {
+          setAdminUser(null);
         }
-        const data = await res.json();
-        setAdminUser(data.admin);
       } catch {
-        router.push('/login');
+        setAdminUser(null);
       } finally {
         setLoading(false);
       }
     }
     checkAuth();
-  }, [router]);
+  }, []);
+
+  const handleAdminLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError(null);
+    setLoginSubmitting(true);
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: loginUsername.trim(),
+          password: loginPassword,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setLoginError(data.error || 'Invalid coordinator credentials');
+      } else {
+        setAdminUser(data.admin || { name: 'Lead Coordinator', role: 'SUPER_ADMIN' });
+      }
+    } catch {
+      setLoginError('Failed to connect to authentication server');
+    } finally {
+      setLoginSubmitting(false);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -46,7 +78,8 @@ export default function AdminLayout({
     } catch {
       // Fallback
     }
-    router.push('/login');
+    setAdminUser(null);
+    router.push('/admin');
   };
 
   const navItems = [
@@ -67,7 +100,79 @@ export default function AdminLayout({
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#050e09] text-zinc-400">
-        Loading Admin Workspace...
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs uppercase tracking-widest text-zinc-500 font-bold">Verifying Session...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!adminUser) {
+    return (
+      <div className="min-h-screen bg-[#050e09] flex items-center justify-center px-4 py-12 text-zinc-200">
+        <div className="w-full max-w-md bg-[#08140e] border border-white/10 rounded-3xl p-8 space-y-6 shadow-2xl">
+          <div className="text-center space-y-2">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-700 flex items-center justify-center text-white mx-auto shadow-lg shadow-emerald-950/50">
+              <ShieldCheck className="w-7 h-7" />
+            </div>
+            <h1 className="text-xl font-black text-white tracking-tight uppercase">Coordinator Portal</h1>
+            <p className="text-xs text-zinc-400">Restricted Operations Console • Expeditions Command</p>
+          </div>
+
+          {loginError && (
+            <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs text-center font-medium">
+              {loginError}
+            </div>
+          )}
+
+          <form onSubmit={handleAdminLogin} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+                Username
+              </label>
+              <input
+                type="text"
+                required
+                value={loginUsername}
+                onChange={(e) => setLoginUsername(e.target.value)}
+                placeholder="Coordinator ID (e.g. PAPAG)"
+                className="w-full px-4 py-3 rounded-xl bg-[#0d1f16] border border-white/10 text-white placeholder-zinc-600 text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+                Password
+              </label>
+              <input
+                type="password"
+                required
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                placeholder="Access Password"
+                className="w-full px-4 py-3 rounded-xl bg-[#0d1f16] border border-white/10 text-white placeholder-zinc-600 text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loginSubmitting}
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-500 hover:to-green-600 text-white font-bold text-sm shadow-lg shadow-emerald-950/40 transition-all disabled:opacity-50"
+            >
+              {loginSubmitting ? 'Verifying Credentials...' : 'Enter Coordinator Portal →'}
+            </button>
+          </form>
+
+          <div className="pt-4 border-t border-white/10 text-center">
+            <Link
+              href="/"
+              className="text-xs text-zinc-400 hover:text-white transition-colors"
+            >
+              ← Return to Public Website
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
@@ -81,7 +186,7 @@ export default function AdminLayout({
             <ShieldCheck className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-sm font-black text-white tracking-tight">GLA EXPEDITION</h2>
+            <h2 className="text-sm font-black text-white tracking-tight">HIMALAYAN ESCAPE</h2>
             <p className="text-[10px] font-bold text-orange-400 uppercase">ADMIN CONSOLE</p>
           </div>
         </div>
@@ -144,7 +249,7 @@ export default function AdminLayout({
             >
               {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
-            <span className="font-black text-sm text-white">GLA ADMIN CONSOLE</span>
+            <span className="font-black text-sm text-white">ADMIN CONSOLE</span>
           </div>
           <button
             onClick={handleLogout}

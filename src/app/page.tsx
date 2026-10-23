@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import { TRIP_METADATA, PRICING_DEFAULTS, CONTACT_INFO, ITINERARY_DAYS } from '@/lib/constants';
 
+import DestinationCarousel from '@/components/DestinationCarousel';
+
 interface BusData {
   trip?: {
     totalBooked: number;
@@ -41,7 +43,7 @@ export default function HomePage() {
       {/* ======================================================== */}
       {/* 1. HERO SECTION (EDITORIAL PHOTOGRAPHY + TRANSPARENT PRICING) */}
       {/* ======================================================== */}
-      <section className="relative w-full min-h-[80vh] md:min-h-[90vh] flex flex-col justify-center items-center text-center overflow-hidden px-4 pt-24 pb-16">
+      <section className="w-full min-h-[85vh] relative overflow-hidden flex items-center justify-center pt-24 pb-28 text-center px-4">
         {/* Full-width Himalayan Photograph with Seamless Gradient Overlay */}
         <div className="absolute inset-0 -z-10 w-full h-full overflow-hidden">
           <Image
@@ -49,17 +51,20 @@ export default function HomePage() {
             alt="Himalayan mountain peaks in Manali"
             fill
             priority
-            className="object-cover object-center"
+            className="w-full h-full object-cover object-[center_35%]"
             sizes="100vw"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-[#F7F5EF]" />
+          {/* Atmospheric multi-stage overlay */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/25 to-stone-950/95" />
+          {/* Soft bottom mist blur transitioning smoothly into the page background */}
+          <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#F7F5EF] to-transparent pointer-events-none" />
         </div>
 
         {/* Hero Content Layer */}
         <div className="relative z-10 max-w-4xl mx-auto space-y-6 flex flex-col items-center">
           {/* Live Seat Counter & Status Pill */}
           <div className="flex flex-col sm:flex-row items-center gap-3">
-            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-black/50 backdrop-blur-md border border-white/20 text-xs font-bold tracking-wide text-white shadow-xl">
+            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-xs font-bold tracking-wide text-white shadow-xl">
               <span className="relative flex h-2.5 w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
@@ -89,7 +94,7 @@ export default function HomePage() {
               HIMALAYAN ESCAPE 2026
             </h1>
             <p className="text-lg sm:text-2xl font-light text-stone-100 tracking-wide drop-shadow-sm">
-              Manali × Kasol • Mountains. Friends. Adventure. Memories.
+              A Dreamy 6D/5N Expedition Through Manali & Kasol
             </p>
           </div>
 
@@ -125,9 +130,9 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2 w-full sm:w-auto">
             <Link
               href="/book"
-              className="w-full sm:w-auto px-9 py-4 rounded-xl bg-[#D87945] hover:bg-[#B85F30] text-white font-black text-sm shadow-xl transition-all tracking-wider text-center"
+              className="w-full sm:w-auto px-9 py-4 rounded-xl bg-gradient-to-r from-[#D87945] to-[#B85F30] hover:from-[#B85F30] hover:to-[#A34E22] text-white font-black text-sm shadow-xl transition-all tracking-wider text-center"
             >
-              SELECT YOUR SEAT
+              RESERVE YOUR SEAT NOW
             </Link>
             <Link
               href="#trip-overview"
@@ -179,13 +184,13 @@ export default function HomePage() {
             </h2>
             <div className="space-y-3 text-base text-[#171918]/80 leading-relaxed font-normal">
               <p>
-                Himalayan Escape is an independent student mountain expedition departing near the GLA Main Gate, Mathura. Designed for comfort and adventure, travellers journey across the plains of North India and climb into the high valleys of Himachal Pradesh aboard dedicated 2x2 luxury tourist coaches.
+                Himalayan Escape is an independent student mountain expedition departing near the Main Gate (NH-2), Mathura. Designed for comfort and adventure, travellers journey across the plains of North India and climb into the high valleys of Himachal Pradesh aboard dedicated 2x2 luxury tourist coaches.
               </p>
               <p>
                 From the snowy heights of Solang Valley and the engineering marvel of the Atal Tunnel to the mystical cedar forests and riverside cafés of Kasol and the spiritual hot springs of Manikaran Sahib, every day offers a balance of curated group exploration and independent freedom.
               </p>
               <p className="text-sm font-medium text-[#163C32]">
-                Pickup & Reporting: Near GLA Main Gate, Mathura → Manali → Solang Valley → Atal Tunnel → Sissu → Kasol → Manikaran → Mathura
+                Pickup & Reporting: Near Main Gate (NH-2), Mathura → Manali → Solang Valley → Atal Tunnel → Sissu → Kasol → Manikaran → Mathura
               </p>
             </div>
           </div>
@@ -235,6 +240,11 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ======================================================== */}
+      {/* 3.5. DESTINATION HIGHLIGHTS CAROUSEL                     */}
+      {/* ======================================================== */}
+      <DestinationCarousel />
 
       {/* ======================================================== */}
       {/* 4. ITINERARY (VERTICAL EDITORIAL TIMELINE)               */}
@@ -408,7 +418,7 @@ export default function HomePage() {
               <h3 className="font-bold text-base text-[#171918]">Dedicated 2x2 AC Tourist Coaches</h3>
             </div>
             <p className="text-xs text-[#646864] pl-7.5 leading-relaxed">
-              Round-trip road journey from GLA University Mathura to Manali, Solang Valley, Kasol, and return.
+              Round-trip road journey from Mathura (NH-2) to Manali, Solang Valley, Kasol, and return.
             </p>
           </div>
 
@@ -480,7 +490,7 @@ export default function HomePage() {
             </div>
             <div className="p-4 rounded-xl bg-[#F7F5EF] border border-[#D8D2C4] space-y-1">
               <span className="text-xs font-bold text-[#163C32]">4 Coaches Available</span>
-              <p className="text-xs text-[#646864]">Coordinated departure from GLA Mathura campus.</p>
+              <p className="text-xs text-[#646864]">Coordinated departure from Mathura pickup point.</p>
             </div>
           </div>
         </div>
@@ -498,7 +508,7 @@ export default function HomePage() {
             </h3>
           </div>
           <p className="text-xs sm:text-sm text-[#171918]/80 leading-relaxed">
-            All travellers report Near GLA Main Gate, Mathura at the scheduled departure time with valid student/college ID and digital QR pass. Luggage tags will be assigned during boarding check-in. For coordination assistance, contact Student Trip Organizers / Lead Coordinators directly at <strong>{CONTACT_INFO.coordinatorPhone1}</strong> or <strong>{CONTACT_INFO.coordinatorPhone2}</strong>.
+            All travellers report Near Main Gate (NH-2), Mathura at the scheduled departure time with valid student/college ID and digital QR pass. Luggage tags will be assigned during boarding check-in. For coordination assistance, contact Student Trip Organizers / Lead Coordinators directly at <strong>{CONTACT_INFO.coordinatorPhone1}</strong> or <strong>{CONTACT_INFO.coordinatorPhone2}</strong>.
           </p>
           <p className="text-[11px] text-[#171918]/60 italic border-t border-[#D8D2C4] pt-2">
             * Note: Independent student-organized expedition. Not an officially sponsored university event.

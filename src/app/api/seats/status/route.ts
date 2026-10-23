@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { cleanExpiredHolds } from '@/lib/server-utils';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -18,7 +20,16 @@ export async function GET(request: NextRequest) {
     const seats = await db.busSeat.findMany({
       where: {
         ...(busId ? { busId } : {}),
-        ...(tripId ? { bus: { OR: [{ tripId }, { trip: { slug: tripId } }] } } : {}),
+        ...(tripId
+          ? {
+              bus: {
+                OR: [
+                  { tripId },
+                  { trip: { is: { slug: tripId } } },
+                ],
+              },
+            }
+          : {}),
       },
       include: {
         seatHold: {
@@ -81,12 +92,12 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    const [confirmedCount, settings] = await Promise.all([
+    const [confirmedCount, trip] = await Promise.all([
       db.seatBooking.count({ where: { status: 'CONFIRMED' } }),
-      db.globalSettings.findFirst(),
+      db.trip.findFirst({ select: { capacity: true } }),
     ]);
 
-    const capacityLimit = settings?.tripCapacity ?? 75;
+    const capacityLimit = trip?.capacity ?? 75;
 
     return NextResponse.json({
       success: true,

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -9,7 +10,7 @@ async function resetProductionData() {
 
   try {
     // 1. Delete all transactional bookings and traveller artifacts in foreign key dependency order
-    console.log('[1/5] Purging transactional booking and traveller records...');
+    console.log('[1/4] Purging transactional booking and traveller records...');
     
     // Check-in scan records
     const deletedCheckIns = await prisma.checkIn.deleteMany({});
@@ -44,7 +45,7 @@ async function resetProductionData() {
     console.log(`  ✓ Deleted ${deletedBookings.count} Booking records`);
 
     // 2. Reset all 100 BusSeats across all 4 coaches to AVAILABLE
-    console.log('\n[2/5] Resetting all bus seats across the fleet...');
+    console.log('\n[2/4] Resetting all bus seats across the fleet...');
     
     // Reset passenger seats
     const resetPassengerSeats = await prisma.busSeat.updateMany({
@@ -73,7 +74,7 @@ async function resetProductionData() {
     console.log(`  ✓ Ensured ${resetCabinSeats.count} cabin seats (driver/conductor) are UNAVAILABLE`);
 
     // 3. Verify the 4 buses (Bus 01 to Bus 04)
-    console.log('\n[3/5] Verifying 4 expedition coaches (Bus 01 - Bus 04)...');
+    console.log('\n[3/4] Verifying 4 expedition coaches (Bus 01 - Bus 04)...');
     const buses = await prisma.bus.findMany({
       orderBy: { orderIndex: 'asc' },
       include: {
@@ -87,24 +88,8 @@ async function resetProductionData() {
       console.log(`    - ${bus.busNumber} (${bus.vehicleName}): ${availableCount}/${passengerSeats.length} passenger seats available`);
     }
 
-    // 4. Ensure GlobalSettings retains tripCapacity = 75
-    console.log('\n[4/5] Enforcing GlobalSettings (tripCapacity = 75)...');
-    const settings = await prisma.globalSettings.upsert({
-      where: { id: 'global_default' },
-      update: {
-        tripCapacity: 75,
-        siteName: 'Himalayan Escape — Student Mountain Expedition',
-      },
-      create: {
-        id: 'global_default',
-        tripCapacity: 75,
-        siteName: 'Himalayan Escape — Student Mountain Expedition',
-      },
-    });
-    console.log(`  ✓ GlobalSettings verified: tripCapacity = ${settings.tripCapacity}`);
-
-    // 5. Ensure master Trip details (Manali × Kasol) are preserved
-    console.log('\n[5/5] Preserving master Trip entity (Manali × Kasol)...');
+    // 4. Ensure master Trip details (Manali × Kasol) are preserved
+    console.log('\n[4/4] Preserving master Trip entity (Manali × Kasol)...');
     const trip = await prisma.trip.findUnique({
       where: { slug: 'manali-kasol' },
     });

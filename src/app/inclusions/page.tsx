@@ -4,7 +4,7 @@ import { CheckCircle2, XCircle, AlertTriangle, ArrowRight } from 'lucide-react';
 import { INCLUSIONS_LIST, EXCLUSIONS_LIST, TRIP_METADATA } from '@/lib/constants';
 
 export const metadata = {
-  title: 'Inclusions & Exclusions | GLA Himalayan Escape',
+  title: 'Inclusions & Exclusions | Himalayan Escape',
   description: 'Detailed list of package inclusions and exclusions for the Manali × Kasol 6D/5N expedition.',
 };
 

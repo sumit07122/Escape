@@ -546,15 +546,15 @@ model Admin {
 }
 
 model User {
-  id        String    @id @default(cuid())
-  email     String    @unique
-  phone     String?
-  name      String
-  image     String?
-  googleId  String?   @unique
-  role      String    @default("TRAVELLER")
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  bookings  Booking[]
+  id            String     @id @default(cuid())
+  email         String     @unique
+  passwordHash  String?    // Nullable for Google-only users
+  name          String?
+  phone         String?
+  image         String?
+  role          String     @default("USER") // "USER" | "ADMIN"
+  googleId      String?    @unique
+  bookings      Booking[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 }

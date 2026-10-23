@@ -256,7 +256,7 @@ export default function AdminScannerPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ticketId: ticketIdToUse,
-          notes: '₹5,200 balance collected and verified at GLA departure desk.',
+          notes: '₹5,200 balance collected and verified at departure desk.',
         }),
       });
 
@@ -310,7 +310,7 @@ export default function AdminScannerPage() {
       {/* Header */}
       <div className="text-center space-y-2">
         <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest flex items-center justify-center gap-1.5">
-          <ShieldCheck className="w-4 h-4" /> GLA UNIVERSITY DEPARTURE GATE CHECK-IN
+          <ShieldCheck className="w-4 h-4" /> EXPEDITION DEPARTURE GATE CHECK-IN
         </span>
         <h1 className="text-2xl sm:text-3xl font-black text-white">
           Departure QR Gate Scanner

@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Phone, MapPin, Shield } from 'lucide-react';
+import { Phone, MapPin } from 'lucide-react';
 import { CONTACT_INFO } from '@/lib/constants';
 
 export default function Footer() {
@@ -50,12 +50,6 @@ export default function Footer() {
               <li><Link href="/terms" className="hover:text-[#163C32] transition-colors">Terms & Conditions</Link></li>
               <li><Link href="/privacy" className="hover:text-[#163C32] transition-colors">Privacy Policy</Link></li>
               <li><Link href="/cancellation" className="hover:text-[#163C32] transition-colors">Cancellation Policy</Link></li>
-              <li>
-                <Link href="/login" className="hover:text-[#163C32] flex items-center gap-1 text-[#171918]/60 pt-1">
-                  <Shield className="w-3 h-3" />
-                  <span>Coordinator Admin</span>
-                </Link>
-              </li>
             </ul>
           </div>
 

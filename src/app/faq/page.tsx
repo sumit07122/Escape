@@ -4,7 +4,7 @@ import { HelpCircle, ArrowRight, Phone, MessageSquare } from 'lucide-react';
 import { FAQ_ITEMS, CONTACT_INFO } from '@/lib/constants';
 
 export const metadata = {
-  title: 'Frequently Asked Questions | GLA Himalayan Escape',
+  title: 'Frequently Asked Questions | Himalayan Escape',
   description: 'Answers to all common queries about booking, bus seats, reservation, 5+1 offer, and luggage.',
 };
 
@@ -44,7 +44,7 @@ export default function FAQPage() {
       <div className="p-8 rounded-3xl bg-zinc-950 border border-zinc-800 text-center space-y-4">
         <h3 className="text-xl font-bold text-white">Still have questions?</h3>
         <p className="text-xs text-zinc-400 max-w-md mx-auto">
-          Our GLA student trip coordinators are on standby to help with your boarding queries and room assignments.
+          Our student trip coordinators are on standby to help with your boarding queries and room assignments.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
           <a

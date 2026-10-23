@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Mountain, Camera, ArrowRight } from 'lucide-react';
 
 export const metadata = {
-  title: 'Expedition Gallery | GLA Himalayan Escape',
+  title: 'Expedition Gallery | Himalayan Escape',
   description: 'Scenic vistas, pine trails, riverbanks, and memories from Manali and Kasol.',
 };
 
@@ -83,7 +83,7 @@ export default function GalleryPage() {
             </div>
 
             <div className="pt-3 border-t border-zinc-800">
-              <span className="text-[11px] text-zinc-500">GLA Himalayan Escape 2026</span>
+              <span className="text-[11px] text-zinc-500">Himalayan Escape 2026</span>
             </div>
           </div>
         ))}

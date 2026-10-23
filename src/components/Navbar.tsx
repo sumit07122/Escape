@@ -178,7 +178,7 @@ export default function Navbar() {
                 href="/login"
                 className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-[#171918] hover:text-[#163C32] border border-[#D8D2C4] bg-white hover:bg-[#F0ECE3] transition-colors"
               >
-                <span>Continue with Google</span>
+                <span>Sign In</span>
               </Link>
             )}
 
@@ -270,7 +270,7 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="px-3.5 py-2.5 rounded-lg text-sm font-semibold text-[#163C32] hover:bg-[#E7E2D8]"
               >
-                Continue with Google
+                Sign In
               </Link>
             )}
           </div>

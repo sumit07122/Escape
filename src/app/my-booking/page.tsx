@@ -64,7 +64,7 @@ function BookingTrackerContent() {
           My Trip & Boarding Pass
         </h1>
         <p className="text-xs text-[#646864] max-w-md mx-auto">
-          Access your confirmed seat reservation, view your QR boarding pass, and prepare for departure near GLA Main Gate, Mathura.
+          Access your confirmed seat reservation, view your QR boarding pass, and prepare for departure near Main Gate (NH-2), Mathura.
         </p>
         <div className="pt-2">
           <Link
@@ -202,7 +202,7 @@ function BookingTrackerContent() {
                   <div className="flex items-center justify-between border-b border-[#D8D2C4] pb-2">
                     <div>
                       <span className="text-[10px] font-bold text-[#D87945] uppercase tracking-wider block">
-                        GLA HIMALAYAN ESCAPE
+                        HIMALAYAN ESCAPE
                       </span>
                       <h4 className="font-black text-sm text-[#171918]">{t.fullName}</h4>
                     </div>
@@ -227,7 +227,7 @@ function BookingTrackerContent() {
 
                     <div className="space-y-1 text-xs text-[#646864]">
                       <p><strong>Coach:</strong> {booking.bus?.busNumber || 'Bus 01'}</p>
-                      <p><strong>Reporting:</strong> GLA Main Gate (04:30 PM)</p>
+                      <p><strong>Reporting:</strong> Main Gate (NH-2), Mathura (04:30 PM)</p>
                       <p><strong>Deposit Paid:</strong> ₹1,000 | <strong>Balance Due:</strong> ₹5,200</p>
                       {t.ticket?.qrToken && (
                         <Link

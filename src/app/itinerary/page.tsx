@@ -62,7 +62,7 @@ export default function ItineraryPage() {
           Complete 6-Day Itinerary
         </h1>
         <p className="text-sm text-[#646864] max-w-xl mx-auto">
-          Pickup: Near GLA Main Gate, Mathura → Manali → Solang Valley → Atal Tunnel → Kasol → Manikaran → Mathura
+          Pickup: Near Main Gate (NH-2), Mathura → Manali → Solang Valley → Atal Tunnel → Kasol → Manikaran → Mathura
         </p>
       </div>
 

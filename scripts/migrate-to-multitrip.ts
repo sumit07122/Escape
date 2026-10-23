@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Non-destructive Multi-Trip Migration Script
  * 

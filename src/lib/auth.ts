@@ -120,7 +120,9 @@ export function verifyUserSession(token: string): UserSessionPayload | null {
  * Extract customer session from NextRequest cookies or Authorization header
  */
 export async function getUserSessionFromRequest(request: NextRequest): Promise<UserSessionPayload | null> {
-  const cookie = request.cookies.get('gla_user_session')?.value;
+  const cookie =
+    request.cookies.get('user_session')?.value ||
+    request.cookies.get('gla_user_session')?.value;
   if (cookie) {
     const session = verifyUserSession(cookie);
     if (session) return session;
@@ -140,7 +142,9 @@ export async function getUserSessionFromRequest(request: NextRequest): Promise<U
  * Extract admin session from NextRequest cookies or Authorization header
  */
 export async function getAdminSessionFromRequest(request: NextRequest): Promise<AdminSessionPayload | null> {
-  const cookie = request.cookies.get('gla_admin_token')?.value;
+  const cookie =
+    request.cookies.get('admin_session')?.value ||
+    request.cookies.get('gla_admin_token')?.value;
   if (cookie) {
     const session = verifySessionToken(cookie);
     if (session) return session;
