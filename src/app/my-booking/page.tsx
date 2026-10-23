@@ -228,7 +228,7 @@ function BookingTrackerContent() {
                     <div className="space-y-1 text-xs text-[#646864]">
                       <p><strong>Coach:</strong> {booking.bus?.busNumber || 'Bus 01'}</p>
                       <p><strong>Reporting:</strong> Main Gate (NH-2), Mathura (04:30 PM)</p>
-                      <p><strong>Deposit Paid:</strong> ₹1,000 | <strong>Balance Due:</strong> ₹5,200</p>
+                      <p><strong>Booking Deposit:</strong> ₹{booking.reservationAmount?.toLocaleString('en-IN')} | <strong>Booking Balance Due:</strong> ₹{booking.remainingBalance?.toLocaleString('en-IN')}</p>
                       {t.ticket?.qrToken && (
                         <Link
                           href={`/ticket/${t.ticket.qrToken}`}

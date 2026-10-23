@@ -7,6 +7,8 @@ import {
   ChevronDown, ChevronUp, Compass
 } from 'lucide-react';
 import { ITINERARY_DAYS, TRIP_METADATA } from '@/lib/constants';
+import PackingChecklist from '@/components/PackingChecklist';
+import SpotifyTripHub from '@/components/SpotifyTripHub';
 
 interface ItineraryItem {
   time?: string;
@@ -173,6 +175,12 @@ export default function ItineraryPage() {
             </div>
           );
         })}
+      </div>
+
+      {/* Student Essentials: Packing Checklist & Spotify Road-Trip Hub */}
+      <div className="space-y-8">
+        <PackingChecklist />
+        <SpotifyTripHub />
       </div>
 
       {/* Bottom CTA */}

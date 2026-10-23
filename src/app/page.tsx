@@ -15,6 +15,9 @@ import { getSeatAvailability } from '@/lib/trip-config';
 import { verifyUserSession } from '@/lib/auth';
 import DestinationCarousel from '@/components/DestinationCarousel';
 import SnowEffect from '@/components/SnowEffect';
+import MountainWeatherWidget from '@/components/MountainWeatherWidget';
+import PackingChecklist from '@/components/PackingChecklist';
+import SpotifyTripHub from '@/components/SpotifyTripHub';
 
 export default async function HomePage() {
   const availability = await getSeatAvailability();
@@ -57,7 +60,7 @@ export default async function HomePage() {
 
         {/* Hero Content on top (z-10) */}
         <div className="relative z-10 max-w-5xl mx-auto space-y-6 flex flex-col items-center text-white">
-          {/* Live Seat Counter & Status Pill (SSOT DYNAMIC CALCULATION) */}
+          {/* Live Seat Counter & Status Pill (SSOT DYNAMIC CALCULATION) + Mountain Weather Widget */}
           <div className="flex flex-col sm:flex-row items-center gap-3">
             <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-xs font-bold tracking-wide text-white shadow-xl">
               <span className="relative flex h-2.5 w-2.5">
@@ -68,6 +71,8 @@ export default async function HomePage() {
                 {availableSeats} OF {totalCapacity} SEATS REMAINING
               </span>
             </div>
+
+            <MountainWeatherWidget />
           </div>
 
           {/* Large Hero Title & Prominent Official Brand Badge */}
@@ -328,7 +333,13 @@ export default async function HomePage() {
           </div>
         </section>
 
-
+        {/* ======================================================== */}
+        {/* 4.5. PACKING CHECKLIST & HIGHWAY SPOTIFY HUB             */}
+        {/* ======================================================== */}
+        <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+          <PackingChecklist />
+          <SpotifyTripHub />
+        </section>
 
         {/* ======================================================== */}
         {/* 6. WHAT'S INCLUDED SECTION                               */}

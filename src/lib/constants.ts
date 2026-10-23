@@ -239,7 +239,7 @@ export const PACKING_LIST = [
 export const FAQ_ITEMS = [
   {
     q: 'How much is the reservation amount to lock my seat?',
-    a: 'You only pay ₹1,000 per traveller today to confirm your reservation and lock your bus seat. The remaining balance (₹5,200 per traveller) can be cleared closer to the departure date as scheduled by the coordinators.',
+    a: 'You pay a ₹1,000 deposit per traveller to confirm your reservation and lock your bus seat. The remaining balance depends on your booking rate: ₹5,500 per traveller at the standard rate or ₹5,200 per traveller for groups of five or more. Coordinators will confirm when it is due.',
   },
   {
     q: 'Can I select my exact bus seat like BookMyShow?',
@@ -251,7 +251,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: 'What is the pricing per traveller?',
-    a: 'The trip price is ₹6,200 per traveller. Total price is simply the number of travellers × ₹6,200 (e.g. 1 traveller = ₹6,200, 2 travellers = ₹12,400, 6 travellers = ₹37,200).',
+    a: 'The standard rate is ₹6,500 per traveller. Groups of five or more automatically receive the ₹6,200 per traveller rate, saving ₹300 per person. A ₹1,000 deposit per traveller is due to reserve seats.',
   },
   {
     q: 'Can I book for a group of friends?',

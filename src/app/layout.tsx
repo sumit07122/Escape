@@ -4,6 +4,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import MobileBottomBar from '@/components/MobileBottomBar';
 import WhatsAppCommunityButton from '@/components/WhatsAppCommunityButton';
+import SocialProofToast from '@/components/SocialProofToast';
 import { Analytics } from '@vercel/analytics/next';
 
 export const metadata: Metadata = {
@@ -77,6 +78,7 @@ export default function RootLayout({
         <Footer />
         <MobileBottomBar />
         <WhatsAppCommunityButton />
+        <SocialProofToast />
         <Analytics />
       </body>
     </html>

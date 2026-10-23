@@ -58,6 +58,8 @@ export default function BookingFlow() {
   // Step: Bus & Seat Selection
   const [selectedBusId, setSelectedBusId] = useState('');
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
+  const [squadFriendSeats, setSquadFriendSeats] = useState<string[]>([]);
+  const [squadLinkNotice, setSquadLinkNotice] = useState<string | null>(null);
 
   // Step: Pricing & Payment
   const [pricing, setPricing] = useState<BookingPricing | null>(null);
@@ -69,6 +71,19 @@ export default function BookingFlow() {
 
   // Step: Confirmed Booking Details
   const [confirmedBooking, setConfirmedBooking] = useState<any>(null);
+
+  // Restore the coach and seats shared by a friend without taking their seats.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const bus = params.get('bus');
+    const seats = (params.get('seats') || '')
+      .split(',')
+      .map((seat) => seat.trim().toUpperCase())
+      .filter((seat) => /^(L|R|B)\d+$/.test(seat));
+
+    if (bus) setSelectedBusId(bus);
+    if (seats.length > 0) setSquadFriendSeats([...new Set(seats)]);
+  }, []);
 
   // 1. Initialize Booking Session & Check User Auth
   useEffect(() => {
@@ -209,6 +224,22 @@ export default function BookingFlow() {
   const handleSeatSelect = (busId: string, seatNumbers: string[]) => {
     setSelectedBusId(busId);
     setSelectedSeats(seatNumbers);
+  };
+
+  const handleShareSquadLink = async () => {
+    if (!selectedBusId || selectedSeats.length === 0) return;
+
+    const shareUrl = new URL('/book', window.location.origin);
+    shareUrl.searchParams.set('bus', selectedBusId);
+    shareUrl.searchParams.set('seats', selectedSeats.join(','));
+
+    try {
+      await navigator.clipboard.writeText(shareUrl.toString());
+      setSquadLinkNotice('Squad link copied! Send it in your WhatsApp group to lock seats together.');
+      window.setTimeout(() => setSquadLinkNotice(null), 4500);
+    } catch {
+      setSquadLinkNotice('Could not copy automatically. Please allow clipboard access and try again.');
+    }
   };
 
   const handleProceedToPayment = async () => {
@@ -729,7 +760,31 @@ export default function BookingFlow() {
             onSeatSelect={handleSeatSelect}
             bookingSessionId={bookingSessionId}
             preference={sittingPreference}
+            squadFriendSeats={squadFriendSeats}
           />
+
+          {selectedSeats.length >= 1 && selectedSeats.length <= 4 && (
+            <div className="w-full max-w-xl mx-auto p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-violet-50 to-amber-50 border border-violet-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-black text-[#171918]">Booking with your crew?</p>
+                <p className="text-xs text-[#646864] mt-1">
+                  Add {5 - selectedSeats.length} more {5 - selectedSeats.length === 1 ? 'friend' : 'friends'} to unlock the ₹6,200/head squad deal!
+                </p>
+                {squadLinkNotice && (
+                  <p role="status" className="text-xs font-bold text-emerald-700 mt-2">
+                    {squadLinkNotice}
+                  </p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={handleShareSquadLink}
+                className="shrink-0 px-4 py-3 rounded-xl bg-violet-700 hover:bg-violet-800 text-white font-extrabold text-xs shadow-md transition-colors"
+              >
+                🔗 Share Squad Link
+              </button>
+            </div>
+          )}
 
           <div className="flex items-center justify-between pt-4 border-t border-[#E7E2D8]">
             <button

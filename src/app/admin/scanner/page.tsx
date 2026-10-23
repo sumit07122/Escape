@@ -256,7 +256,7 @@ export default function AdminScannerPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ticketId: ticketIdToUse,
-          notes: '₹5,200 balance collected and verified at departure desk.',
+          notes: `₹${(scannedResult?.booking?.remainingBalance ?? 0).toLocaleString('en-IN')} booking balance collected and verified at departure desk.`,
         }),
       });
 
@@ -298,6 +298,7 @@ export default function AdminScannerPage() {
   const travellerName = scannedResult?.traveller?.fullName || scannedResult?.booking?.primaryTravellerName || 'Student';
   const busNumber = scannedResult?.traveller?.assignedBusNumber || scannedResult?.booking?.bus?.busNumber || 'Bus 01';
   const seatNumber = scannedResult?.traveller?.assignedSeatNumber || 'L1';
+  const balanceDue = scannedResult?.booking?.remainingBalance ?? 0;
   const checkedInTimeFormatted = scannedResult?.checkInTime
     ? new Date(scannedResult.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
     : scannedResult?.lastCheckIn?.checkInTime
@@ -528,7 +529,7 @@ export default function AdminScannerPage() {
                 GATE VERIFICATION CLEARED
               </span>
               <h2 className="text-xl sm:text-2xl font-black text-white">
-                VALID PASS — {travellerName} — {busNumber}, Seat {seatNumber} — Collect ₹5,200 Balance
+                VALID PASS — {travellerName} — {busNumber}, Seat {seatNumber} — Collect ₹{balanceDue.toLocaleString('en-IN')} Balance
               </h2>
               <p className="text-xs text-emerald-200">
                 Ticket #{scannedResult.ticketNumber} • Booking #{scannedResult.booking?.bookingId}
@@ -539,7 +540,7 @@ export default function AdminScannerPage() {
           <div className="p-4 rounded-2xl bg-black/40 border border-emerald-500/40 flex flex-wrap items-center justify-between gap-4">
             <div>
               <span className="text-[10px] text-zinc-400 uppercase block font-semibold">CASHIER INSTRUCTION</span>
-              <span className="text-sm font-black text-amber-300">Collect ₹5,200 Pending Balance</span>
+              <span className="text-sm font-black text-amber-300">Collect ₹{balanceDue.toLocaleString('en-IN')} Pending Balance</span>
             </div>
             {/* One-Click Action Button */}
             <button

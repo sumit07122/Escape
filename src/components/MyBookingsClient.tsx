@@ -8,6 +8,8 @@ import {
   Phone, Printer, ExternalLink, Mountain
 } from 'lucide-react';
 import { CONTACT_INFO } from '@/lib/constants';
+import PackingChecklist from '@/components/PackingChecklist';
+import SpotifyTripHub from '@/components/SpotifyTripHub';
 
 interface Traveller {
   id: string;
@@ -406,6 +408,12 @@ export default function MyBookingsClient({ initialConfig }: { initialConfig?: an
             })}
           </div>
         )}
+
+        {/* Student Trip Hub Extras */}
+        <div className="space-y-8 pt-4">
+          <PackingChecklist />
+          <SpotifyTripHub />
+        </div>
       </div>
     </div>
   );

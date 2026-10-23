@@ -32,9 +32,9 @@ model Trip {
   galleryImages                  String?           // JSON array string of photo URLs
 
   // Pricing Fields
-  packagePricePerTraveller       Int               @default(6200)
+  packagePricePerTraveller       Int               @default(6500)
   reservationAmountPerTraveller  Int               @default(1000)
-  packagePrice                   Float             @default(6200)
+  packagePrice                   Float             @default(6500)
   reservationAmount              Float             @default(1000)
   balanceDueDatePolicy           String            @default("BEFORE_BOARDING") // BEFORE_BOARDING, DAYS_BEFORE_DEPARTURE, SPECIFIC_DATE
   balanceDueDate                 DateTime?

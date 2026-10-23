@@ -123,12 +123,13 @@ export default function DigitalTicketPage({
   const rollNumberDisplay = traveller?.rollNumber || traveller?.collegeId || 'ID Verified';
 
   const passengerName = traveller?.fullName || booking?.primaryTravellerName || 'Student';
+  const bookingBalanceDue = booking?.remainingBalance ?? 0;
   const ticketPassUrl = passUrl || (typeof window !== 'undefined' ? window.location.href : '');
   const shareText =
     "🏔️ Himalayan Escape 2026 - My Boarding Pass\n" +
     "Passenger: " + passengerName + "\n" +
     "Bus: " + busNumber + " | Seat: " + seatNumber + "\n" +
-    "Remaining Balance Due: ₹5,200\n" +
+    `Booking Balance Due: ₹${bookingBalanceDue.toLocaleString('en-IN')}\n` +
     "Ticket Pass: " + ticketPassUrl;
   const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
 
@@ -270,7 +271,7 @@ export default function DigitalTicketPage({
                 </div>
                 <div className="p-3 rounded-xl bg-white border border-[#D87945]/40 text-center">
                   <span className="text-xs sm:text-sm font-black text-[#B85F30] uppercase tracking-wide block">
-                    ⚠️ Balance Due at Gate: ₹5,200 (UPI / Cash)
+                    ⚠️ Booking Balance Due: ₹{bookingBalanceDue.toLocaleString('en-IN')} (UPI / Cash)
                   </span>
                   <span className="text-[10px] text-[#646864] block mt-0.5">
                     Remaining cash or UPI balance to be settled at gate verification desk before boarding.

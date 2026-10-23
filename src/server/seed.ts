@@ -71,7 +71,7 @@ async function main() {
   }
   console.log(`✓ Master Trip confirmed: ${trip.title} (ID: ${trip.id})`);
 
-  // 4. Seed Packages (Standard single source of truth: ₹6,200 per traveller)
+  // 4. Seed package descriptions; live booking prices come from TripConfig tiers.
   const packages = [
     {
       tripId: trip.id,
@@ -87,10 +87,10 @@ async function main() {
       tripId: trip.id,
       name: 'GROUP',
       slug: 'group',
-      price: PRICING_DEFAULTS.pricePerTraveller,
+      price: PRICING_DEFAULTS.groupPricePerTraveller,
       reservationAmount: PRICING_DEFAULTS.reservationAmountPerTraveller,
       travellersCount: 1,
-      description: 'Group booking for friends travelling together. ₹6,200 per traveller with adjacent seat recommendation, unified dashboard, and individual QR passes.',
+      description: 'Group booking for five or more friends travelling together at the discounted ₹6,200 per traveller rate, with adjacent seat recommendations and individual QR passes.',
       features: JSON.stringify(['Same Bus Allocation', 'Adjacent Seat Recommendations', 'Shared Booking Dashboard', 'All Hotel Stays & Meals Included', 'Individual Digital Passes']),
     },
   ];
@@ -102,7 +102,7 @@ async function main() {
       create: pkg,
     });
   }
-  console.log(`✓ Seeded ${packages.length} Packages (Single ₹6,200, Couple ₹6,500, Group 5+1 Free)`);
+  console.log(`✓ Seeded ${packages.length} Packages (₹6,500 standard, ₹6,200 for groups of 5+, ₹1,000 deposit)`);
 
   // 5. Seed Buses and Exact 25-Position Layouts
   for (let i = 0; i < INITIAL_BUSES.length; i++) {

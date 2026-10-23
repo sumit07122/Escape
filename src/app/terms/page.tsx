@@ -28,7 +28,7 @@ export default function TermsPage() {
         <section className="space-y-2">
           <h2 className="text-base font-bold text-[#171918]">1. Seat Reservation & Payment Policy</h2>
           <p>
-            A reservation deposit of ₹1,000 per traveller is required to lock your coach seat. The remaining balance of ₹5,200 must be cleared prior to boarding as scheduled by trip coordinators.
+            A reservation deposit of ₹1,000 per traveller is required to lock your coach seat. The remaining balance is ₹5,500 per traveller at the standard rate or ₹5,200 per traveller for groups of five or more, and must be cleared as scheduled by trip coordinators.
           </p>
         </section>
 

@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Bus, Clock, Check, Sparkles, AlertCircle, RefreshCw } from 'lucide-react';
+import { Bus, Check, Sparkles, AlertCircle, RefreshCw } from 'lucide-react';
 import { SittingPreference, SeatStatus } from '@/types';
-import { isSeatRecommended, formatHoldCountdown } from '@/lib/bus-seating';
+import { isSeatRecommended } from '@/lib/bus-seating';
+import SeatHoldTimer from './SeatHoldTimer';
 
 export interface SeatData {
   id: string;
@@ -48,6 +49,7 @@ interface BusSeatMapProps {
   readOnly?: boolean;
   isAdmin?: boolean;
   onAdminSeatClick?: (seat: SeatData, busId: string) => void;
+  squadFriendSeats?: string[];
 }
 
 // Canonical Coach Titles
@@ -56,6 +58,18 @@ const COACH_NAMES: Record<string, string> = {
   'Bus 02': 'Parvati Cruiser',
   'Bus 03': 'Solang Glider',
   'Bus 04': 'Rohtang Explorer',
+};
+
+const PAIR_MAP: Record<string, string[]> = {
+  L1: ['L2'], L2: ['L1'],
+  L3: ['L4'], L4: ['L3'],
+  L5: ['L6'], L6: ['L5'],
+  L7: ['L8'], L8: ['L7'],
+  R1: ['R2'], R2: ['R1'],
+  R3: ['R4'], R4: ['R3'],
+  R5: ['R6'], R6: ['R5'],
+  R7: ['R8'], R8: ['R7'],
+  B1: ['B2'], B2: ['B1', 'B3'], B3: ['B2', 'B4'], B4: ['B3', 'B5'], B5: ['B4'],
 };
 
 export default function BusSeatMap({
@@ -68,6 +82,7 @@ export default function BusSeatMap({
   readOnly = false,
   isAdmin = false,
   onAdminSeatClick,
+  squadFriendSeats = [],
 }: BusSeatMapProps) {
   const [buses, setBuses] = useState<BusSummary[]>([]);
   const [activeBusId, setActiveBusId] = useState<string>(selectedBusId || '');
@@ -85,17 +100,31 @@ export default function BusSeatMap({
       });
       if (res.ok) {
         const data = await res.json();
-        setBuses(data.buses || []);
+        const busList: BusSummary[] = data.buses || [];
+        setBuses(busList);
 
-        if (!activeBusId && data.buses?.length > 0) {
-          const firstAvailable = data.buses.find((b: BusSummary) => !b.stats.isFull) || data.buses[0];
-          setActiveBusId(firstAvailable.id);
+        if (busList.length > 0) {
+          let chosenBusId = activeBusId;
+          if (selectedBusId) {
+            const matched = busList.find(
+              (b) =>
+                b.id === selectedBusId ||
+                b.busNumber.toLowerCase() === selectedBusId.toLowerCase() ||
+                b.busNumber.replace(/\s+/g, '').toLowerCase() === selectedBusId.replace(/\s+/g, '').toLowerCase()
+            );
+            if (matched) chosenBusId = matched.id;
+          }
+          if (!chosenBusId) {
+            const firstAvailable = busList.find((b) => !b.stats.isFull) || busList[0];
+            chosenBusId = firstAvailable.id;
+          }
+          setActiveBusId(chosenBusId);
         }
       }
     } catch (err) {
       console.error('Error loading buses:', err);
     }
-  }, [activeBusId]);
+  }, [activeBusId, selectedBusId]);
 
   // 2. Fetch seats for active bus
   const loadSeats = useCallback(async (busId: string) => {
@@ -183,7 +212,17 @@ export default function BusSeatMap({
       setHoldTimerSeconds((prev) => {
         if (prev <= 1) {
           clearInterval(interval);
-          if (activeBusId) loadSeats(activeBusId);
+          if (activeBusId && selectedSeats.length > 0) {
+            void fetch('/api/seats/release', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                busId: activeBusId,
+                seatNumbers: selectedSeats,
+                bookingSessionId,
+              }),
+            }).finally(() => loadSeats(activeBusId));
+          }
           onSeatSelect(activeBusId, []);
           setErrorMessage('Your 10-minute reservation hold has expired. Please pick your seat again.');
           return 0;
@@ -193,7 +232,7 @@ export default function BusSeatMap({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [holdTimerSeconds, activeBusId, loadSeats, onSeatSelect]);
+  }, [holdTimerSeconds, activeBusId, bookingSessionId, loadSeats, onSeatSelect, selectedSeats]);
 
   // Handle seat click
   const handleSeatClick = async (seat: SeatData) => {
@@ -325,7 +364,12 @@ export default function BusSeatMap({
       bgColor = 'bg-[#163C32] text-white border-[#163C32] font-black shadow-md';
     }
 
-    // Preference Highlight Ring
+    // Preference & Squad Highlight Ring
+    const isFriendSeat = squadFriendSeats.includes(seat.seatNumber);
+    const isAdjacentToFriend = squadFriendSeats.some((friendSeat) =>
+      PAIR_MAP[friendSeat]?.includes(seat.seatNumber)
+    );
+
     const isPreferenceMatch =
       preference !== 'NO_PREFERENCE' &&
       ((preference === 'WINDOW' && seat.position === 'WINDOW') ||
@@ -335,6 +379,8 @@ export default function BusSeatMap({
 
     const ringClasses = isSelected
       ? 'ring-2 ring-[#D87945] ring-offset-2'
+      : isAdjacentToFriend && seat.status === 'AVAILABLE'
+      ? 'ring-2 ring-purple-500 ring-offset-1 animate-pulse'
       : isPreferenceMatch && seat.status === 'AVAILABLE'
       ? 'ring-2 ring-[#D87945]/70 ring-offset-1'
       : '';
@@ -354,6 +400,18 @@ export default function BusSeatMap({
         {isRecommended && seat.status === 'AVAILABLE' && !isSelected && (
           <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[#D87945] flex items-center justify-center text-[9px] text-white font-black shadow-xs">
             ★
+          </span>
+        )}
+
+        {isAdjacentToFriend && seat.status === 'AVAILABLE' && !isSelected && (
+          <span className="absolute -top-1.5 -left-1.5 px-1 py-0.2 rounded bg-purple-600 text-white text-[8px] font-black uppercase shadow-xs" title="Adjacent to your squad">
+            👥
+          </span>
+        )}
+
+        {isFriendSeat && !isSelected && (
+          <span className="absolute -bottom-1 -right-1 px-1 py-0.2 rounded bg-stone-800 text-purple-300 text-[8px] font-mono font-bold shadow-xs">
+            Friend
           </span>
         )}
 
@@ -451,6 +509,12 @@ export default function BusSeatMap({
         </div>
       )}
 
+      <SeatHoldTimer
+        selectedSeats={selectedSeats}
+        secondsRemaining={holdTimerSeconds}
+        busNumber={buses.find((bus) => bus.id === activeBusId)?.busNumber}
+      />
+
       {/* Bus Visual Chassis Container with Topographic Grid */}
       <div className="w-full max-w-md bg-white coach-grid rounded-3xl p-5 sm:p-7 border border-[#D8D2C4] shadow-sm relative">
         {/* Front Bus Cabin / Windshield */}
@@ -546,28 +610,6 @@ export default function BusSeatMap({
           </span>
         </div>
       </div>
-
-      {/* Live 10-Minute Hold Countdown Timer at Bottom of Seat Selector */}
-      {holdTimerSeconds > 0 && (
-        <div className="w-full max-w-xl mt-4 p-4 rounded-2xl bg-[#FDF4E7] border-2 border-[#D87945] flex items-center justify-between shadow-lg">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-[#D87945]/20 flex items-center justify-center text-[#D87945]">
-              <Clock className="w-5 h-5 animate-pulse" />
-            </div>
-            <div>
-              <p className="text-xs font-black text-[#1C1C1C] uppercase tracking-wide">
-                Atomic Seat Lease Active ({selectedSeats.join(', ')})
-              </p>
-              <p className="text-[11px] text-[#646864]">
-                Complete ₹1,000 reservation payment before timer expires:
-              </p>
-            </div>
-          </div>
-          <div className="px-3.5 py-1.5 rounded-xl bg-white font-mono text-lg font-black text-[#D87945] border border-[#D87945] shadow-xs">
-            {formatHoldCountdown(holdTimerSeconds)}
-          </div>
-        </div>
-      )}
 
       {/* Legend & Seat Status Guide */}
       <div className="w-full max-w-xl mt-6 p-4 rounded-2xl bg-white border border-[#D8D2C4] shadow-xs">
