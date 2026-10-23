@@ -9,6 +9,7 @@ import { cleanExpiredHolds, createAuditLog } from '@/lib/server-utils';
 import { TravellerInput } from '@/types';
 import { getUserSessionFromRequest } from '@/lib/auth';
 import { getTripConfig } from '@/lib/trip-config';
+import { calculateDynamicBookingPricing } from '@/lib/pricing';
 
 
 export async function POST(request: NextRequest) {
@@ -22,6 +23,7 @@ export async function POST(request: NextRequest) {
       bookingSessionId,
       emergencyContactName,
       emergencyContactPhone,
+      couponCode,
     } = body;
 
     if (!busId || !selectedSeats || !Array.isArray(selectedSeats) || selectedSeats.length === 0) {
@@ -98,15 +100,17 @@ export async function POST(request: NextRequest) {
 
     const primaryTraveller = travellers[0];
 
-    // 4. Strict Server-Side Calculation (Dynamic SSOT TripConfig)
-    const tripConfig = await getTripConfig();
+    // 4. Strict Server-Side Tiered Squad Calculation
     const travellersCount = travellers.length;
-    const pricePerTraveller = Number(tripConfig.packagePrice) || 6200;
-    const depositPerTraveller = Number(tripConfig.depositPrice) || 1000;
-    const depositAmount = travellersCount * depositPerTraveller;
-    const totalPackage = travellersCount * pricePerTraveller;
-    const balanceDue = Math.max(0, totalPackage - depositAmount);
-
+    const calculatedPricing = await calculateDynamicBookingPricing({
+      travellersCount,
+      couponCode,
+    });
+    const depositAmount = calculatedPricing.reservationAmount;
+    const totalPackage = calculatedPricing.totalAmount;
+    const baseTotal = calculatedPricing.baseAmount;
+    const balanceDue = calculatedPricing.remainingBalance;
+    const discountAmount = calculatedPricing.discountAmount;
 
     // 5. Generate unique booking ID
     const bookingId = generateBookingId();
@@ -143,17 +147,18 @@ export async function POST(request: NextRequest) {
         primaryPhone: primaryTraveller.phone || '0000000000',
         gender: primaryTraveller.gender || 'NOT_SPECIFIED',
         emergencyContactName: emergencyContactName || primaryTraveller.emergencyContactName || 'University Coordinator',
-        emergencyContactPhone: emergencyContactPhone || primaryTraveller.emergencyContactPhone || '7017936338',
+        emergencyContactPhone: emergencyContactPhone || primaryTraveller.emergencyContactPhone || '6398412828',
         sittingPreference: sittingPreference || 'NO_PREFERENCE',
         travellersCount,
-        totalAmount: totalPackage,
+        totalAmount: baseTotal,
         reservationAmount: depositAmount,
-        discountAmount: 0, // Profit-safe: Zero discounts
+        discountAmount: discountAmount,
         finalAmount: totalPackage,
         remainingBalance: balanceDue,
         paymentStatus: 'PENDING',
         bookingStatus: 'PENDING',
         busId,
+        notes: calculatedPricing.couponCode ? `Coupon applied: ${calculatedPricing.couponCode}` : undefined,
         travellers: {
           create: travellers.map((t: TravellerInput, index: number) => ({
             fullName: t.fullName || `Student ${index + 1}`,
@@ -217,14 +222,14 @@ export async function POST(request: NextRequest) {
       isMock: orderResult.isMock,
       pricing: {
         travellersCount,
-        pricePerTraveller,
+        pricePerTraveller: calculatedPricing.pricePerTraveller,
         totalAmount: totalPackage,
         totalPackage,
         depositAmount,
         reservationAmount: depositAmount,
         balanceDue,
         remainingBalance: balanceDue,
-        discount: 0,
+        discount: discountAmount,
       },
       booking: {
         id: booking.id,

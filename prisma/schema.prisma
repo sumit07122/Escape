@@ -540,15 +540,30 @@ model TripConfig {
   tripTitle              String   @default("Himalayan Escape 2026")
   subtitle               String   @default("Manali × Kasol Student Expedition")
   totalCapacity          Int      @default(75)
-  packagePrice           Int      @default(6200)
-  depositPrice           Int      @default(1000)
-  pickupLocation         String   @default("Near Main Gate (NH-2), Mathura")
-  reportingTime          String   @default("07:00 PM")
+  packagePrice           Int      @default(6500) // Standard individual price
+  groupPackagePrice      Int      @default(6200) // Discounted price for groups
+  groupSizeThreshold     Int      @default(5)    // Min travelers for group rate (5)
+  depositPrice           Int      @default(1000) // Advance reservation deposit
   departureDate          String   @default("2026-10-24")
-  emergencyHelplines     String[] @default(["7017936338", "9368287947"])
+  returnDate             String   @default("2026-10-29")
+  reportingTime          String   @default("07:00 PM")
+  pickupLocation         String   @default("Near Main Gate (NH-2), Mathura")
+  emergencyHelplines     String[] @default(["6398412828", "8126854850"])
   announcementBanner     String?  // Optional emergency broadcast banner
   announcementActive     Boolean  @default(false)
   updatedAt              DateTime @updatedAt
+}
+
+model Coupon {
+  id             String    @id @default(cuid())
+  code           String    @unique
+  discountAmount Int       @default(200)
+  maxUses        Int       @default(100)
+  usedCount      Int       @default(0)
+  isActive       Boolean   @default(true)
+  expiresAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }
 
 model Admin {

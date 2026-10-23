@@ -183,6 +183,21 @@ export async function POST(request: NextRequest) {
         },
       });
 
+      // Increment coupon usedCount if coupon was applied
+      if (booking.notes && booking.notes.startsWith('Coupon applied: ')) {
+        const appliedCode = booking.notes.replace('Coupon applied: ', '').trim();
+        if (appliedCode) {
+          try {
+            await tx.coupon.update({
+              where: { code: appliedCode },
+              data: { usedCount: { increment: 1 } },
+            });
+          } catch {
+            // Safe fallback if database table or coupon isn't present
+          }
+        }
+      }
+
       // Queue confirmation notification
       await tx.notification.create({
         data: {

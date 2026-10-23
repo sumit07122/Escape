@@ -7,7 +7,7 @@ import { calculateDynamicBookingPricing } from '@/lib/pricing';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
-    const rawCount = body.travellersCount;
+    const { travellersCount: rawCount, couponCode } = body;
     const travellersCount = Number(rawCount) || 1;
 
     if (travellersCount < 1) {
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const pricing = await calculateDynamicBookingPricing({ travellersCount });
+    const pricing = await calculateDynamicBookingPricing({ travellersCount, couponCode });
 
     return NextResponse.json({
       pricing,

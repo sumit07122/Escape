@@ -3,11 +3,14 @@ export interface TripConfigData {
   tripTitle: string;
   subtitle: string;
   totalCapacity: number;
-  packagePrice: number;
-  depositPrice: number;
-  pickupLocation: string;
-  reportingTime: string;
+  packagePrice: number; // Standard individual price (₹6,500)
+  groupPackagePrice: number; // Discounted price for groups (₹6,200)
+  groupSizeThreshold: number; // Min travelers for group rate (5)
+  depositPrice: number; // Advance reservation deposit (₹1,000)
   departureDate: string;
+  returnDate: string;
+  reportingTime: string;
+  pickupLocation: string;
   emergencyHelplines: string[];
   announcementBanner?: string | null;
   announcementActive: boolean;
@@ -18,12 +21,15 @@ export const DEFAULT_TRIP_CONFIG: TripConfigData = {
   tripTitle: 'Himalayan Escape 2026',
   subtitle: 'Manali × Kasol Student Expedition',
   totalCapacity: 75,
-  packagePrice: 6200,
+  packagePrice: 6500,
+  groupPackagePrice: 6200,
+  groupSizeThreshold: 5,
   depositPrice: 1000,
-  pickupLocation: 'Near Main Gate (NH-2), Mathura',
-  reportingTime: '07:00 PM',
   departureDate: '2026-10-24',
-  emergencyHelplines: ['7017936338', '9368287947'],
+  returnDate: '2026-10-29',
+  reportingTime: '07:00 PM',
+  pickupLocation: 'Near Main Gate (NH-2), Mathura',
+  emergencyHelplines: ['6398412828', '8126854850'],
   announcementBanner: 'Reporting time updated: Buses will depart from NH-2 gate at 8:00 PM sharp.',
   announcementActive: false,
 };

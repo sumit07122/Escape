@@ -83,6 +83,8 @@ export async function GET() {
         checkedInTravellers: travellers.filter((t) => t.checkInStatus === 'CHECKED_IN').length,
         capacity: tripConfig.totalCapacity,
         packagePrice: tripConfig.packagePrice,
+        groupPackagePrice: tripConfig.groupPackagePrice,
+        groupSizeThreshold: tripConfig.groupSizeThreshold,
         depositPrice: tripConfig.depositPrice,
         balanceDue,
         availableSeats: seatAvail.availableSeats,

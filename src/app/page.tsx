@@ -29,7 +29,8 @@ export default async function HomePage() {
     cookieStore.get('user_session')?.value;
   const userSession = token ? verifyUserSession(token) : null;
 
-  const pkgPrice = Number(tripConfig.packagePrice) || 6200;
+  const pkgPrice = Number(tripConfig.packagePrice) || 6500;
+  const groupPrice = Number(tripConfig.groupPackagePrice) || 6200;
   const depPrice = Number(tripConfig.depositPrice) || 1000;
   const balPrice = Math.max(0, pkgPrice - depPrice);
 
@@ -38,17 +39,17 @@ export default async function HomePage() {
       {/* ======================================================== */}
       {/* 1. HERO SECTION (DREAMY ALPINE PHOTOGRAPHY + PRICING)   */}
       {/* ======================================================== */}
-      <section className="relative w-full min-h-[90vh] flex items-center justify-center overflow-hidden bg-stone-950 text-center px-4 pt-24 pb-28">
+      <section className="relative w-full min-h-[92vh] flex items-center justify-center overflow-hidden bg-stone-950 text-center px-4 pt-24 pb-28">
         {/* Background Mountain Image Container (z-0, Guaranteed Render) */}
         <div className="absolute inset-0 z-0">
           <img
             src="/hero-mountain.jpg"
-            alt="Himalayan Mountain Peaks & Alpine Pass"
-            className="w-full h-full object-cover object-[center_30%]"
+            alt="Himalayan Mountain Range"
+            className="w-full h-full object-cover object-[center_35%]"
           />
           {/* Multi-layer atmospheric dark & mist overlays */}
-          <div className="absolute inset-0 bg-gradient-to-b from-stone-950/70 via-black/35 to-stone-950" />
-          <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#F7F5EF] to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-b from-stone-950/75 via-black/35 to-stone-950" />
+          <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-stone-950 to-transparent pointer-events-none" />
         </div>
 
         {/* Subtle Snowflake Particle Layer */}
@@ -97,31 +98,36 @@ export default async function HomePage() {
             </p>
           </div>
 
-          {/* Clean Pricing Breakdown Card (DYNAMIC FROM SSOT) */}
-          <div className="w-full max-w-lg p-5 rounded-2xl bg-black/55 backdrop-blur-md border border-white/25 shadow-2xl space-y-4">
+          {/* Tiered Squad Pricing Breakdown Card (DYNAMIC FROM SSOT) */}
+          <div className="w-full max-w-lg p-5 rounded-2xl bg-black/60 backdrop-blur-md border border-white/25 shadow-2xl space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/15 pb-4">
               <div className="text-left">
                 <span className="text-[11px] font-bold tracking-widest uppercase text-stone-300 block font-mono">
-                  ALL-INCLUSIVE EXPEDITION
+                  SOLO RATE (1–4 PAX)
                 </span>
                 <span className="text-3xl sm:text-4xl font-black tracking-tight text-white font-mono">
                   ₹{pkgPrice.toLocaleString('en-IN')}
                 </span>
-                <span className="text-[10px] text-stone-300 ml-1 font-semibold">/ student</span>
+                <span className="text-[10px] text-stone-300 ml-1 font-semibold">/ person</span>
               </div>
               <div className="text-right">
-                <span className="text-[11px] font-bold tracking-widest uppercase text-[#D87945] block font-mono">
-                  ONLINE RESERVATION
+                <span className="text-[11px] font-bold tracking-widest uppercase text-emerald-400 block font-mono">
+                  SQUAD RATE (5+ PAX)
                 </span>
-                <span className="text-3xl sm:text-4xl font-black tracking-tight text-[#D87945] font-mono">
-                  ₹{depPrice.toLocaleString('en-IN')}
+                <span className="text-3xl sm:text-4xl font-black tracking-tight text-emerald-400 font-mono">
+                  ₹{groupPrice.toLocaleString('en-IN')}
                 </span>
+                <span className="text-[10px] text-emerald-300 ml-1 font-semibold">/ person</span>
               </div>
             </div>
-            <div className="flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold text-stone-100 font-mono">
-              <span className="text-[#D87945] font-bold">₹{depPrice.toLocaleString('en-IN')} to Reserve Seat</span>
-              <span className="text-white/40">•</span>
-              <span className="text-stone-200">₹{balPrice.toLocaleString('en-IN')} Balance at Departure</span>
+
+            <div className="space-y-1.5 text-center font-mono">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold">
+                <span>Lock Your Seat at just ₹{depPrice.toLocaleString('en-IN')} Deposit</span>
+              </div>
+              <p className="text-xs text-stone-300">
+                ₹{pkgPrice.toLocaleString('en-IN')} / Person • Squad of {tripConfig.groupSizeThreshold || 5}+: ₹{groupPrice.toLocaleString('en-IN')} / Person
+              </p>
             </div>
           </div>
 

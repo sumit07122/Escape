@@ -8,27 +8,29 @@ export const TRIP_METADATA = {
   origin: 'Pickup & Reporting: Near Main Gate (NH-2), Mathura',
   destination: 'Manali & Kasol, Himachal Pradesh',
   capacity: 75,
-  dates: 'November 15 - November 20, 2026',
+  dates: 'October 24 - October 29, 2026',
   reportingLocation: 'Pickup & Reporting: Near Main Gate (NH-2), Mathura',
   disclaimer: 'Independent student-organized expedition. Not an officially sponsored university event. Trip itinerary may change due to weather, road conditions, traffic, permits, government restrictions, local conditions, or safety requirements. Weather-dependent and road-dependent activities (such as Atal Tunnel / Sissu snow trails and river rafting) are subject to official clearances and cannot be guaranteed.',
 };
 
 export const PRICING_DEFAULTS = {
-  pricePerTraveller: 6200, // ₹6,200 PER TRAVELLER - single source of truth
-  singlePrice: 6200,
+  pricePerTraveller: 6500, // ₹6,500 standard solo rate
+  groupPricePerTraveller: 6200, // ₹6,200 group rate
+  groupThreshold: 5,
+  singlePrice: 6500,
   reservationAmountPerTraveller: 1000, // ₹1,000 reservation deposit per traveller
   reservationAmount: 1000,
-  remainingBalancePerTraveller: 5200, // ₹5,200 remaining balance per traveller
+  remainingBalancePerTraveller: 5500, // ₹5,500 remaining balance per solo traveller
   seatHoldMinutes: 10, // 10-minute hold duration
 };
 
 export const CONTACT_INFO = {
-  coordinatorPhone1: '7017936338',
-  coordinatorPhone2: '9368287947',
-  whatsapp1: '917017936338',
-  whatsapp2: '919368287947',
-  emergencyCoordinator: '7017936338',
-  emergencySupport: '9368287947',
+  coordinatorPhone1: '6398412828',
+  coordinatorPhone2: '8126854850',
+  whatsapp1: '916398412828',
+  whatsapp2: '918126854850',
+  emergencyCoordinator: '6398412828',
+  emergencySupport: '8126854850',
   police: '100',
   ambulance: '108',
   email: 'trips@glaescape.in',

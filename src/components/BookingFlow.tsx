@@ -61,6 +61,9 @@ export default function BookingFlow() {
 
   // Step: Pricing & Payment
   const [pricing, setPricing] = useState<BookingPricing | null>(null);
+  const [couponInput, setCouponInput] = useState('');
+  const [couponMessage, setCouponMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
@@ -101,36 +104,51 @@ export default function BookingFlow() {
     checkAuth();
   }, []);
 
-  const refreshPricing = useCallback(async (count: number) => {
+  const refreshPricing = useCallback(async (count: number, couponOverride?: string) => {
     try {
+      const codeToSend = couponOverride !== undefined ? couponOverride : couponInput;
       const res = await fetch(`/api/pricing/calculate?t=${Date.now()}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Cache-Control': 'no-cache, no-store, must-revalidate',
         },
-        body: JSON.stringify({ travellersCount: count }),
+        body: JSON.stringify({ travellersCount: count, couponCode: codeToSend ? codeToSend.trim() : undefined }),
         cache: 'no-store',
       });
       if (res.ok) {
         const data = await res.json();
         setPricing(data.pricing);
+        if (codeToSend && codeToSend.trim()) {
+          if (data.pricing?.couponDiscount > 0) {
+            setCouponMessage({
+              type: 'success',
+              text: `Promo "${data.pricing.couponCode}" applied! ₹${data.pricing.couponDiscount} discount.`,
+            });
+          } else {
+            setCouponMessage({ type: 'error', text: 'Invalid or expired promo code' });
+          }
+        }
       }
     } catch {
-
       setPricing({
         travellersCount: count,
-        baseAmount: count * PRICING_DEFAULTS.pricePerTraveller,
-        totalAmount: count * PRICING_DEFAULTS.pricePerTraveller,
-        pricePerTraveller: PRICING_DEFAULTS.pricePerTraveller,
-        reservationAmountPerTraveller: PRICING_DEFAULTS.reservationAmountPerTraveller,
-        reservationAmount: count * PRICING_DEFAULTS.reservationAmountPerTraveller,
-        remainingBalance: count * PRICING_DEFAULTS.remainingBalancePerTraveller,
-        finalAmount: count * PRICING_DEFAULTS.pricePerTraveller,
+        baseAmount: count * 6500,
+        totalAmount: count * 6500,
+        pricePerTraveller: count >= 5 ? 6200 : 6500,
+        reservationAmountPerTraveller: 1000,
+        reservationAmount: count * 1000,
+        remainingBalance: count * (count >= 5 ? 5200 : 5500),
+        finalAmount: count * (count >= 5 ? 6200 : 6500),
         discountAmount: 0,
+        isGroupRate: count >= 5,
+        groupThreshold: 5,
+        groupPackagePrice: 6200,
+        standardPackagePrice: 6500,
+        savingsPerTraveller: count >= 5 ? 300 : 0,
       });
     }
-  }, []);
+  }, [couponInput]);
 
   // 2. Adjust travellers array whenever count changes
   useEffect(() => {
@@ -207,6 +225,7 @@ export default function BookingFlow() {
         bookingSessionId,
         emergencyContactName,
         emergencyContactPhone,
+        couponCode: couponInput.trim() || undefined,
       };
 
       const res = await fetch('/api/bookings/create-order', {
@@ -270,12 +289,7 @@ export default function BookingFlow() {
         const rzp = new window.Razorpay(options);
         rzp.open();
       } else {
-        await verifyPayment({
-          bookingId: orderData.bookingId,
-          razorpayOrderId: orderData.razorpayOrderId,
-          razorpayPaymentId: 'pay_sim_' + Date.now(),
-          razorpaySignature: 'simulated_signature_sandbox',
-        });
+        throw new Error('Razorpay secure checkout could not be loaded. Please ensure you are connected to the internet and retry.');
       }
     } catch (err: unknown) {
       console.error(err);
@@ -443,11 +457,34 @@ export default function BookingFlow() {
               </button>
             </div>
 
+            {/* Live Tiered Squad Pricing Tag */}
+            <div className="pt-2">
+              {travellersCount < (pricing?.groupThreshold || 5) ? (
+                <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-center space-y-0.5">
+                  <div className="text-xs font-bold text-amber-900 font-mono">
+                    ₹{(pricing?.standardPackagePrice || 6500).toLocaleString('en-IN')} / person
+                  </div>
+                  <div className="text-[11px] text-amber-800 font-medium">
+                    ⚡ Add {(pricing?.groupThreshold || 5) - travellersCount} more friend{(pricing?.groupThreshold || 5) - travellersCount > 1 ? 's' : ''} to unlock <span className="font-bold text-amber-950 font-mono">₹{(pricing?.groupPackagePrice || 6200).toLocaleString('en-IN')} / person</span> group rate!
+                  </div>
+                </div>
+              ) : (
+                <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/35 text-center space-y-0.5 animate-in fade-in">
+                  <div className="text-xs font-black text-emerald-800 font-mono flex items-center justify-center gap-1">
+                    <span>🎉 Group Discount Unlocked!</span>
+                  </div>
+                  <div className="text-[11px] text-emerald-900 font-semibold">
+                    Flat ₹{(pricing?.groupPackagePrice || 6200).toLocaleString('en-IN')} / person applied (Saved ₹{(pricing?.savingsPerTraveller || 300).toLocaleString('en-IN')} per head)
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Transparent Calculation */}
             <div className="pt-2 border-t border-[#D8D2C4] text-xs space-y-1">
               <div className="flex justify-between text-[#171918] font-bold">
                 <span>Total Package:</span>
-                <span>₹{(pricing?.totalAmount ?? (travellersCount * (pricing?.pricePerTraveller || 6200))).toLocaleString('en-IN')}</span>
+                <span>₹{(pricing?.totalAmount ?? (travellersCount * (pricing?.pricePerTraveller || 6500))).toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between text-[#D87945] font-semibold">
                 <span>Reservation Deposit (Today):</span>
@@ -455,7 +492,7 @@ export default function BookingFlow() {
               </div>
               <div className="flex justify-between text-[#646864] text-[11px]">
                 <span>Remaining before boarding:</span>
-                <span>₹{(pricing?.remainingBalance ?? (travellersCount * ((pricing?.pricePerTraveller || 6200) - (pricing?.reservationAmountPerTraveller || 1000)))).toLocaleString('en-IN')}</span>
+                <span>₹{(pricing?.remainingBalance ?? (travellersCount * ((pricing?.pricePerTraveller || 6500) - (pricing?.reservationAmountPerTraveller || 1000)))).toLocaleString('en-IN')}</span>
               </div>
             </div>
           </div>
@@ -759,18 +796,68 @@ export default function BookingFlow() {
               </div>
             </div>
 
+            {/* Promo Code Input */}
+            <div className="pt-2 pb-1 border-y border-[#D8D2C4] space-y-2">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={couponInput}
+                  onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                  placeholder="Enter Promo Code (e.g. SQUAD5)"
+                  className="flex-1 px-3 py-2 rounded-xl bg-white border border-[#D8D2C4] text-xs font-mono font-bold text-[#171918] uppercase placeholder:normal-case placeholder:font-normal focus:border-[#D87945] focus:outline-none"
+                />
+                <button
+                  type="button"
+                  disabled={applyingCoupon || !couponInput.trim()}
+                  onClick={async () => {
+                    setApplyingCoupon(true);
+                    await refreshPricing(travellersCount, couponInput.trim());
+                    setApplyingCoupon(false);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-[#163C32] hover:bg-[#112F27] text-white text-xs font-bold transition-all disabled:opacity-50"
+                >
+                  {applyingCoupon ? 'Checking...' : 'Apply'}
+                </button>
+              </div>
+
+              {couponMessage && (
+                <p
+                  className={`text-[11px] font-semibold ${
+                    couponMessage.type === 'success' ? 'text-emerald-700' : 'text-rose-600'
+                  }`}
+                >
+                  {couponMessage.text}
+                </p>
+              )}
+            </div>
+
             <div className="space-y-1.5 pt-1 text-xs">
               <div className="flex justify-between text-[#646864]">
                 <span>Total Trip Cost:</span>
-                <span className="font-bold text-[#171918]">₹{(pricing?.totalAmount ?? (travellersCount * (pricing?.pricePerTraveller || 6200))).toLocaleString('en-IN')}</span>
+                <span className="font-bold text-[#171918]">₹{(pricing?.baseAmount ?? (travellersCount * (pricing?.pricePerTraveller || 6500))).toLocaleString('en-IN')}</span>
               </div>
+
+              {pricing?.discountAmount && pricing.discountAmount > 0 ? (
+                <div className="flex justify-between text-emerald-700 font-bold">
+                  <span>Promo Discount ({pricing.couponCode}):</span>
+                  <span>−₹{pricing.discountAmount.toLocaleString('en-IN')}</span>
+                </div>
+              ) : null}
+
+              {pricing?.isGroupRate ? (
+                <div className="flex justify-between text-emerald-700 text-[11px] font-semibold">
+                  <span>Squad Group Discount:</span>
+                  <span>Flat ₹{(pricing.groupPackagePrice || 6200).toLocaleString('en-IN')}/head</span>
+                </div>
+              ) : null}
+
               <div className="flex justify-between text-[#D87945] font-bold text-sm">
                 <span>Reservation Deposit (Today):</span>
                 <span className="text-base">₹{(pricing?.reservationAmount ?? (travellersCount * (pricing?.reservationAmountPerTraveller || 1000))).toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between text-[#646864] text-[11px]">
                 <span>Balance Before Boarding:</span>
-                <span className="text-[#171918]">₹{(pricing?.remainingBalance ?? (travellersCount * ((pricing?.pricePerTraveller || 6200) - (pricing?.reservationAmountPerTraveller || 1000)))).toLocaleString('en-IN')}</span>
+                <span className="text-[#171918]">₹{(pricing?.remainingBalance ?? (travellersCount * ((pricing?.pricePerTraveller || 6500) - (pricing?.reservationAmountPerTraveller || 1000)))).toLocaleString('en-IN')}</span>
               </div>
             </div>
 
@@ -793,7 +880,7 @@ export default function BookingFlow() {
                   <span>Processing Payment...</span>
                 </>
               ) : (
-                <span>PAY RESERVATION (₹{(travellersCount * 1000).toLocaleString('en-IN')})</span>
+                <span>PAY RESERVATION (₹{(pricing?.reservationAmount ?? (travellersCount * (pricing?.reservationAmountPerTraveller || 1000))).toLocaleString('en-IN')})</span>
               )}
             </button>
           </div>
