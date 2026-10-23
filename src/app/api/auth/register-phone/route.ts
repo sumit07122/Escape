@@ -55,11 +55,15 @@ export async function POST(request: NextRequest) {
     // Hash password using bcryptjs (salt rounds: 10)
     const passwordHash = await bcrypt.hash(String(password), 10);
     const cleanName = name ? String(name).trim() : 'Traveller';
+    // Older deployed databases still require email even though phone-only auth does not.
+    // A reserved .invalid address satisfies that legacy constraint without inventing a deliverable email.
+    const accountEmail = `${cleanPhone}@phone.himalayaescape.invalid`;
 
     // Create user in database
     const newUser = await db.user.create({
       data: {
         phone: cleanPhone,
+        email: accountEmail,
         passwordHash,
         name: cleanName,
         role: 'USER',
@@ -106,9 +110,16 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error: unknown) {
-    console.error('[AUTH_REGISTER_PHONE_ERROR]:', error);
+    const databaseError = error as { code?: string };
+    if (databaseError?.code === 'P2002') {
+      return NextResponse.json(
+        { error: 'An account with this mobile number already exists. Please sign in.' },
+        { status: 409 }
+      );
+    }
+    console.error('[AUTH_REGISTER_PHONE_ERROR]:', databaseError?.code || 'unknown');
     return NextResponse.json(
-      { error: 'Registration failed. Please try again.' },
+      { error: 'We could not create your account right now. Please try again in a moment.' },
       { status: 500 }
     );
   }

@@ -146,14 +146,11 @@ export default function AdminLayout({
   // Unauthenticated Alpine Login Portal
   if (!adminUser) {
     return (
-      <div className="min-h-screen bg-stone-950 text-stone-100 flex items-center justify-center px-4 py-12 relative overflow-hidden">
-        {/* Subtle Alpine Ambient Glows */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-emerald-900/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-1/4 left-1/2 -translate-x-1/2 translate-y-1/2 w-96 h-96 bg-amber-900/15 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative w-full max-w-md backdrop-blur-md bg-stone-900/80 border border-white/10 rounded-3xl p-8 space-y-6 shadow-2xl">
+      <div className="min-h-screen bg-[#f4f3ee] text-[#202925] flex items-center justify-center px-4 py-12 relative overflow-hidden">
+        <div className="absolute inset-x-0 top-0 h-2 bg-[#1b4a3d]" />
+        <div className="relative w-full max-w-md bg-white border border-[#e4e2da] rounded-3xl p-7 sm:p-9 space-y-6 shadow-[0_24px_70px_rgba(26,47,39,0.10)]">
           <div className="text-center space-y-2">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 to-emerald-500/20 border border-white/10 flex items-center justify-center mx-auto shadow-lg p-2.5">
+            <div className="w-14 h-14 rounded-2xl bg-[#edf3ef] border border-[#dbe7df] flex items-center justify-center mx-auto p-2.5">
               <img
                 src="/logo.png"
                 alt="Himalayan Escape"
@@ -164,70 +161,72 @@ export default function AdminLayout({
                 }}
               />
             </div>
-            <span className="text-[10px] font-bold tracking-widest uppercase text-amber-400 font-mono block">
-              Alpine Operations Console
+            <span className="text-[10px] font-bold tracking-[0.16em] uppercase text-[#587267] block">
+              Himalayan Escape · Admin
             </span>
-            <h1 className="text-2xl font-serif font-black text-stone-100 tracking-tight">
-              Coordinator Portal
+            <h1 className="text-2xl font-sans font-bold text-[#203c32] tracking-tight">
+              Admin sign in
             </h1>
-            <p className="text-xs text-stone-400">
-              Restricted Expedition Command • Mathura to Manali & Kasol
+            <p className="text-sm text-[#6c746f]">
+              Manage your trip, bookings, and website.
             </p>
           </div>
 
           {loginError && (
-            <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs text-center font-medium">
+            <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs text-center font-medium">
               {loginError}
             </div>
           )}
 
           <form onSubmit={handleAdminLogin} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-stone-400 flex items-center gap-1.5">
-                <User className="w-3.5 h-3.5 text-amber-400" /> Coordinator Username
+              <label className="text-[11px] font-bold uppercase tracking-wider text-[#59645e] flex items-center gap-1.5">
+                <User className="w-3.5 h-3.5 text-[#527565]" /> Admin username
               </label>
               <input
                 type="text"
                 required
                 value={loginUsername}
                 onChange={(e) => setLoginUsername(e.target.value)}
-                placeholder="Coordinator ID (e.g. PAPAG)"
-                className="w-full px-4 py-3 rounded-xl bg-stone-950/80 border border-white/10 text-stone-100 placeholder-stone-600 text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors font-mono"
+                autoComplete="username"
+                placeholder="Enter your username"
+                className="w-full px-4 py-3 rounded-xl bg-[#fafaf8] border border-[#dcded8] text-[#202925] placeholder-[#929992] text-sm focus:outline-none focus:border-[#527565] focus:ring-2 focus:ring-[#527565]/15 transition-colors"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-stone-400 flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-amber-400" /> Access Password
+              <label className="text-[11px] font-bold uppercase tracking-wider text-[#59645e] flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-[#527565]" /> Password
               </label>
               <input
                 type="password"
                 required
                 value={loginPassword}
                 onChange={(e) => setLoginPassword(e.target.value)}
-                placeholder="Access Password (e.g. BETAG)"
-                className="w-full px-4 py-3 rounded-xl bg-stone-950/80 border border-white/10 text-stone-100 placeholder-stone-600 text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors"
+                autoComplete="current-password"
+                placeholder="Enter your password"
+                className="w-full px-4 py-3 rounded-xl bg-[#fafaf8] border border-[#dcded8] text-[#202925] placeholder-[#929992] text-sm focus:outline-none focus:border-[#527565] focus:ring-2 focus:ring-[#527565]/15 transition-colors"
               />
             </div>
 
             <button
               type="submit"
               disabled={loginSubmitting}
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-950/40 transition-all cursor-pointer disabled:opacity-50"
+              className="w-full py-3.5 rounded-xl bg-[#1b4a3d] hover:bg-[#153c31] text-white font-bold text-sm shadow-sm transition-colors cursor-pointer disabled:opacity-50"
             >
-              {loginSubmitting ? 'Verifying Credentials...' : 'Enter Operations Desk →'}
+              {loginSubmitting ? 'Signing in…' : 'Sign in'}
             </button>
           </form>
 
-          <div className="pt-4 border-t border-white/10 flex items-center justify-between text-xs text-stone-400">
+          <div className="pt-4 border-t border-[#e8e8e2] flex items-center justify-between text-xs text-[#707a73]">
             <Link
               href="/"
-              className="hover:text-stone-200 transition-colors flex items-center gap-1"
+              className="hover:text-[#203c32] transition-colors flex items-center gap-1"
             >
               ← Public Site
             </Link>
-            <span className="text-[10px] text-stone-500 font-mono">
-              Lead Student Access Only
+            <span className="text-[10px] text-[#7e8781]">
+              Secure staff access
             </span>
           </div>
         </div>

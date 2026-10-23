@@ -79,12 +79,12 @@ export default function AdminDashboardClient({ initialConfig }: AdminDashboardCl
 
   const totalCap = tripConfig?.totalCapacity ?? 75;
   const quickLinks = [
-    { title: 'Edit the website', description: 'Name, dates, pricing, announcements and contact details', href: '/admin/site-editor', icon: PanelsTopLeft, tone: 'amber' },
-    { title: 'Plan the itinerary', description: 'Update day-by-day activities and departure notes', href: '/admin/itinerary', icon: CalendarDays, tone: 'emerald' },
-    { title: 'Manage stays', description: 'Edit hotels, rooms and accommodation details', href: '/admin/hotels', icon: Settings2, tone: 'blue' },
-    { title: 'Reservations', description: 'Review bookings and traveller information', href: '/admin/bookings', icon: Users, tone: 'violet' },
-    { title: 'Fleet and seats', description: 'Manage coaches, capacity and seat availability', href: '/admin/buses', icon: Bus, tone: 'orange' },
-    { title: 'Payments and reports', description: 'Track deposits, balances and trip performance', href: '/admin/payments', icon: CreditCard, tone: 'teal' },
+    { title: 'Edit the website', description: 'Name, dates, pricing, announcements and contact details', href: '/admin/site-editor', icon: PanelsTopLeft },
+    { title: 'Plan the itinerary', description: 'Update day-by-day activities and departure notes', href: '/admin/itinerary', icon: CalendarDays },
+    { title: 'Manage stays', description: 'Edit hotels, rooms and accommodation details', href: '/admin/hotels', icon: Settings2 },
+    { title: 'Reservations', description: 'Review bookings and traveller information', href: '/admin/bookings', icon: Users },
+    { title: 'Fleet and seats', description: 'Manage coaches, capacity and seat availability', href: '/admin/buses', icon: Bus },
+    { title: 'Payments and reports', description: 'Track deposits, balances and trip performance', href: '/admin/payments', icon: CreditCard },
   ];
 
   return (
@@ -95,15 +95,15 @@ export default function AdminDashboardClient({ initialConfig }: AdminDashboardCl
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-white/5">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest font-mono">
-              REAL-TIME OPERATIONS CONSOLE
+            <span className="text-[10px] font-bold text-[#c4d8cc] uppercase tracking-widest">
+              TRIP ADMINISTRATION
             </span>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[10px] font-mono text-emerald-400 font-bold">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Live DB Sync
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-[10px] text-[#d8e3dc] font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#9ec2aa]" /> Live
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-serif font-black text-stone-100 tracking-tight mt-0.5">
-            Expedition Operations Desk
+          <h1 className="text-2xl sm:text-3xl font-sans font-bold text-stone-100 tracking-tight mt-0.5">
+            Trip dashboard
           </h1>
           <p className="text-xs text-stone-400 mt-1">
             Himalayan Escape • Manali × Kasol ({totalCap} Capacity)
@@ -125,13 +125,13 @@ export default function AdminDashboardClient({ initialConfig }: AdminDashboardCl
               onClick={() => handleTabChange(tab.key)}
               className={`flex-1 min-w-[132px] sm:min-w-0 flex items-center justify-center gap-2 px-3 py-3 rounded-xl text-[11px] font-bold transition-all cursor-pointer sm:gap-2.5 sm:px-4 sm:text-xs ${
                 isActive
-                  ? 'bg-gradient-to-r from-amber-500/20 to-amber-600/15 text-amber-300 border border-amber-500/35 shadow-md shadow-amber-950/20'
+                  ? 'bg-[#24483b] text-white border border-[#355b4d] shadow-sm'
                   : 'text-stone-400 hover:text-stone-200 hover:bg-stone-800/40 border border-transparent'
               }`}
             >
               <Icon
                 className={`w-4 h-4 shrink-0 ${
-                  isActive ? 'text-amber-400' : 'text-stone-500'
+                  isActive ? 'text-[#d3e3d8]' : 'text-stone-500'
                 }`}
               />
               <span className="truncate">{tab.label}</span>
@@ -139,7 +139,7 @@ export default function AdminDashboardClient({ initialConfig }: AdminDashboardCl
                 <span
                   className={`hidden sm:inline-block text-[9px] font-mono font-black px-1.5 py-0.5 rounded ${
                     isActive
-                      ? 'bg-amber-400/20 text-amber-200 border border-amber-400/30'
+                       ? 'bg-white/10 text-[#e0ece4] border border-white/10'
                       : 'bg-stone-800 text-stone-400'
                   }`}
                 >
@@ -161,7 +161,7 @@ export default function AdminDashboardClient({ initialConfig }: AdminDashboardCl
               <div className="pointer-events-none absolute -right-16 -top-24 h-72 w-72 rounded-full border border-white/10" />
               <div className="relative flex flex-col justify-between gap-6 md:flex-row md:items-end">
                 <div className="max-w-2xl">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#f1bd94]">Your expedition workspace</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#c8dfd0]">Your expedition workspace</span>
                   <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">Manage the whole trip from here.</h2>
                   <p className="mt-3 max-w-xl text-sm leading-6 text-emerald-50/70">Edit what travellers see, keep the schedule current and manage bookings from one control room.</p>
                 </div>
@@ -180,7 +180,7 @@ export default function AdminDashboardClient({ initialConfig }: AdminDashboardCl
             <section>
               <div className="mb-4 flex items-end justify-between gap-3"><div><h2 className="text-lg font-semibold text-stone-100">Manage your site and trip</h2><p className="mt-1 text-xs text-stone-500">Choose a section to start editing.</p></div><BarChart3 className="h-5 w-5 text-stone-600" /></div>
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                {quickLinks.map((item) => { const Icon = item.icon; return <Link key={item.href} href={item.href} className="group rounded-2xl border border-white/[0.08] bg-stone-900/65 p-5 transition hover:-translate-y-0.5 hover:border-emerald-500/30 hover:bg-stone-900"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.06] text-emerald-200"><Icon className="h-5 w-5" /></span><h3 className="mt-4 flex items-center justify-between text-sm font-semibold text-stone-100">{item.title}<ArrowRight className="h-4 w-4 text-stone-600 transition group-hover:translate-x-1 group-hover:text-emerald-300" /></h3><p className="mt-1.5 text-xs leading-5 text-stone-500">{item.description}</p></Link>; })}
+                {quickLinks.map((item) => { const Icon = item.icon; return <Link key={item.href} href={item.href} className="group rounded-2xl border border-white/[0.08] bg-stone-900/65 p-5 transition hover:-translate-y-0.5 hover:border-[#648675]/50 hover:bg-stone-900"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#24483b]/60 text-[#cde0d3]"><Icon className="h-5 w-5" /></span><h3 className="mt-4 flex items-center justify-between text-sm font-semibold text-stone-100">{item.title}<ArrowRight className="h-4 w-4 text-stone-600 transition group-hover:translate-x-1 group-hover:text-[#cde0d3]" /></h3><p className="mt-1.5 text-xs leading-5 text-stone-500">{item.description}</p></Link>; })}
               </div>
             </section>
           </div>

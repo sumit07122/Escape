@@ -9,7 +9,8 @@ async function main() {
 
   // 1. Seed or Upsert Admin User
   const adminEmail = process.env.ADMIN_DEFAULT_EMAIL || 'admin@glaescape.in';
-  const adminPassword = process.env.ADMIN_DEFAULT_PASSWORD || 'GLAAdmin@2026#Secure';
+  const adminPassword = process.env.ADMIN_DEFAULT_PASSWORD;
+  if (!adminPassword) throw new Error('Set ADMIN_DEFAULT_PASSWORD before running the database seed.');
   const passwordHash = hashPassword(adminPassword);
 
   const admin = await prisma.admin.upsert({

@@ -159,7 +159,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { busId, busNumber, vehicleName, vehicleNumber, driverName, driverPhone, conductorName, conductorPhone, status, passengerCapacity, rowCount, rearSeatCount } = body;
+    const { busId, busNumber, vehicleName, vehicleNumber, driverName, driverPhone, conductorName, conductorPhone, status, passengerCapacity, rowCount, rearSeatCount, seatPositions } = body;
 
     if (!busId) {
       return NextResponse.json({ error: 'Bus ID is required' }, { status: 400 });
@@ -180,6 +180,48 @@ export async function PATCH(request: NextRequest) {
 
     const existingBus = await db.bus.findUnique({ where: { id: busId }, include: { seats: { include: { seatBooking: true, seatHold: true } } } });
     if (!existingBus) return NextResponse.json({ error: 'Bus not found.' }, { status: 404 });
+
+    if (seatPositions !== undefined) {
+      if (!Array.isArray(seatPositions) || seatPositions.length !== 2 || new Set(seatPositions.map((item) => item?.seatId)).size !== 2) {
+        return NextResponse.json({ error: 'Choose two seats to swap.' }, { status: 400 });
+      }
+      const requested = seatPositions.map((item) => ({
+        seatId: String(item?.seatId || ''),
+        rowNumber: Number(item?.rowNumber),
+        side: String(item?.side || ''),
+        position: String(item?.position || ''),
+      }));
+      const seatsToMove = requested.map((item) => existingBus.seats.find((seat) => seat.id === item.seatId));
+      if (seatsToMove.some((seat) => !seat || seat.seatType !== 'PASSENGER' || !['LEFT', 'RIGHT', 'REAR'].includes(seat.side))) {
+        return NextResponse.json({ error: 'Only passenger seats can be moved.' }, { status: 400 });
+      }
+      if (requested.some((item) => !Number.isInteger(item.rowNumber) || item.rowNumber < 1 || item.rowNumber > 21 || !['LEFT', 'RIGHT', 'REAR'].includes(item.side) || !['WINDOW', 'AISLE', 'REAR'].includes(item.position))) {
+        return NextResponse.json({ error: 'That seat position is not valid.' }, { status: 400 });
+      }
+      const hasOccupiedSeat = seatsToMove.some((seat) => {
+        if (!seat) return true;
+        const hasLiveHold = seat.seatHold?.status === 'ACTIVE' && seat.seatHold.expiresAt > new Date();
+        return !!seat.seatBooking || hasLiveHold || !seat.isBookable;
+      });
+      if (hasOccupiedSeat) {
+        return NextResponse.json({ error: 'Booked, held, or blocked seats cannot be moved.' }, { status: 409 });
+      }
+      const slots = requested.map(({ rowNumber, side, position }) => `${rowNumber}:${side}:${position}`);
+      if (slots[0] === slots[1]) return NextResponse.json({ error: 'Seats cannot share the same position.' }, { status: 400 });
+
+      await db.$transaction(requested.map((seat) => db.busSeat.update({
+        where: { id: seat.seatId },
+        data: { rowNumber: seat.rowNumber, side: seat.side, position: seat.position },
+      })));
+      await createAuditLog({
+        action: 'ADMIN_BUS_SEATS_MOVED',
+        entityType: 'BUS',
+        entityId: busId,
+        performedBy: `Admin: ${admin.name} (${admin.email})`,
+        newValue: requested.map((seat) => `${seat.seatId} → row ${seat.rowNumber}, ${seat.side}, ${seat.position}`).join('; '),
+      });
+      return NextResponse.json({ success: true, message: 'Seat positions updated.' });
+    }
 
     let layoutChanged = rowCount !== undefined || rearSeatCount !== undefined || passengerCapacity !== undefined;
     let layoutRows = getBusLayoutSettings(existingBus.seats).rows;

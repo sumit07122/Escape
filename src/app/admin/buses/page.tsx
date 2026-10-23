@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Bus as BusIcon, Plus, UserCheck, ShieldAlert,
   ArrowRight, X, RefreshCw, AlertCircle, CheckCircle2, Lock, Unlock,
-  User, Phone, Hash, ArrowLeftRight, UserMinus, ShieldCheck
+  User, Phone, Hash, ArrowLeftRight, UserMinus, ShieldCheck, GripVertical
 } from 'lucide-react';
 
 interface Occupant {
@@ -44,6 +44,7 @@ interface BusSeatData {
       primaryTravellerName: string;
     };
   } | null;
+  seatHold?: { status: string; expiresAt: string } | null;
 }
 
 interface BusData {
@@ -115,6 +116,8 @@ export default function AdminBusesPage() {
   const [layoutRearSeats, setLayoutRearSeats] = useState('5');
   const [layoutSaving, setLayoutSaving] = useState(false);
   const [layoutFeedback, setLayoutFeedback] = useState<string | null>(null);
+  const [draggedSeatId, setDraggedSeatId] = useState<string | null>(null);
+  const [seatMoveSaving, setSeatMoveSaving] = useState(false);
 
   const fetchFleetData = async () => {
     try {
@@ -302,6 +305,47 @@ export default function AdminBusesPage() {
     }
   };
 
+  const handleSeatDrop = async (targetSeat: BusSeatData) => {
+    if (!currentBus || !draggedSeatId || draggedSeatId === targetSeat.id) return;
+    const draggedSeat = currentBus.seats.find((seat) => seat.id === draggedSeatId);
+    setDraggedSeatId(null);
+    if (!draggedSeat) return;
+    const canMove = (seat: BusSeatData) => {
+      const liveHold = seat.seatHold?.status === 'ACTIVE' && new Date(seat.seatHold.expiresAt) > new Date();
+      return seat.seatType === 'PASSENGER' && ['LEFT', 'RIGHT', 'REAR'].includes(seat.side) && seat.isBookable && !seat.seatBooking && !liveHold;
+    };
+    if (!canMove(draggedSeat) || !canMove(targetSeat)) {
+      setLayoutFeedback('Only available seats can be moved.');
+      return;
+    }
+    setSeatMoveSaving(true);
+    setLayoutFeedback(null);
+    try {
+      const res = await fetch('/api/admin/buses', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          busId: currentBus.id,
+          seatPositions: [
+            { seatId: draggedSeat.id, rowNumber: targetSeat.rowNumber, side: targetSeat.side, position: targetSeat.position },
+            { seatId: targetSeat.id, rowNumber: draggedSeat.rowNumber, side: draggedSeat.side, position: draggedSeat.position },
+          ],
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setLayoutFeedback(data.error || 'Could not move those seats.');
+        return;
+      }
+      await fetchFleetData();
+      setLayoutFeedback('Seat map updated.');
+    } catch {
+      setLayoutFeedback('Could not connect to the fleet settings service.');
+    } finally {
+      setSeatMoveSaving(false);
+    }
+  };
+
   const handleSaveCoachDetails = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!currentBus) return;
@@ -467,7 +511,7 @@ export default function AdminBusesPage() {
               {currentBus?.busNumber}: {currentBus?.vehicleName} ({currentBus?.vehicleNumber})
             </h2>
             <p className="text-xs text-zinc-400">
-              Chauffeur: {currentBus?.driverName || 'Rajesh Sharma'} ({currentBus?.driverPhone || '7017936338'}) • Conductor: {currentBus?.conductorName || 'Amit Verma'}
+              Driver: {currentBus?.driverName || 'Not set'} • Conductor: {currentBus?.conductorName || 'Not set'}
             </p>
           </div>
           <div className="flex items-center gap-3 text-xs">
@@ -484,7 +528,8 @@ export default function AdminBusesPage() {
         </div>
 
         {/* 25-Seater Coach Layout Container */}
-        <div className="max-w-2xl mx-auto p-6 sm:p-8 rounded-3xl bg-zinc-950 border border-zinc-800 space-y-6">
+          <div className="max-w-2xl mx-auto p-6 sm:p-8 rounded-3xl bg-zinc-950 border border-zinc-800 space-y-6">
+          <p className="-mb-2 flex items-center gap-2 text-xs text-zinc-400"><GripVertical className="h-4 w-4" /> Drag an available seat onto another to swap its place on the map. Booked, held, and locked seats stay fixed.{seatMoveSaving ? ' Saving…' : ''}</p>
           {currentBus && <details className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
             <summary className="cursor-pointer text-xs font-bold text-zinc-200">Edit coach details <span className="ml-1 text-[10px] font-normal text-zinc-500">Label, vehicle and crew contacts</span></summary>
             <form onSubmit={handleSaveCoachDetails} className="mt-4 space-y-3">
@@ -552,7 +597,12 @@ export default function AdminBusesPage() {
                       key={seat.id}
                       type="button"
                       onClick={() => handleSeatClick(seat)}
-                      className={`p-3 rounded-xl border text-center transition-all relative group cursor-pointer ${
+                      draggable={seat.isBookable && !seat.seatBooking && !(seat.seatHold?.status === 'ACTIVE' && new Date(seat.seatHold.expiresAt) > new Date())}
+                      onDragStart={() => setDraggedSeatId(seat.id)}
+                      onDragEnd={() => setDraggedSeatId(null)}
+                      onDragOver={(event) => event.preventDefault()}
+                      onDrop={(event) => { event.preventDefault(); void handleSeatDrop(seat); }}
+                      className={`p-3 rounded-xl border text-center transition-all relative group cursor-pointer ${draggedSeatId === seat.id ? 'opacity-40' : ''} ${
                         isBooked
                           ? 'bg-emerald-950 border-emerald-600/70 text-emerald-200 hover:bg-emerald-900'
                           : isLocked
@@ -593,7 +643,12 @@ export default function AdminBusesPage() {
                       key={seat.id}
                       type="button"
                       onClick={() => handleSeatClick(seat)}
-                      className={`p-3 rounded-xl border text-center transition-all relative group cursor-pointer ${
+                      draggable={seat.isBookable && !seat.seatBooking && !(seat.seatHold?.status === 'ACTIVE' && new Date(seat.seatHold.expiresAt) > new Date())}
+                      onDragStart={() => setDraggedSeatId(seat.id)}
+                      onDragEnd={() => setDraggedSeatId(null)}
+                      onDragOver={(event) => event.preventDefault()}
+                      onDrop={(event) => { event.preventDefault(); void handleSeatDrop(seat); }}
+                      className={`p-3 rounded-xl border text-center transition-all relative group cursor-pointer ${draggedSeatId === seat.id ? 'opacity-40' : ''} ${
                         isBooked
                           ? 'bg-emerald-950 border-emerald-600/70 text-emerald-200 hover:bg-emerald-900'
                           : isLocked
@@ -635,7 +690,12 @@ export default function AdminBusesPage() {
                     key={seat.id}
                     type="button"
                     onClick={() => handleSeatClick(seat)}
-                    className={`p-3 rounded-xl border text-center transition-all relative cursor-pointer ${
+                    draggable={seat.isBookable && !seat.seatBooking && !(seat.seatHold?.status === 'ACTIVE' && new Date(seat.seatHold.expiresAt) > new Date())}
+                    onDragStart={() => setDraggedSeatId(seat.id)}
+                    onDragEnd={() => setDraggedSeatId(null)}
+                    onDragOver={(event) => event.preventDefault()}
+                    onDrop={(event) => { event.preventDefault(); void handleSeatDrop(seat); }}
+                    className={`p-3 rounded-xl border text-center transition-all relative cursor-pointer ${draggedSeatId === seat.id ? 'opacity-40' : ''} ${
                       isBooked
                         ? 'bg-emerald-950 border-emerald-600/70 text-emerald-200 hover:bg-emerald-900'
                         : isLocked

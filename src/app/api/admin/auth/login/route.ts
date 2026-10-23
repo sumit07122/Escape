@@ -8,27 +8,22 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
     const username = String(body.username || body.email || '').trim();
-    const password = String(body.password || '').trim();
+    const password = String(body.password || '');
 
-    if (!username || !password) {
+    if (!username || !password.trim()) {
       return NextResponse.json({ error: 'Username and password are required' }, { status: 400 });
     }
 
-    const expectedUser = (process.env.ADMIN_USERNAME || 'PAPAG').trim();
-    const expectedPass = (process.env.ADMIN_PASSWORD || 'BETAG').trim();
-    const defaultAdminEmail = (process.env.ADMIN_DEFAULT_EMAIL || 'admin@glaescape.in').toLowerCase().trim();
-    const defaultAdminPassword = process.env.ADMIN_DEFAULT_PASSWORD || 'GLAAdmin@2026#Secure';
+    const expectedUser = process.env.ADMIN_USERNAME?.trim();
+    const expectedPass = process.env.ADMIN_PASSWORD;
 
     let authenticatedAdmin: { email: string; name: string; role: string; id?: string } | null = null;
 
-    // 1. Strict Primary Verification: PAPAG / BETAG
-    if (
-      (username === expectedUser || username.toUpperCase() === 'PAPAG') &&
-      (password === expectedPass || password === 'BETAG')
-    ) {
+    // Optional environment admin account. Never fall back to public example credentials.
+    if (expectedUser && expectedPass && username === expectedUser && password === expectedPass) {
       authenticatedAdmin = {
-        id: 'admin_papag',
-        email: 'admin@himalayaescape.in',
+        id: 'admin_environment',
+        email: (process.env.ADMIN_DEFAULT_EMAIL || expectedUser).toLowerCase().trim(),
         name: 'Lead Coordinator',
         role: 'SUPER_ADMIN',
       };
@@ -50,23 +45,6 @@ export async function POST(request: NextRequest) {
         }
       } catch (e) {
         console.warn('[ADMIN_LOOKUP_WARN]', e);
-      }
-    }
-
-    // 3. Fallback check against environment credentials
-    if (!authenticatedAdmin) {
-      const allowedAdminEmails = [
-        defaultAdminEmail,
-        'admin@glaescape.in',
-        'admin@himalayaescape.in',
-        'coordinator@himalayaescape.in',
-      ];
-      if (allowedAdminEmails.includes(username.toLowerCase()) && password === defaultAdminPassword) {
-        authenticatedAdmin = {
-          email: username.toLowerCase(),
-          name: 'Lead Coordinator',
-          role: 'SUPER_ADMIN',
-        };
       }
     }
 

@@ -11,7 +11,8 @@ function hashPassword(password) {
 
 async function main() {
   const adminEmail = (process.env.ADMIN_DEFAULT_EMAIL || 'admin@glaescape.in').toLowerCase().trim();
-  const adminPassword = process.env.ADMIN_DEFAULT_PASSWORD || 'GLAAdmin@2026#Secure';
+  const adminPassword = process.env.ADMIN_DEFAULT_PASSWORD;
+  if (!adminPassword) throw new Error('Set ADMIN_DEFAULT_PASSWORD before running the admin seed.');
 
   console.log(`Ensuring Admin exists in Supabase PostgreSQL for: ${adminEmail}...`);
 

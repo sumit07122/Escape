@@ -56,7 +56,7 @@ export default function MobileBottomBar() {
           href="/book"
           className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[#D87945] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-[#C26735] min-[380px]:px-5"
         >
-          <span>BOOK SEAT</span>
+          <span>Reserve · ₹{stats?.deposit.toLocaleString('en-IN') || '1,000'}</span>
           <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       </div>

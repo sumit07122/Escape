@@ -1,8 +1,17 @@
 import crypto from 'crypto';
 import { NextRequest } from 'next/server';
 
-const ADMIN_SECRET = process.env.ADMIN_SESSION_SECRET || process.env.NEXTAUTH_SECRET || 'haP70H1qe7tJoJ53b1gUTFGLApeHytJKl_Fr39-7dqY';
-const AUTH_SECRET = process.env.NEXTAUTH_SECRET || 'NjttlGq0yBrfPiiEMRCLlN-gXJn-yJROBEqomya2REc';
+function getAdminSecret() {
+  const secret = process.env.ADMIN_SESSION_SECRET || process.env.NEXTAUTH_SECRET;
+  if (!secret) throw new Error("Set ADMIN_SESSION_SECRET or NEXTAUTH_SECRET before using admin sessions.");
+  return secret;
+}
+
+function getAuthSecret() {
+  const secret = process.env.NEXTAUTH_SECRET;
+  if (!secret) throw new Error("Set NEXTAUTH_SECRET before using customer sessions.");
+  return secret;
+}
 
 export interface UserSessionPayload {
   id: string;
@@ -49,7 +58,7 @@ export function verifyPassword(password: string, combinedHash: string): boolean 
 export function signSessionToken(payload: AdminSessionPayload): string {
   const data = JSON.stringify({ ...payload, exp: Date.now() + 7 * 24 * 60 * 60 * 1000 });
   const base64Data = Buffer.from(data).toString('base64url');
-  const signature = crypto.createHmac('sha256', ADMIN_SECRET).update(base64Data).digest('base64url');
+  const signature = crypto.createHmac('sha256', getAdminSecret()).update(base64Data).digest('base64url');
   return `${base64Data}.${signature}`;
 }
 
@@ -61,7 +70,7 @@ export function verifySessionToken(token: string): AdminSessionPayload | null {
     const [base64Data, signature] = token.split('.');
     if (!base64Data || !signature) return null;
 
-    const expectedSignature = crypto.createHmac('sha256', ADMIN_SECRET).update(base64Data).digest('base64url');
+    const expectedSignature = crypto.createHmac('sha256', getAdminSecret()).update(base64Data).digest('base64url');
     if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) {
       return null;
     }
@@ -83,7 +92,7 @@ export function verifySessionToken(token: string): AdminSessionPayload | null {
 export function signUserSession(payload: UserSessionPayload): string {
   const data = JSON.stringify({ ...payload, exp: Date.now() + 7 * 24 * 60 * 60 * 1000 }); // 7 days
   const base64Data = Buffer.from(data).toString('base64url');
-  const signature = crypto.createHmac('sha256', AUTH_SECRET).update(base64Data).digest('base64url');
+  const signature = crypto.createHmac('sha256', getAuthSecret()).update(base64Data).digest('base64url');
   return `${base64Data}.${signature}`;
 }
 
@@ -95,7 +104,7 @@ export function verifyUserSession(token: string): UserSessionPayload | null {
     const [base64Data, signature] = token.split('.');
     if (!base64Data || !signature) return null;
 
-    const expectedSignature = crypto.createHmac('sha256', AUTH_SECRET).update(base64Data).digest('base64url');
+    const expectedSignature = crypto.createHmac('sha256', getAuthSecret()).update(base64Data).digest('base64url');
     if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) {
       return null;
     }

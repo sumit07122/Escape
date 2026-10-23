@@ -103,7 +103,7 @@ export default async function HomePage() {
             ) : (
               <>
                 <Link href="/book" className="inline-flex items-center justify-center gap-2 rounded-full bg-[#f1c39e] px-8 py-4 text-sm font-bold text-[#17231f] shadow-xl transition hover:bg-white">
-                  Start your booking <ArrowRight className="h-4 w-4" />
+                  Reserve · ₹{depPrice.toLocaleString('en-IN')} advance <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link href="#trip-overview" className="inline-flex items-center justify-center rounded-full border border-white/35 bg-white/10 px-8 py-4 text-sm font-semibold text-white backdrop-blur-md transition hover:bg-white/20">
                   Explore the expedition
