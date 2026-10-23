@@ -34,11 +34,11 @@ export default function MountainWeatherWidget() {
         const [manaliRes, kasolRes] = await Promise.all([
           fetch(
             'https://api.open-meteo.com/v1/forecast?latitude=32.2396&longitude=77.1887&current=temperature_2m,weather_code&timezone=auto',
-            { next: { revalidate: 3600 } }
+            { signal: AbortSignal.timeout(5000) }
           ).catch(() => null),
           fetch(
             'https://api.open-meteo.com/v1/forecast?latitude=32.0100&longitude=77.3150&current=temperature_2m,weather_code&timezone=auto',
-            { next: { revalidate: 3600 } }
+            { signal: AbortSignal.timeout(5000) }
           ).catch(() => null),
         ]);
 
