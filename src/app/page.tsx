@@ -110,7 +110,7 @@ export default async function HomePage() {
           <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-white/65 sm:text-xs">
             Departing from {tripConfig.pickupLocation} - {tripConfig.reportingTime}
           </p>
-          <div className="rounded-full border border-white/15 bg-black/20 p-1 backdrop-blur-md">
+          <div className="w-full max-w-sm pt-1">
             <MountainWeatherWidget />
           </div>
         </div>
