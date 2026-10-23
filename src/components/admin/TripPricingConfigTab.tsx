@@ -238,6 +238,25 @@ export default function TripPricingConfigTab() {
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">
+        <div className="rounded-3xl border border-white/10 bg-stone-900/75 p-5 shadow-xl sm:p-8">
+          <div className="mb-5 flex items-center gap-2 border-b border-white/10 pb-3 text-xs font-bold uppercase tracking-widest text-amber-400">
+            <Sparkles className="h-4 w-4" />
+            <span>Homepage content</span>
+          </div>
+          <div className="grid gap-4">
+            <div className="space-y-1.5">
+              <label htmlFor="site-trip-title" className="block text-xs font-bold text-stone-200">Hero title</label>
+              <input id="site-trip-title" type="text" required maxLength={80} value={config.tripTitle} onChange={(e) => setConfig({ ...config, tripTitle: e.target.value })} className="w-full rounded-xl border border-white/20 bg-stone-950 px-4 py-3 text-sm text-white focus:border-amber-400 focus:outline-none" />
+              <p className="text-[10px] text-stone-500">Shown as the main homepage heading.</p>
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="site-hero-copy" className="block text-xs font-bold text-stone-200">Hero description</label>
+              <textarea id="site-hero-copy" required maxLength={240} rows={3} value={config.subtitle} onChange={(e) => setConfig({ ...config, subtitle: e.target.value })} className="w-full resize-y rounded-xl border border-white/20 bg-stone-950 px-4 py-3 text-sm leading-6 text-white focus:border-amber-400 focus:outline-none" />
+              <p className="text-[10px] text-stone-500">Shown beneath the title. Keep it clear and easy to scan on a phone.</p>
+            </div>
+          </div>
+        </div>
+
         {/* Card 1: Tiered Squad Pricing Architecture */}
         <div className="backdrop-blur-md bg-stone-900/75 rounded-3xl border border-white/10 p-6 sm:p-8 space-y-6 shadow-xl">
           <div className="flex items-center gap-2 pb-3 border-b border-white/10 text-xs font-bold text-amber-400 uppercase tracking-widest">
@@ -371,14 +390,12 @@ export default function TripPricingConfigTab() {
               </label>
               <input
                 type="number"
-                required
-                min={10}
-                max={200}
+                readOnly
                 value={config.totalCapacity}
-                onChange={(e) => setConfig({ ...config, totalCapacity: Number(e.target.value) })}
-                className="w-full px-4 py-2.5 rounded-xl bg-stone-950 border border-white/20 text-white font-mono font-bold text-xs focus:border-amber-400 focus:outline-none"
+                aria-describedby="capacity-derived-help"
+                className="w-full cursor-not-allowed rounded-xl border border-white/10 bg-stone-950/70 px-4 py-2.5 font-mono text-xs font-bold text-stone-300"
               />
-              <span className="text-[10px] text-stone-500 block">Total students across all coaches</span>
+              <span id="capacity-derived-help" className="block text-[10px] text-stone-500">Calculated from active bus seat maps. Change it in Fleet &amp; seats.</span>
             </div>
 
             {/* Going / Departure Date */}

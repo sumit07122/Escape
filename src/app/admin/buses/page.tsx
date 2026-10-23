@@ -52,6 +52,7 @@ interface BusData {
   vehicleName: string;
   vehicleNumber: string;
   passengerCapacity: number;
+  status?: string;
   driverName?: string | null;
   driverPhone?: string | null;
   conductorName?: string | null;
@@ -99,9 +100,21 @@ export default function AdminBusesPage() {
   // New Bus modal
   const [newBusModalOpen, setNewBusModalOpen] = useState(false);
   const [newBusNumber, setNewBusNumber] = useState('Bus 05');
+  const [newVehicleName, setNewVehicleName] = useState('Himalayan Express');
   const [newVehicleNumber, setNewVehicleNumber] = useState('UP-85-GLA-005');
   const [newDriverName, setNewDriverName] = useState('');
-  const [newPassengerCapacity, setNewPassengerCapacity] = useState('23');
+  const [newDriverPhone, setNewDriverPhone] = useState('');
+  const [newConductorName, setNewConductorName] = useState('');
+  const [newConductorPhone, setNewConductorPhone] = useState('');
+  const [coachDetails, setCoachDetails] = useState({ busNumber: '', vehicleName: '', vehicleNumber: '', driverName: '', driverPhone: '', conductorName: '', conductorPhone: '' });
+  const [detailsSaving, setDetailsSaving] = useState(false);
+  const [detailsFeedback, setDetailsFeedback] = useState<string | null>(null);
+  const [newRowCount, setNewRowCount] = useState('5');
+  const [newRearSeatCount, setNewRearSeatCount] = useState('5');
+  const [layoutRows, setLayoutRows] = useState('5');
+  const [layoutRearSeats, setLayoutRearSeats] = useState('5');
+  const [layoutSaving, setLayoutSaving] = useState(false);
+  const [layoutFeedback, setLayoutFeedback] = useState<string | null>(null);
 
   const fetchFleetData = async () => {
     try {
@@ -114,8 +127,10 @@ export default function AdminBusesPage() {
       if (busesRes.ok) {
         const data = await busesRes.json();
         setBuses(data.buses || []);
-        if (!activeBusId && data.buses?.length > 0) {
+        if (data.buses?.length > 0 && !data.buses.some((bus: BusData) => bus.id === activeBusId)) {
           setActiveBusId(data.buses[0].id);
+        } else if (data.buses?.length === 0) {
+          setActiveBusId('');
         }
       }
 
@@ -136,6 +151,27 @@ export default function AdminBusesPage() {
   }, []);
 
   const currentBus = buses.find((b) => b.id === activeBusId);
+
+  useEffect(() => {
+    if (!currentBus) return;
+    setCoachDetails({
+      busNumber: currentBus.busNumber,
+      vehicleName: currentBus.vehicleName,
+      vehicleNumber: currentBus.vehicleNumber,
+      driverName: currentBus.driverName || '',
+      driverPhone: currentBus.driverPhone || '',
+      conductorName: currentBus.conductorName || '',
+      conductorPhone: currentBus.conductorPhone || '',
+    });
+    const sideRows = currentBus.seats
+      .filter((seat) => seat.seatType === 'PASSENGER' && (seat.side === 'LEFT' || seat.side === 'RIGHT'))
+      .map((seat) => seat.rowNumber);
+    setLayoutRows(String(Math.max(1, ...sideRows)));
+    setLayoutRearSeats(String(currentBus.seats.filter((seat) => seat.seatType === 'PASSENGER' && seat.side === 'REAR').length));
+    setLayoutFeedback(null);
+  }, [currentBus?.id, currentBus?.passengerCapacity]);
+
+  const capacityForLayout = (rows: string, rearSeats: string) => Math.max(0, (Math.max(1, Number(rows)) - 1) * 4 + 2 + Math.max(0, Number(rearSeats)));
 
   // When seat is clicked, open slide-over drawer
   const handleSeatClick = (seat: BusSeatData) => {
@@ -213,9 +249,15 @@ export default function AdminBusesPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           busNumber: newBusNumber,
+          vehicleName: newVehicleName,
           vehicleNumber: newVehicleNumber,
           driverName: newDriverName || 'Chauffeur',
-          passengerCapacity: Number(newPassengerCapacity) || 23,
+          driverPhone: newDriverPhone,
+          conductorName: newConductorName,
+          conductorPhone: newConductorPhone,
+          passengerCapacity: capacityForLayout(newRowCount, newRearSeatCount),
+          rowCount: Number(newRowCount),
+          rearSeatCount: Number(newRearSeatCount),
         }),
       });
 
@@ -228,6 +270,97 @@ export default function AdminBusesPage() {
       }
     } catch {
       alert('Error creating bus');
+    }
+  };
+
+  const handleSaveLayout = async () => {
+    if (!currentBus) return;
+    setLayoutSaving(true);
+    setLayoutFeedback(null);
+    try {
+      const res = await fetch('/api/admin/buses', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          busId: currentBus.id,
+          rowCount: Number(layoutRows),
+          rearSeatCount: Number(layoutRearSeats),
+          passengerCapacity: capacityForLayout(layoutRows, layoutRearSeats),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setLayoutFeedback(data.error || 'Could not save this seat layout.');
+        return;
+      }
+      await fetchFleetData();
+      setLayoutFeedback(`Saved ${data.bus.passengerCapacity} bookable passenger seats.`);
+    } catch {
+      setLayoutFeedback('Could not connect to the fleet settings service.');
+    } finally {
+      setLayoutSaving(false);
+    }
+  };
+
+  const handleSaveCoachDetails = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!currentBus) return;
+    setDetailsSaving(true);
+    setDetailsFeedback(null);
+    try {
+      const res = await fetch('/api/admin/buses', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ busId: currentBus.id, ...coachDetails }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setDetailsFeedback(data.error || 'Could not save coach details.');
+        return;
+      }
+      await fetchFleetData();
+      setDetailsFeedback('Coach details saved.');
+    } catch {
+      setDetailsFeedback('Could not connect to the fleet settings service.');
+    } finally {
+      setDetailsSaving(false);
+    }
+  };
+
+  const handleRemoveBus = async (bus: BusData) => {
+    if (!window.confirm(`Remove ${bus.busNumber} from this trip? Buses with bookings or active seat holds cannot be removed.`)) return;
+    try {
+      const res = await fetch(`/api/admin/buses?busId=${encodeURIComponent(bus.id)}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) {
+        window.alert(data.error || 'Could not remove this bus.');
+        return;
+      }
+      if (activeBusId === bus.id) setActiveBusId('');
+      await fetchFleetData();
+    } catch {
+      window.alert('Could not connect to the fleet service.');
+    }
+  };
+
+  const handleToggleBusStatus = async (bus: BusData) => {
+    const nextStatus = bus.status === 'ACTIVE' || !bus.status ? 'DISABLED' : 'ACTIVE';
+    const action = nextStatus === 'ACTIVE' ? 'put back on the public booking map' : 'hide from new public bookings';
+    if (!window.confirm(`${nextStatus === 'ACTIVE' ? 'Activate' : 'Disable'} ${bus.busNumber} and ${action}? Existing bookings are preserved.`)) return;
+    try {
+      const res = await fetch('/api/admin/buses', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ busId: bus.id, status: nextStatus }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        window.alert(data.error || 'Could not update bus status.');
+        return;
+      }
+      await fetchFleetData();
+    } catch {
+      window.alert('Could not connect to the fleet service.');
     }
   };
 
@@ -293,7 +426,10 @@ export default function AdminBusesPage() {
             <div
               key={bus.id}
               onClick={() => setActiveBusId(bus.id)}
-              className={`p-5 rounded-2xl border cursor-pointer transition-all ${
+              role="button"
+              tabIndex={0}
+              onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') setActiveBusId(bus.id); }}
+              className={`p-4 sm:p-5 rounded-2xl border cursor-pointer transition-all ${
                 isActive
                   ? 'bg-emerald-950/70 border-emerald-500 shadow-xl shadow-emerald-950/40'
                   : 'bg-zinc-950/70 border-zinc-800 hover:border-zinc-700'
@@ -301,11 +437,10 @@ export default function AdminBusesPage() {
             >
               <div className="flex items-center justify-between">
                 <span className="font-black text-white text-base">{bus.busNumber}</span>
-                <span className="text-xs font-mono px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">
-                  {bus.vehicleNumber}
-                </span>
+                <span className={`text-[10px] font-bold uppercase tracking-wide ${bus.status === 'ACTIVE' || !bus.status ? 'text-emerald-400' : 'text-amber-300'}`}>{bus.status || 'ACTIVE'}</span>
               </div>
               <p className="text-xs text-zinc-400 truncate mt-1">{bus.vehicleName}</p>
+              <p className="mt-1 text-[10px] font-mono text-zinc-500">{bus.vehicleNumber}</p>
 
               <div className="mt-4 pt-3 border-t border-zinc-800 flex justify-between text-xs">
                 <span className="text-zinc-500">
@@ -313,6 +448,10 @@ export default function AdminBusesPage() {
                 </span>
                 <span className="text-emerald-400 font-bold">{available} free</span>
                 {locked > 0 && <span className="text-rose-400 font-semibold">{locked} locked</span>}
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <button type="button" onClick={(event) => { event.stopPropagation(); void handleToggleBusStatus(bus); }} className="rounded-lg border border-white/10 px-2 py-2 text-[10px] font-semibold text-zinc-300 transition hover:border-amber-300/40 hover:text-amber-200">{bus.status === 'ACTIVE' || !bus.status ? 'Disable' : 'Activate'}</button>
+                <button type="button" onClick={(event) => { event.stopPropagation(); void handleRemoveBus(bus); }} className="rounded-lg border border-white/10 px-2 py-2 text-[10px] font-semibold text-zinc-400 transition hover:border-rose-400/40 hover:text-rose-300">Remove</button>
               </div>
             </div>
           );
@@ -346,6 +485,43 @@ export default function AdminBusesPage() {
 
         {/* 25-Seater Coach Layout Container */}
         <div className="max-w-2xl mx-auto p-6 sm:p-8 rounded-3xl bg-zinc-950 border border-zinc-800 space-y-6">
+          {currentBus && <details className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
+            <summary className="cursor-pointer text-xs font-bold text-zinc-200">Edit coach details <span className="ml-1 text-[10px] font-normal text-zinc-500">Label, vehicle and crew contacts</span></summary>
+            <form onSubmit={handleSaveCoachDetails} className="mt-4 space-y-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {([
+                  ['busNumber', 'Bus label'], ['vehicleName', 'Coach name'], ['vehicleNumber', 'Registration'],
+                  ['driverName', 'Driver name'], ['driverPhone', 'Driver phone'], ['conductorName', 'Conductor name'], ['conductorPhone', 'Conductor phone'],
+                ] as const).map(([key, label]) => <label key={key} className="block text-[10px] font-semibold text-zinc-400">{label}<input value={coachDetails[key]} onChange={(event) => setCoachDetails({ ...coachDetails, [key]: event.target.value })} className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs text-white" /></label>)}
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+                {detailsFeedback && <p className="text-xs text-zinc-300 sm:mr-auto" role="status">{detailsFeedback}</p>}
+                <button type="submit" disabled={detailsSaving} className="rounded-lg bg-white/10 px-3 py-2 text-xs font-bold text-white hover:bg-white/15 disabled:opacity-50">{detailsSaving ? 'Saving…' : 'Save coach details'}</button>
+              </div>
+            </form>
+          </details>}
+
+          <div className="grid grid-cols-1 gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+            <div>
+              <label htmlFor="fleet-side-rows" className="mb-1.5 block text-[10px] font-bold uppercase tracking-wide text-zinc-400">Side rows</label>
+              <input id="fleet-side-rows" type="number" min={1} max={20} value={layoutRows} onChange={(event) => setLayoutRows(event.target.value)} className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white" />
+              <p className="mt-1 text-[10px] text-zinc-500">Four seats per full row; the last row has two.</p>
+            </div>
+            <div>
+              <label htmlFor="fleet-rear-seats" className="mb-1.5 block text-[10px] font-bold uppercase tracking-wide text-zinc-400">Rear bench seats</label>
+              <input id="fleet-rear-seats" type="number" min={0} max={8} value={layoutRearSeats} onChange={(event) => setLayoutRearSeats(event.target.value)} className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white" />
+              <p className="mt-1 text-[10px] text-zinc-500">Choose zero to eight rear seats.</p>
+            </div>
+            <div className="flex items-center justify-between gap-3 sm:block sm:text-right">
+              <span className="text-xs text-zinc-400">Passenger seats</span>
+              <strong className="text-xl text-white">{capacityForLayout(layoutRows, layoutRearSeats)}</strong>
+            </div>
+            <div className="flex items-center justify-between gap-3 sm:col-span-3 sm:justify-end">
+              {layoutFeedback && <p className="text-xs text-zinc-300" role="status">{layoutFeedback}</p>}
+              <button type="button" onClick={handleSaveLayout} disabled={layoutSaving || !currentBus} className="rounded-xl bg-[#e8b58e] px-4 py-2.5 text-xs font-bold text-[#18352b] transition hover:bg-[#f0c8a8] disabled:opacity-50">{layoutSaving ? 'Saving…' : 'Save seat map'}</button>
+            </div>
+          </div>
+
           {/* Driver & Conductor Cabin */}
           <div className="flex items-center justify-between pb-4 border-b border-zinc-800/80">
             {cabinSeats.map((cs) => (
@@ -741,9 +917,9 @@ export default function AdminBusesPage() {
       {/* Add New Bus Modal */}
       {newBusModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-zinc-950 rounded-3xl border border-zinc-700 max-w-md w-full p-6 sm:p-8 space-y-5">
+            <div className="max-h-[90dvh] overflow-y-auto bg-zinc-950 rounded-3xl border border-zinc-700 max-w-md w-full p-5 sm:p-8 space-y-5">
             <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-              <h2 className="text-xl font-black text-white">Add Luxury Tourist Bus</h2>
+              <h2 className="text-xl font-black text-white">Add a bus</h2>
               <button onClick={() => setNewBusModalOpen(false)} className="p-2 text-zinc-400 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
@@ -758,6 +934,17 @@ export default function AdminBusesPage() {
                   value={newBusNumber}
                   onChange={(e) => setNewBusNumber(e.target.value)}
                   placeholder="e.g. Bus 05"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-white"
+                />
+              </div>
+
+              <div>
+                <label className="text-zinc-400 mb-1 block font-bold">Coach name</label>
+                <input
+                  type="text"
+                  value={newVehicleName}
+                  onChange={(e) => setNewVehicleName(e.target.value)}
+                  placeholder="e.g. Himalayan Express"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-white"
                 />
               </div>
@@ -785,24 +972,41 @@ export default function AdminBusesPage() {
                 />
               </div>
 
-              <div>
-                <label className="text-zinc-400 mb-1 block font-bold">Passenger Capacity</label>
-                <input
-                  type="number"
-                  value={newPassengerCapacity}
-                  onChange={(e) => setNewPassengerCapacity(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-white font-bold"
-                />
-                <p className="text-[10px] text-zinc-500 mt-1">
-                  * Auto-generates Driver (1), Conductor (1), and 23 bookable seats.
-                </p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="text-zinc-400 mb-1 block font-bold">Driver Phone</label>
+                  <input type="tel" value={newDriverPhone} onChange={(e) => setNewDriverPhone(e.target.value)} placeholder="Optional" className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-white" />
+                </div>
+                <div>
+                  <label className="text-zinc-400 mb-1 block font-bold">Conductor Name</label>
+                  <input type="text" value={newConductorName} onChange={(e) => setNewConductorName(e.target.value)} placeholder="Optional" className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-white" />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="text-zinc-400 mb-1 block font-bold">Conductor Phone</label>
+                  <input type="tel" value={newConductorPhone} onChange={(e) => setNewConductorPhone(e.target.value)} placeholder="Optional" className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-white" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-zinc-400 mb-1 block font-bold">Side rows</label>
+                  <input type="number" min={1} max={20} value={newRowCount} onChange={(e) => setNewRowCount(e.target.value)} className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-white font-bold" />
+                </div>
+                <div>
+                  <label className="text-zinc-400 mb-1 block font-bold">Rear bench seats</label>
+                  <input type="number" min={0} max={8} value={newRearSeatCount} onChange={(e) => setNewRearSeatCount(e.target.value)} className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-white font-bold" />
+                </div>
+              </div>
+              <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900 px-3.5 py-3 text-xs">
+                <span className="text-zinc-400">Bookable passenger seats</span>
+                <strong className="text-lg text-white">{capacityForLayout(newRowCount, newRearSeatCount)}</strong>
               </div>
 
               <button
                 type="submit"
                 className="w-full py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs shadow-lg mt-4 cursor-pointer"
               >
-                Create Bus & Generate Seat Map
+                Add bus & create seat map
               </button>
             </form>
           </div>

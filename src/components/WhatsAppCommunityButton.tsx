@@ -8,7 +8,7 @@ export default function WhatsAppCommunityButton() {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <div className="fixed bottom-20 md:bottom-6 right-5 md:right-6 z-50 flex items-center group">
+    <div className="fixed right-5 bottom-[calc(env(safe-area-inset-bottom)+6.5rem)] z-50 flex items-center group md:bottom-6 md:right-6">
       {/* Hover Tooltip */}
       <div
         className={`absolute right-full mr-3 px-3 py-1.5 rounded-xl bg-stone-900/90 text-white text-[11px] font-bold whitespace-nowrap shadow-xl backdrop-blur-sm border border-white/10 pointer-events-none transition-all duration-200 ${

@@ -77,7 +77,7 @@ export default function AdminDashboardClient({ initialConfig }: AdminDashboardCl
     },
   ];
 
-  const totalCap = tripConfig?.totalCapacity || 75;
+  const totalCap = tripConfig?.totalCapacity ?? 75;
   const quickLinks = [
     { title: 'Edit the website', description: 'Name, dates, pricing, announcements and contact details', href: '/admin/site-editor', icon: PanelsTopLeft, tone: 'amber' },
     { title: 'Plan the itinerary', description: 'Update day-by-day activities and departure notes', href: '/admin/itinerary', icon: CalendarDays, tone: 'emerald' },
@@ -123,7 +123,7 @@ export default function AdminDashboardClient({ initialConfig }: AdminDashboardCl
               key={tab.key}
               type="button"
               onClick={() => handleTabChange(tab.key)}
-              className={`flex-1 min-w-[170px] sm:min-w-0 flex items-center justify-center gap-2.5 px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`flex-1 min-w-[132px] sm:min-w-0 flex items-center justify-center gap-2 px-3 py-3 rounded-xl text-[11px] font-bold transition-all cursor-pointer sm:gap-2.5 sm:px-4 sm:text-xs ${
                 isActive
                   ? 'bg-gradient-to-r from-amber-500/20 to-amber-600/15 text-amber-300 border border-amber-500/35 shadow-md shadow-amber-950/20'
                   : 'text-stone-400 hover:text-stone-200 hover:bg-stone-800/40 border border-transparent'
@@ -171,7 +171,7 @@ export default function AdminDashboardClient({ initialConfig }: AdminDashboardCl
 
             <section className="grid gap-3 sm:grid-cols-3">
               {[
-                { label: 'Trip capacity', value: `${tripConfig?.totalCapacity || totalCap} travellers`, detail: 'Current booking limit' },
+                { label: 'Trip capacity', value: `${tripConfig?.totalCapacity ?? totalCap} travellers`, detail: 'Current booking limit' },
                 { label: 'Standard rate', value: `₹${(tripConfig?.packagePrice || 6500).toLocaleString('en-IN')}`, detail: 'Per traveller' },
                 { label: 'Next departure', value: tripConfig?.departureDate || 'Set a date', detail: tripConfig?.returnDate ? `Returns ${tripConfig.returnDate}` : 'Update in Site editor' },
               ].map((metric) => <article key={metric.label} className="rounded-2xl border border-white/10 bg-stone-900/70 p-5"><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-500">{metric.label}</p><strong className="mt-2 block text-xl font-semibold tracking-tight text-white">{metric.value}</strong><span className="mt-1 block text-[11px] text-stone-500">{metric.detail}</span></article>)}

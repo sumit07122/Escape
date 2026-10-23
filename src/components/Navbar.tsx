@@ -67,10 +67,10 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full bg-[#F7F5EF]/95 backdrop-blur-md border-b border-[#E7E2D8]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex h-16 items-center justify-between sm:h-20">
           {/* Brand Logo */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[#163C32]/25 shadow-md group-hover:scale-105 transition-transform shrink-0 bg-white p-0.5">
+            <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 border-[#163C32]/25 bg-white p-0.5 shadow-md transition-transform group-hover:scale-105 sm:h-12 sm:w-12">
               <Image
                 src="/logo.png"
                 alt="Himalayan Escape Logo"
@@ -81,10 +81,10 @@ export default function Navbar() {
               />
             </div>
             <div>
-              <span className="font-black text-base sm:text-lg tracking-tight text-[#171918] block leading-tight">
+              <span className="block text-[13px] font-black leading-tight tracking-tight text-[#171918] min-[380px]:text-sm sm:text-lg">
                 HIMALAYAN ESCAPE
               </span>
-              <p className="text-[10px] font-bold tracking-widest text-[#D87945] uppercase">
+              <p className="mt-0.5 text-[8px] font-bold uppercase tracking-[0.1em] text-[#D87945] min-[380px]:text-[9px] sm:text-[10px] sm:tracking-widest max-[359px]:hidden">
                 6D / 5N • MANALI × KASOL EXPEDITION
               </p>
             </div>
@@ -210,13 +210,13 @@ export default function Navbar() {
           <div className="flex md:hidden items-center gap-2">
             <Link
               href="/book"
-              className="px-3.5 py-2 rounded-lg bg-[#D87945] text-white font-bold text-xs"
+              className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#D87945] px-3 text-xs font-bold text-white shadow-sm"
             >
               Book Now
             </Link>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg bg-white text-[#171918] border border-[#D8D2C4]"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[#D8D2C4] bg-white text-[#171918]"
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -227,7 +227,7 @@ export default function Navbar() {
 
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-[#F7F5EF] border-b border-[#D8D2C4] px-4 pt-3 pb-6 space-y-3">
+        <div className="max-h-[calc(100dvh-4rem)] space-y-3 overflow-y-auto border-b border-[#D8D2C4] bg-[#F7F5EF] px-4 pb-6 pt-3 md:hidden">
           <div className="flex flex-col gap-1">
             {navLinks.map((link) => (
               <Link

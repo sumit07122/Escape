@@ -8,6 +8,90 @@ export { DEFAULT_TRIP_CONFIG };
 // In-memory cache for ultra-fast response and graceful offline fallback
 let memoryConfigCache: TripConfigData = { ...DEFAULT_TRIP_CONFIG };
 
+const LEGACY_CONFIG_KEYS = {
+  tripTitle: 'trip_name',
+  subtitle: 'trip_subtitle',
+  totalCapacity: 'trip_capacity',
+  packagePrice: 'price_single',
+  groupPackagePrice: 'price_group',
+  groupSizeThreshold: 'group_size_threshold',
+  depositPrice: 'price_reservation',
+  departureDate: 'departure_date',
+  returnDate: 'return_date',
+  reportingTime: 'reporting_time',
+  pickupLocation: 'pickup_location',
+  emergencyHelplines: 'emergency_helplines',
+  announcementBanner: 'announcement_banner',
+  announcementActive: 'announcement_active',
+} as const;
+
+async function readLegacyTripConfig() {
+  try {
+    const keys = Object.values(LEGACY_CONFIG_KEYS);
+    const [settings, globalSettings] = await Promise.all([
+      db.settings.findMany({ where: { key: { in: [...keys] } } }),
+      db.globalSettings.findUnique({ where: { id: 'global_default' } }),
+    ]);
+    const values = new Map(settings.map((setting) => [setting.key, setting.value]));
+    const getNumber = (key: keyof typeof LEGACY_CONFIG_KEYS, fallback: number) => {
+      const value = Number(values.get(LEGACY_CONFIG_KEYS[key]));
+      return Number.isFinite(value) ? value : fallback;
+    };
+    const legacyConfig: TripConfigData = {
+      ...memoryConfigCache,
+      tripTitle: values.get(LEGACY_CONFIG_KEYS.tripTitle) || memoryConfigCache.tripTitle,
+      subtitle: values.get(LEGACY_CONFIG_KEYS.subtitle) || memoryConfigCache.subtitle,
+      totalCapacity: getNumber('totalCapacity', Number(globalSettings?.tripCapacity ?? memoryConfigCache.totalCapacity)),
+      packagePrice: getNumber('packagePrice', memoryConfigCache.packagePrice),
+      groupPackagePrice: getNumber('groupPackagePrice', memoryConfigCache.groupPackagePrice),
+      groupSizeThreshold: getNumber('groupSizeThreshold', memoryConfigCache.groupSizeThreshold),
+      depositPrice: getNumber('depositPrice', memoryConfigCache.depositPrice),
+      departureDate: values.get(LEGACY_CONFIG_KEYS.departureDate) || memoryConfigCache.departureDate,
+      returnDate: values.get(LEGACY_CONFIG_KEYS.returnDate) || memoryConfigCache.returnDate,
+      reportingTime: values.get(LEGACY_CONFIG_KEYS.reportingTime) || memoryConfigCache.reportingTime,
+      pickupLocation: values.get(LEGACY_CONFIG_KEYS.pickupLocation) || memoryConfigCache.pickupLocation,
+      emergencyHelplines: (() => {
+        try {
+          const parsed = JSON.parse(values.get(LEGACY_CONFIG_KEYS.emergencyHelplines) || '[]');
+          return Array.isArray(parsed) && parsed.length ? parsed.map(String) : memoryConfigCache.emergencyHelplines;
+        } catch { return memoryConfigCache.emergencyHelplines; }
+      })(),
+      announcementBanner: values.get(LEGACY_CONFIG_KEYS.announcementBanner) ?? memoryConfigCache.announcementBanner,
+      announcementActive: values.get(LEGACY_CONFIG_KEYS.announcementActive) === undefined
+        ? memoryConfigCache.announcementActive
+        : values.get(LEGACY_CONFIG_KEYS.announcementActive) === 'true',
+    };
+    if (settings.length || globalSettings) memoryConfigCache = legacyConfig;
+  } catch (error) {
+    console.warn('[TRIP_CONFIG_LEGACY_FETCH_WARNING]:', error);
+  }
+}
+
+async function persistLegacyTripConfig(config: TripConfigData) {
+  const categories: Record<keyof typeof LEGACY_CONFIG_KEYS, string> = {
+    tripTitle: 'GENERAL', subtitle: 'GENERAL', totalCapacity: 'PRICING',
+    packagePrice: 'PRICING', groupPackagePrice: 'PRICING', groupSizeThreshold: 'PRICING',
+    depositPrice: 'PRICING', departureDate: 'GENERAL', returnDate: 'GENERAL',
+    reportingTime: 'GENERAL', pickupLocation: 'GENERAL', emergencyHelplines: 'CONTACTS',
+    announcementBanner: 'GENERAL', announcementActive: 'GENERAL',
+  };
+  const values = Object.entries(LEGACY_CONFIG_KEYS).map(([field, key]) => {
+    const typedField = field as keyof typeof LEGACY_CONFIG_KEYS;
+    const rawValue = config[typedField];
+    return { key, category: categories[typedField], value: Array.isArray(rawValue) ? JSON.stringify(rawValue) : String(rawValue ?? '') };
+  });
+  await Promise.all(values.map(({ key, category, value }) => db.settings.upsert({
+    where: { key },
+    update: { value, category },
+    create: { key, value, category },
+  })));
+  await db.globalSettings.upsert({
+    where: { id: 'global_default' },
+    update: { tripCapacity: config.totalCapacity },
+    create: { id: 'global_default', tripCapacity: config.totalCapacity },
+  });
+}
+
 /**
  * Fetch dynamic TripConfig from database (Zero-stale fresh Supabase lookup)
  */
@@ -22,7 +106,7 @@ export async function getTripConfig(): Promise<TripConfigData> {
         id: config.id,
         tripTitle: config.tripTitle || DEFAULT_TRIP_CONFIG.tripTitle,
         subtitle: config.subtitle || DEFAULT_TRIP_CONFIG.subtitle,
-        totalCapacity: Number(config.totalCapacity) || DEFAULT_TRIP_CONFIG.totalCapacity,
+        totalCapacity: Number.isFinite(Number(config.totalCapacity)) ? Math.max(0, Number(config.totalCapacity)) : DEFAULT_TRIP_CONFIG.totalCapacity,
         packagePrice: Number(config.packagePrice) || DEFAULT_TRIP_CONFIG.packagePrice,
         groupPackagePrice: Number(config.groupPackagePrice) || DEFAULT_TRIP_CONFIG.groupPackagePrice,
         groupSizeThreshold: Number(config.groupSizeThreshold) || DEFAULT_TRIP_CONFIG.groupSizeThreshold,
@@ -42,6 +126,7 @@ export async function getTripConfig(): Promise<TripConfigData> {
     }
   } catch (error) {
     console.warn('[TRIP_CONFIG_DB_FETCH_WARNING]: Using cached or default configuration', error);
+    await readLegacyTripConfig();
   }
 
   return memoryConfigCache;
@@ -115,7 +200,12 @@ export async function updateTripConfig(data: Partial<TripConfigData>): Promise<T
     };
     return memoryConfigCache;
   } catch (error) {
-    console.warn('[TRIP_CONFIG_DB_UPDATE_WARNING]: Persisted to memory fallback', error);
+    console.warn('[TRIP_CONFIG_DB_UPDATE_WARNING]: Falling back to legacy settings storage', error);
+    try {
+      await persistLegacyTripConfig(merged);
+    } catch (legacyError) {
+      console.error('[TRIP_CONFIG_LEGACY_UPDATE_ERROR]:', legacyError);
+    }
     memoryConfigCache = merged;
     return merged;
   }
@@ -136,7 +226,7 @@ export interface SeatAvailabilityResult {
  */
 export async function getSeatAvailability(): Promise<SeatAvailabilityResult> {
   const tripConfig = await getTripConfig();
-  const totalCapacity = tripConfig.totalCapacity || 75;
+  const totalCapacity = Math.max(0, Number(tripConfig.totalCapacity));
 
   let confirmedCount = 0;
   let heldCount = 0;

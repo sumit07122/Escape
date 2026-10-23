@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { TRIP_METADATA, CONTACT_INFO, ITINERARY_DAYS } from '@/lib/constants';
 import { getSeatAvailability } from '@/lib/trip-config';
+import { db } from '@/lib/db';
 import { verifyUserSession } from '@/lib/auth';
 import DestinationCarousel from '@/components/DestinationCarousel';
 import SnowEffect from '@/components/SnowEffect';
@@ -26,6 +27,9 @@ export default async function HomePage() {
   const squadPrice = Number(tripConfig.groupPackagePrice) || 6200;
   const groupThreshold = Number(tripConfig.groupSizeThreshold) || 5;
   const squadSaving = Math.max(0, soloPrice - squadPrice);
+  const activeBusCount = await db.bus.count({
+    where: { status: 'ACTIVE' },
+  }).catch(() => 0);
 
   // Retrieve user session from cookie if logged in
   const cookieStore = await cookies();
@@ -76,7 +80,7 @@ export default async function HomePage() {
               {tripConfig.tripTitle || 'Himalayan Escape'}
             </h1>
             <p className="mx-auto max-w-2xl text-base font-light leading-relaxed text-stone-100/90 sm:text-xl md:text-2xl">
-              Six days from the plains to the peaks. Find snow trails in Manali, pine-scented evenings in Kasol, and a new crew for the journey.
+              {tripConfig.subtitle}
             </p>
             <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] font-medium uppercase tracking-[0.12em] text-white/75 sm:text-xs">
               <span>6 days</span><span className="h-1 w-1 rounded-full bg-[#f0b588]" />
@@ -378,8 +382,8 @@ export default async function HomePage() {
                 <p className="text-xs text-[#646864]">Seats remain locked exclusively for you during checkout.</p>
               </div>
               <div className="p-4 rounded-xl bg-[#F7F5EF] border border-[#D8D2C4] space-y-1">
-                <span className="text-xs font-bold text-[#163C32]">4 Coaches Available</span>
-                <p className="text-xs text-[#646864]">Coordinated departure from Mathura pickup point.</p>
+                <span className="text-xs font-bold text-[#163C32]">{activeBusCount} {activeBusCount === 1 ? 'Coach' : 'Coaches'} Available</span>
+                <p className="text-xs text-[#646864]">Live fleet count for the Mathura departure.</p>
               </div>
             </div>
           </div>

@@ -7,53 +7,57 @@ import { ArrowRight } from 'lucide-react';
 
 export default function MobileBottomBar() {
   const pathname = usePathname();
-  const [stats, setStats] = useState<{ totalBooked: number; capacity: number } | null>(null);
+  const [stats, setStats] = useState<{ available: number; capacity: number; deposit: number } | null>(null);
 
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch('/api/buses');
-        if (res.ok) {
-          const data = await res.json();
+        const [busesRes, configRes] = await Promise.all([
+          fetch('/api/buses', { cache: 'no-store' }),
+          fetch('/api/trip-config', { cache: 'no-store' }),
+        ]);
+        const [buses, tripConfig] = await Promise.all([
+          busesRes.ok ? busesRes.json() : Promise.resolve(null),
+          configRes.ok ? configRes.json() : Promise.resolve(null),
+        ]);
+        if (buses?.trip) {
           setStats({
-            totalBooked: data.trip?.totalBooked || 0,
-            capacity: data.trip?.capacity || 75,
+            available: Number(buses.trip.totalAvailable ?? 0),
+            capacity: Number(buses.trip.capacity ?? 0),
+            deposit: Number(tripConfig?.config?.depositPrice ?? 1000),
           });
         }
       } catch {
-        // Fallback
+        // Keep the booking action available if live stats are offline.
       }
     }
     load();
   }, []);
 
-  // Do not show on booking page or admin pages
-  if (pathname === '/book' || pathname?.startsWith('/admin')) {
-    return null;
-  }
+  if (pathname === '/book' || pathname?.startsWith('/admin')) return null;
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-[#D8D2C4] px-4 py-3 bg-[#F7F5EF]/95 backdrop-blur-md shadow-lg">
-      <div className="flex items-center justify-between gap-3">
-        <div>
+    <div className="mobile-bottom-bar fixed inset-x-0 bottom-0 z-40 border-t border-[#D8D2C4] bg-[#F7F5EF]/95 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 shadow-[0_-8px_28px_rgba(14,38,32,0.10)] backdrop-blur-md md:hidden">
+      <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
+        <div className="min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#163C32]" />
-            <span className="text-[11px] font-bold text-[#163C32]">
-              {stats ? `${stats.totalBooked}/${stats.capacity} Booked` : '75 Total Capacity'}
+            <span className="h-2 w-2 shrink-0 rounded-full bg-[#163C32]" />
+            <span className="truncate text-[11px] font-bold text-[#163C32]">
+              {stats ? `${stats.available} seats left` : 'Live seat availability'}
             </span>
+            {stats && <span className="hidden text-[10px] text-[#646864] min-[380px]:inline">of {stats.capacity}</span>}
           </div>
-          <div className="flex items-baseline gap-1">
-            <span className="text-sm font-black text-[#171918]">₹1,000</span>
-            <span className="text-[10px] text-[#646864]">to reserve seat</span>
+          <div className="mt-0.5 flex items-baseline gap-1">
+            <span className="text-sm font-black text-[#171918]">{'\u20B9'}{stats?.deposit.toLocaleString('en-IN') || '1,000'}</span>
+            <span className="truncate text-[10px] text-[#646864]">to reserve</span>
           </div>
         </div>
-
         <Link
           href="/book"
-          className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#D87945] hover:bg-[#C26735] text-white font-bold text-xs shadow-sm"
+          className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[#D87945] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-[#C26735] min-[380px]:px-5"
         >
           <span>BOOK SEAT</span>
-          <ArrowRight className="w-3.5 h-3.5" />
+          <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       </div>
     </div>

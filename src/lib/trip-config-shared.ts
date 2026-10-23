@@ -19,7 +19,7 @@ export interface TripConfigData {
 export const DEFAULT_TRIP_CONFIG: TripConfigData = {
   id: 'global',
   tripTitle: 'Himalayan Escape 2026',
-  subtitle: 'Manali × Kasol Student Expedition',
+  subtitle: 'Six days from the plains to the peaks. Find snow trails in Manali, pine-scented evenings in Kasol, and a new crew for the journey.',
   totalCapacity: 75,
   packagePrice: 6500,
   groupPackagePrice: 6200,

@@ -48,7 +48,7 @@ export default function AdminLayout({
 
         if (json?.stats) {
           setStats({
-            capacity: json.stats.capacity || 75,
+            capacity: json.stats.capacity ?? 75,
             confirmedTravellers: json.stats.confirmedTravellers || 0,
             reservationRevenue: json.stats.reservationRevenue || 0,
             remainingBalances: json.stats.remainingBalances || 0,
@@ -236,7 +236,7 @@ export default function AdminLayout({
   }
 
   const isScannerPage = pathname === '/admin/scanner';
-  const totalCap = stats?.capacity || 75;
+  const totalCap = stats?.capacity ?? 75;
   const activeCap = stats?.confirmedTravellers || 0;
   const revCollected = stats?.reservationRevenue || 0;
   const gatePending = stats?.remainingBalances || 0;
@@ -269,6 +269,12 @@ export default function AdminLayout({
   const currentPage = navGroups.flatMap((group) => group.items).find((item) =>
     item.href === '/admin' ? pathname === '/admin' : pathname === item.href || pathname.startsWith(item.href + '/')
   );
+  const mobilePrimaryNav = [
+    { label: 'Home', href: '/admin', icon: LayoutDashboard },
+    { label: 'Website', href: '/admin/site-editor', icon: PanelsTopLeft },
+    { label: 'Fleet', href: '/admin/buses', icon: Bus },
+    { label: 'Bookings', href: '/admin/bookings', icon: Ticket },
+  ];
 
   return (
     <div className="min-h-screen bg-[#101916] text-stone-100 selection:bg-emerald-500/30 selection:text-emerald-100 lg:flex">
@@ -406,16 +412,16 @@ export default function AdminLayout({
 
         {/* Mobile Live Stats Banner */}
         <div className="lg:hidden border-t border-white/5 bg-stone-950/90 px-4 py-2 flex items-center justify-between text-[11px] overflow-x-auto whitespace-nowrap">
-          <div className="flex items-center gap-4">
+          <div className="flex min-w-0 items-center gap-4">
             <div>
               <span className="text-stone-400">Capacity: </span>
               <strong className="font-mono text-emerald-400 font-bold">{activeCap}/{totalCap}</strong>
             </div>
-            <div>
+            <div className="hidden min-[520px]:block">
               <span className="text-stone-400">Collected: </span>
               <strong className="font-mono text-amber-400 font-bold">₹{revCollected.toLocaleString('en-IN')}</strong>
             </div>
-            <div>
+            <div className="hidden min-[760px]:block">
               <span className="text-stone-400">Gate Due: </span>
               <strong className="font-mono text-stone-300 font-bold">₹{gatePending.toLocaleString('en-IN')}</strong>
             </div>
@@ -429,16 +435,24 @@ export default function AdminLayout({
         </div>
       </header>
 
-      <nav className="flex gap-1 overflow-x-auto border-t border-white/5 bg-[#0d1713] px-3 py-2 lg:hidden" aria-label="Admin navigation">
-        {navGroups.flatMap((group) => group.items).map((item) => {
-          const Icon = item.icon;
-          const active = item.href === '/admin' ? pathname === '/admin' : pathname === item.href || pathname.startsWith(item.href + '/');
-          return <Link key={item.href} href={item.href} className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-[10px] font-semibold ${active ? 'bg-[#1d382e] text-[#f4c49b]' : 'text-stone-400 hover:bg-white/5'}`}><Icon className="h-3.5 w-3.5" />{item.label}</Link>;
-        })}
+      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-[#0b1512]/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-10px_30px_rgba(0,0,0,0.25)] backdrop-blur-xl lg:hidden" aria-label="Admin navigation">
+        <div className="mx-auto grid max-w-2xl grid-cols-5 items-stretch px-2 pt-1.5">
+          {mobilePrimaryNav.map((item) => {
+            const Icon = item.icon;
+            const active = item.href === '/admin' ? pathname === '/admin' : pathname === item.href || pathname.startsWith(item.href + '/');
+            return <Link key={item.href} href={item.href} aria-current={active ? 'page' : undefined} className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[9px] font-semibold ${active ? 'text-[#f1c39e]' : 'text-stone-400'}`}><Icon className={`h-4 w-4 ${active ? 'text-[#f1c39e]' : 'text-stone-500'}`} />{item.label}</Link>;
+          })}
+          <details className="group relative flex min-h-14 flex-col items-center justify-center">
+            <summary className="flex min-h-14 w-full cursor-pointer list-none flex-col items-center justify-center gap-1 rounded-xl px-1 text-[9px] font-semibold text-stone-400 [&::-webkit-details-marker]:hidden"><Settings className="h-4 w-4 text-stone-500" />More</summary>
+            <div className="absolute bottom-full right-0 mb-2 max-h-[65dvh] w-[min(92vw,360px)] overflow-y-auto rounded-2xl border border-white/10 bg-[#101916] p-3 shadow-2xl">
+              {navGroups.map((group) => <section key={group.label} className="mb-3 last:mb-0"><h2 className="mb-1 px-2 text-[9px] font-bold uppercase tracking-[0.18em] text-stone-600">{group.label}</h2><div className="grid grid-cols-2 gap-1">{group.items.filter((item) => !mobilePrimaryNav.some((primary) => primary.href === item.href)).map((item) => { const Icon = item.icon; const active = pathname === item.href || pathname.startsWith(item.href + '/'); return <Link key={item.href} href={item.href} onClick={(event) => event.currentTarget.closest('details')?.removeAttribute('open')} aria-current={active ? 'page' : undefined} className={`flex min-h-10 items-center gap-2 rounded-xl px-2.5 text-[10px] font-medium ${active ? 'bg-[#1d382e] text-[#f4c49b]' : 'text-stone-300 hover:bg-white/[0.05]'}`}><Icon className="h-3.5 w-3.5 shrink-0" />{item.label}</Link>; })}</div></section>)}
+            </div>
+          </details>
+        </div>
       </nav>
 
       {/* Main Container */}
-      <main className="mx-auto min-h-[calc(100vh-73px)] w-full max-w-[1600px] flex-1 px-4 py-6 sm:px-6 sm:py-8 xl:px-9">
+      <main className="mx-auto min-h-[calc(100vh-73px)] w-full max-w-[1600px] flex-1 overflow-x-hidden px-4 pb-24 pt-6 sm:px-6 sm:py-8 sm:pb-24 xl:px-9 lg:pb-8">
         {children}
       </main>
     </div>

@@ -1,14 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Settings, Save, RefreshCw, CheckCircle2, Users, AlertCircle, Shield } from 'lucide-react';
+import { Save, RefreshCw, CheckCircle2, Users } from 'lucide-react';
 
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<any[]>([]);
-  const [tripCapacity, setTripCapacity] = useState<number>(75);
+  const [tripCapacity, setTripCapacity] = useState<number>(0);
   const [loading, setLoading] = useState(true);
-  const [savingCapacity, setSavingCapacity] = useState(false);
-  const [capacitySavedSuccess, setCapacitySavedSuccess] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsSavedSuccess, setSettingsSavedSuccess] = useState(false);
 
@@ -36,35 +34,6 @@ export default function AdminSettingsPage() {
     fetchSettings();
   }, []);
 
-  const handleCapacitySave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSavingCapacity(true);
-    setCapacitySavedSuccess(false);
-    try {
-      const res = await fetch('/api/admin/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tripCapacity }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.tripCapacity !== undefined) {
-          setTripCapacity(data.tripCapacity);
-        }
-        setCapacitySavedSuccess(true);
-        setTimeout(() => setCapacitySavedSuccess(false), 3500);
-      } else {
-        const err = await res.json();
-        alert(err.error || 'Failed to update expedition capacity');
-      }
-    } catch {
-      alert('Network error updating expedition capacity');
-    } finally {
-      setSavingCapacity(false);
-    }
-  };
-
   const handleValueChange = (key: string, value: string) => {
     setSettings((prev) =>
       prev.map((s) => (s.key === key ? { ...s, value } : s))
@@ -79,7 +48,7 @@ export default function AdminSettingsPage() {
       const res = await fetch('/api/admin/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ settings, tripCapacity }),
+        body: JSON.stringify({ settings }),
       });
 
       if (res.ok) {
@@ -120,13 +89,6 @@ export default function AdminSettingsPage() {
       </div>
 
       {/* Global Success Notifications */}
-      {capacitySavedSuccess && (
-        <div className="p-4 rounded-xl bg-emerald-950/70 border border-emerald-500/50 flex items-center gap-2 text-emerald-300 text-xs font-bold animate-in fade-in">
-          <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-          <span>Expedition capacity updated to {tripCapacity} students! Active across all booking endpoints.</span>
-        </div>
-      )}
-
       {settingsSavedSuccess && (
         <div className="p-4 rounded-xl bg-emerald-950/70 border border-emerald-500/50 flex items-center gap-2 text-emerald-300 text-xs font-bold animate-in fade-in">
           <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
@@ -135,7 +97,7 @@ export default function AdminSettingsPage() {
       )}
 
       {/* ======================================================== */}
-      {/* 1. DEDICATED EXPEDITION CAPACITY CARD (ADMIN CONTROLLED) */}
+      {/* 1. CAPACITY SUMMARY (DERIVED FROM ACTIVE BUS SEAT MAPS) */}
       {/* ======================================================== */}
       <div className="glass-card rounded-3xl p-6 sm:p-8 border border-orange-500/30 bg-gradient-to-br from-zinc-950 via-zinc-900/90 to-orange-950/20 shadow-xl space-y-5">
         <div className="flex items-start justify-between gap-4 border-b border-zinc-800 pb-4">
@@ -145,45 +107,19 @@ export default function AdminSettingsPage() {
             </div>
             <div>
               <span className="text-[10px] font-bold text-orange-400 uppercase tracking-widest block">
-                GLOBAL BOOKING CEILING
+                LIVE FLEET CAPACITY
               </span>
-              <h2 className="text-xl font-black text-white">Expedition Capacity</h2>
+              <h2 className="text-xl font-black text-white">Passenger seats</h2>
             </div>
           </div>
           <span className="text-xs font-mono font-bold px-3 py-1 rounded-full bg-orange-950 text-orange-300 border border-orange-600/40">
-            Current Cap: {tripCapacity} Students
+            {tripCapacity} seats across active buses
           </span>
         </div>
 
-        <form onSubmit={handleCapacitySave} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-white block">
-              Total Booking Capacity
-            </label>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              <input
-                type="number"
-                min={1}
-                max={500}
-                required
-                value={tripCapacity}
-                onChange={(e) => setTripCapacity(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                className="w-full sm:w-48 px-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-700 text-white text-base font-black focus:border-orange-500 focus:outline-none"
-              />
-              <button
-                type="submit"
-                disabled={savingCapacity}
-                className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs shadow-lg transition-all"
-              >
-                <Save className="w-4 h-4" />
-                <span>{savingCapacity ? 'Saving Limit...' : 'Save Capacity Limit'}</span>
-              </button>
-            </div>
-            <p className="text-xs text-zinc-400 leading-relaxed pt-1">
-              Maximum number of confirmed students allowed across all buses. Bookings will automatically close once this limit is reached.
-            </p>
-          </div>
-        </form>
+        <p className="text-xs leading-relaxed text-zinc-400">
+          This total updates automatically when you add or disable a bus, or change a bus seat map. Edit individual buses in Fleet.
+        </p>
       </div>
 
       {/* ======================================================== */}
@@ -198,7 +134,7 @@ export default function AdminSettingsPage() {
         </div>
 
         <div className="space-y-4">
-          {settings.map((s) => (
+          {settings.filter((s) => s.key !== 'trip_capacity').map((s) => (
             <div key={s.key} className="p-4 rounded-2xl bg-zinc-950 border border-zinc-800 space-y-1.5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>

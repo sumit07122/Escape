@@ -85,6 +85,13 @@ h3 {
   text-shadow: 0 5px 34px rgb(0 0 0 / 55%);
 }
 
+@media (max-width: 380px) {
+  .hero-title {
+    font-size: clamp(2.65rem, 12vw, 3.1rem);
+    line-height: 1;
+  }
+}
+
 /* ======================================================== */
 /* CUSTOM UTILITY CLASSES                                   */
 /* ======================================================== */

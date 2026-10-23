@@ -316,25 +316,18 @@ export default function BusSeatMap({
   const rightSideSeats = seats.filter((s) => s.side === 'RIGHT');
   const rearSeats = seats.filter((s) => s.side === 'REAR');
 
-  const leftPairs: Array<SeatData[]> = [
-    leftSideSeats.filter((s) => ['L1', 'L2'].includes(s.seatNumber)),
-    leftSideSeats.filter((s) => ['L3', 'L4'].includes(s.seatNumber)),
-    leftSideSeats.filter((s) => ['L5', 'L6'].includes(s.seatNumber)),
-    leftSideSeats.filter((s) => ['L7', 'L8'].includes(s.seatNumber)),
-    leftSideSeats.filter((s) => s.seatNumber === 'L9'),
-  ];
-
-  const rightPairs: Array<SeatData[]> = [
-    rightSideSeats.filter((s) => ['R1', 'R2'].includes(s.seatNumber)),
-    rightSideSeats.filter((s) => ['R3', 'R4'].includes(s.seatNumber)),
-    rightSideSeats.filter((s) => ['R5', 'R6'].includes(s.seatNumber)),
-    rightSideSeats.filter((s) => ['R7', 'R8'].includes(s.seatNumber)),
-    rightSideSeats.filter((s) => s.seatNumber === 'R9'),
-  ];
-
-  const rearSorted = ['B1', 'B2', 'B3', 'B4', 'B5']
-    .map((num) => rearSeats.find((s) => s.seatNumber === num))
-    .filter(Boolean) as SeatData[];
+  const groupSideSeatsByRow = (sideSeats: SeatData[]) => {
+    const rows = new Map<number, SeatData[]>();
+    for (const seat of sideSeats) {
+      rows.set(seat.rowNumber, [...(rows.get(seat.rowNumber) || []), seat]);
+    }
+    return [...rows.entries()]
+      .sort(([rowA], [rowB]) => rowA - rowB)
+      .map(([, rowSeats]) => rowSeats.sort((a, b) => a.seatNumber.localeCompare(b.seatNumber, undefined, { numeric: true })));
+  };
+  const leftPairs = groupSideSeatsByRow(leftSideSeats);
+  const rightPairs = groupSideSeatsByRow(rightSideSeats);
+  const rearSorted = rearSeats.sort((a, b) => a.seatNumber.localeCompare(b.seatNumber, undefined, { numeric: true }));
 
   const renderSeatButton = (seat: SeatData) => {
     const isSelected = selectedSeats.includes(seat.seatNumber);
