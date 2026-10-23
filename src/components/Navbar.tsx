@@ -26,8 +26,12 @@ export default function Navbar() {
   useEffect(() => {
     async function checkAuth() {
       try {
-        const res = await fetch('/api/auth/me');
+        const res = await fetch(`/api/auth/me?t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' },
+        });
         if (res.ok) {
+
           const data = await res.json();
           if (data.authenticated && data.user) {
             setUserSession(data.user);

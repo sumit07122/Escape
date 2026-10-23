@@ -1,8 +1,11 @@
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getCurrentAdmin, cleanExpiredHolds } from '@/lib/server-utils';
-import { getTripConfig } from '@/lib/trip-config';
+import { getTripConfig, getSeatAvailability } from '@/lib/trip-config';
 
 export async function GET() {
   try {
@@ -13,8 +16,9 @@ export async function GET() {
 
     await cleanExpiredHolds();
 
-    const tripConfig = await getTripConfig();
-    const capacity = tripConfig.totalCapacity || 75;
+    const ssot = await getSeatAvailability();
+    const capacity = ssot.totalCapacity;
+    const availableCapacity = ssot.availableSeats;
 
 
     // Fetch all confirmed bookings
@@ -34,8 +38,6 @@ export async function GET() {
       (acc, b) => acc + b.travellers.length,
       0
     );
-
-    const availableCapacity = Math.max(0, capacity - confirmedTravellersCount);
 
     // Sum financials
     const reservationRevenue = confirmedBookings.reduce(

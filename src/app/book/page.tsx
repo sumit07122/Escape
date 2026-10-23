@@ -1,9 +1,12 @@
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
 import React from 'react';
 import BookingFlow from '@/components/BookingFlow';
-import { getTripConfig } from '@/lib/trip-config';
-import { Megaphone, AlertTriangle } from 'lucide-react';
+import { getTripConfig, getSeatAvailability } from '@/lib/trip-config';
+import { Megaphone, AlertTriangle, Users } from 'lucide-react';
+
 
 export const metadata = {
   title: 'Book Your Seat | Himalayan Escape — Student Mountain Expedition',

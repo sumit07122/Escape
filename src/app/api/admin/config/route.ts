@@ -1,10 +1,14 @@
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { getTripConfig, updateTripConfig } from '@/lib/trip-config';
 import { getAdminSessionFromRequest } from '@/lib/auth';
 import { createAuditLog } from '@/lib/server-utils';
 import { db } from '@/lib/db';
+
 
 export async function GET(request: NextRequest) {
   try {
@@ -104,11 +108,23 @@ export async function PATCH(request: NextRequest) {
       newValue: JSON.stringify(body),
     }).catch(() => {});
 
+    try {
+      revalidatePath('/', 'layout');
+      revalidatePath('/', 'page');
+      revalidatePath('/book', 'page');
+      revalidatePath('/admin', 'page');
+      revalidatePath('/my-bookings', 'page');
+    } catch (revalErr) {
+      console.warn('[REVALIDATE_PATH_WARN]:', revalErr);
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Trip configuration updated successfully',
       config: updated,
+      timestamp: Date.now(),
     });
+
   } catch (error) {
     console.error('[API_ADMIN_UPDATE_CONFIG_ERROR]:', error);
     return NextResponse.json({ error: 'Failed to update trip configuration' }, { status: 500 });

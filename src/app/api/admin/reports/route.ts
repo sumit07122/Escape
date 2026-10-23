@@ -1,7 +1,11 @@
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getCurrentAdmin } from '@/lib/server-utils';
+import { getTripConfig, getSeatAvailability } from '@/lib/trip-config';
 
 
 
@@ -61,6 +65,10 @@ export async function GET() {
 
     const netProfitOrLoss = totalRevenue - totalExpenses;
 
+    const seatAvail = await getSeatAvailability();
+    const tripConfig = seatAvail.tripConfig;
+    const balanceDue = Math.max(0, tripConfig.packagePrice - tripConfig.depositPrice);
+
     return NextResponse.json({
       summary: {
         totalRevenue,
@@ -73,7 +81,15 @@ export async function GET() {
         confirmedBookingsCount: confirmedBookings.length,
         totalTravellers: travellers.length,
         checkedInTravellers: travellers.filter((t) => t.checkInStatus === 'CHECKED_IN').length,
+        capacity: tripConfig.totalCapacity,
+        packagePrice: tripConfig.packagePrice,
+        depositPrice: tripConfig.depositPrice,
+        balanceDue,
+        availableSeats: seatAvail.availableSeats,
+        heldSeats: seatAvail.heldCount,
+        blockedSeats: seatAvail.blockedCount,
       },
+      tripConfig,
       bookings,
       travellers,
       payments,

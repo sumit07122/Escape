@@ -74,9 +74,13 @@ export default function FleetSeatMatrixTab() {
   const fetchBuses = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/admin/buses');
+      const res = await fetch(`/api/admin/buses?t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' },
+      });
       if (res.ok) {
         const data = await res.json();
+
         setBuses(data.buses || []);
         if (data.buses?.length > 0 && !selectedBusId) {
           setSelectedBusId(data.buses[0].id);

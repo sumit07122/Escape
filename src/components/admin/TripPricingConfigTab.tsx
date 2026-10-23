@@ -5,7 +5,7 @@ import {
   Save, RefreshCw, CheckCircle2, AlertCircle,
   CreditCard, MapPin, Calendar, Clock, Phone, AlertTriangle, Loader2
 } from 'lucide-react';
-import { TripConfigData, DEFAULT_TRIP_CONFIG } from '@/lib/trip-config';
+import { TripConfigData, DEFAULT_TRIP_CONFIG } from '@/lib/trip-config-shared';
 
 export default function TripPricingConfigTab() {
   const [config, setConfig] = useState<TripConfigData>(DEFAULT_TRIP_CONFIG);
@@ -16,9 +16,13 @@ export default function TripPricingConfigTab() {
   const fetchConfig = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/admin/config');
+      const res = await fetch(`/api/admin/config?t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' },
+      });
       if (res.ok) {
         const data = await res.json();
+
         if (data.config) {
           setConfig(data.config);
         }

@@ -103,16 +103,21 @@ export default function BookingFlow() {
 
   const refreshPricing = useCallback(async (count: number) => {
     try {
-      const res = await fetch('/api/pricing/calculate', {
+      const res = await fetch(`/api/pricing/calculate?t=${Date.now()}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+        },
         body: JSON.stringify({ travellersCount: count }),
+        cache: 'no-store',
       });
       if (res.ok) {
         const data = await res.json();
         setPricing(data.pricing);
       }
     } catch {
+
       setPricing({
         travellersCount: count,
         baseAmount: count * PRICING_DEFAULTS.pricePerTraveller,
@@ -442,15 +447,15 @@ export default function BookingFlow() {
             <div className="pt-2 border-t border-[#D8D2C4] text-xs space-y-1">
               <div className="flex justify-between text-[#171918] font-bold">
                 <span>Total Package:</span>
-                <span>₹{(travellersCount * 6200).toLocaleString('en-IN')}</span>
+                <span>₹{(pricing?.totalAmount ?? (travellersCount * (pricing?.pricePerTraveller || 6200))).toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between text-[#D87945] font-semibold">
                 <span>Reservation Deposit (Today):</span>
-                <span>₹{(travellersCount * 1000).toLocaleString('en-IN')}</span>
+                <span>₹{(pricing?.reservationAmount ?? (travellersCount * (pricing?.reservationAmountPerTraveller || 1000))).toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between text-[#646864] text-[11px]">
                 <span>Remaining before boarding:</span>
-                <span>₹{(travellersCount * 5200).toLocaleString('en-IN')}</span>
+                <span>₹{(pricing?.remainingBalance ?? (travellersCount * ((pricing?.pricePerTraveller || 6200) - (pricing?.reservationAmountPerTraveller || 1000)))).toLocaleString('en-IN')}</span>
               </div>
             </div>
           </div>
@@ -757,15 +762,15 @@ export default function BookingFlow() {
             <div className="space-y-1.5 pt-1 text-xs">
               <div className="flex justify-between text-[#646864]">
                 <span>Total Trip Cost:</span>
-                <span className="font-bold text-[#171918]">₹{(travellersCount * 6200).toLocaleString('en-IN')}</span>
+                <span className="font-bold text-[#171918]">₹{(pricing?.totalAmount ?? (travellersCount * (pricing?.pricePerTraveller || 6200))).toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between text-[#D87945] font-bold text-sm">
                 <span>Reservation Deposit (Today):</span>
-                <span className="text-base">₹{(travellersCount * 1000).toLocaleString('en-IN')}</span>
+                <span className="text-base">₹{(pricing?.reservationAmount ?? (travellersCount * (pricing?.reservationAmountPerTraveller || 1000))).toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between text-[#646864] text-[11px]">
                 <span>Balance Before Boarding:</span>
-                <span className="text-[#171918]">₹{(travellersCount * 5200).toLocaleString('en-IN')}</span>
+                <span className="text-[#171918]">₹{(pricing?.remainingBalance ?? (travellersCount * ((pricing?.pricePerTraveller || 6200) - (pricing?.reservationAmountPerTraveller || 1000)))).toLocaleString('en-IN')}</span>
               </div>
             </div>
 

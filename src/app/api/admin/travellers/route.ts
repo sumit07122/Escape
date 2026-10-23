@@ -1,9 +1,25 @@
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { getAdminSessionFromRequest } from '@/lib/auth';
 import { createAuditLog } from '@/lib/server-utils';
+
+function revalidateAllPages() {
+  try {
+    revalidatePath('/', 'layout');
+    revalidatePath('/', 'page');
+    revalidatePath('/book', 'page');
+    revalidatePath('/admin', 'page');
+    revalidatePath('/my-bookings', 'page');
+  } catch (err) {
+    console.warn('[TRAVELLER_MUTATION_REVALIDATE_WARN]:', err);
+  }
+}
+
 
 export async function GET(request: NextRequest) {
   try {
@@ -141,10 +157,13 @@ export async function PATCH(request: NextRequest) {
         newValue: `Status changed to ${newStatus}`,
       });
 
+      revalidateAllPages();
+
       return NextResponse.json({
         success: true,
         message: `${traveller.fullName} marked as ${newStatus === 'CHECKED_IN' ? 'Gate Checked-In' : 'Not Checked-In'}`,
         checkInStatus: newStatus,
+        timestamp: Date.now(),
       });
     }
 
@@ -204,9 +223,12 @@ export async function PATCH(request: NextRequest) {
         newValue: `Collected ₹${traveller.booking.remainingBalance} & Gate Checked-In`,
       });
 
+      revalidateAllPages();
+
       return NextResponse.json({
         success: true,
         message: `Gate balance collected (₹${traveller.booking.remainingBalance}) & ${traveller.fullName} Checked In!`,
+        timestamp: Date.now(),
       });
     }
 
@@ -237,12 +259,16 @@ export async function PATCH(request: NextRequest) {
         newValue: JSON.stringify(data),
       });
 
+      revalidateAllPages();
+
       return NextResponse.json({
         success: true,
         message: `Passenger details for ${updated.fullName} updated successfully`,
         traveller: updated,
+        timestamp: Date.now(),
       });
     }
+
 
     // 4. ACTION: CANCEL_BOOKING
     if (action === 'CANCEL_BOOKING') {
@@ -289,11 +315,15 @@ export async function PATCH(request: NextRequest) {
         newValue: `Booking ${traveller.booking.bookingId} cancelled and seat vacated`,
       });
 
+      revalidateAllPages();
+
       return NextResponse.json({
         success: true,
         message: `Booking for ${traveller.fullName} has been cancelled and seat released.`,
+        timestamp: Date.now(),
       });
     }
+
 
     return NextResponse.json({ error: `Unknown action: ${action}` }, { status: 400 });
   } catch (error) {

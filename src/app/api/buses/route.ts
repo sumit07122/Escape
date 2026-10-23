@@ -1,14 +1,18 @@
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { cleanExpiredHolds } from '@/lib/server-utils';
-
-
+import { getSeatAvailability } from '@/lib/trip-config';
 
 export async function GET() {
   try {
     // 1. Clean any expired holds first
     await cleanExpiredHolds();
+
+    const ssot = await getSeatAvailability();
 
     // 2. Fetch master trip
     const trip = await db.trip.findFirst();
@@ -69,23 +73,26 @@ export async function GET() {
       };
     });
 
-    const totalAvailable = Math.max(0, trip.capacity - totalTripBooked);
+    const totalAvailable = ssot.availableSeats;
 
     return NextResponse.json({
       trip: {
         id: trip.id,
-        title: trip.title,
-        subtitle: trip.subtitle,
+        title: ssot.tripConfig.tripTitle || trip.title,
+        subtitle: ssot.tripConfig.subtitle || trip.subtitle,
         duration: trip.duration,
         origin: trip.origin,
         destination: trip.destination,
-        capacity: trip.capacity,
-        totalBooked: totalTripBooked,
-        totalHeld: totalTripHeld,
+        capacity: ssot.totalCapacity,
+        totalBooked: ssot.confirmedCount,
+        totalHeld: ssot.heldCount,
+        totalBlocked: ssot.blockedCount,
         totalAvailable,
       },
       buses: busSummaries,
+      timestamp: Date.now(),
     });
+
   } catch (error) {
     console.error('Error fetching buses:', error);
     return NextResponse.json({ error: 'Failed to fetch buses' }, { status: 500 });

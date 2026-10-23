@@ -79,7 +79,10 @@ export default function BusSeatMap({
   // 1. Fetch all buses
   const loadBuses = useCallback(async () => {
     try {
-      const res = await fetch('/api/buses');
+      const res = await fetch(`/api/buses?t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' },
+      });
       if (res.ok) {
         const data = await res.json();
         setBuses(data.buses || []);
@@ -100,7 +103,10 @@ export default function BusSeatMap({
     try {
       setLoading(true);
       setErrorMessage(null);
-      const res = await fetch(`/api/buses/${busId}/seats?bookingSessionId=${encodeURIComponent(bookingSessionId)}`);
+      const res = await fetch(`/api/buses/${busId}/seats?bookingSessionId=${encodeURIComponent(bookingSessionId)}&t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' },
+      });
       if (res.ok) {
         const data = await res.json();
         setSeats(data.seats || []);
@@ -137,11 +143,15 @@ export default function BusSeatMap({
 
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/seats/status?tripId=manali-kasol&busId=${activeBusId}&bookingSessionId=${encodeURIComponent(bookingSessionId)}`);
+        const res = await fetch(`/api/seats/status?tripId=manali-kasol&busId=${activeBusId}&bookingSessionId=${encodeURIComponent(bookingSessionId)}&t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' },
+        });
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data.seats)) {
             setSeats(data.seats);
+
 
             // Sync remaining hold seconds
             const myHeld = data.seats.filter((s: SeatData) => s.isMyHold && s.heldSecondsRemaining > 0);

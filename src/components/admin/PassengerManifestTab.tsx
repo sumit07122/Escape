@@ -54,9 +54,13 @@ export default function PassengerManifestTab() {
   const fetchTravellers = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/admin/travellers');
+      const res = await fetch(`/api/admin/travellers?t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' },
+      });
       if (res.ok) {
         const data = await res.json();
+
         setTravellers(data.travellers || []);
       }
     } catch (err) {

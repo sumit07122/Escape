@@ -1,38 +1,16 @@
 import { db } from '@/lib/db';
+import { cleanExpiredHolds } from '@/lib/server-utils';
+import { TripConfigData, DEFAULT_TRIP_CONFIG } from './trip-config-shared';
 
-export interface TripConfigData {
-  id: string;
-  tripTitle: string;
-  subtitle: string;
-  totalCapacity: number;
-  packagePrice: number;
-  depositPrice: number;
-  pickupLocation: string;
-  reportingTime: string;
-  departureDate: string;
-  emergencyHelplines: string[];
-  announcementBanner?: string | null;
-  announcementActive: boolean;
-}
-
-export const DEFAULT_TRIP_CONFIG: TripConfigData = {
-  id: 'global',
-  tripTitle: 'Himalayan Escape 2026',
-  subtitle: 'Manali × Kasol Student Expedition',
-  totalCapacity: 75,
-  packagePrice: 6200,
-  depositPrice: 1000,
-  pickupLocation: 'Near Main Gate (NH-2), Mathura',
-  reportingTime: '07:00 PM',
-  departureDate: '2026-10-24',
-  emergencyHelplines: ['7017936338', '9368287947'],
-  announcementBanner: 'Reporting time updated: Buses will depart from NH-2 gate at 8:00 PM sharp.',
-  announcementActive: false,
-};
+export type { TripConfigData };
+export { DEFAULT_TRIP_CONFIG };
 
 // In-memory cache for ultra-fast response and graceful offline fallback
 let memoryConfigCache: TripConfigData = { ...DEFAULT_TRIP_CONFIG };
 
+/**
+ * Fetch dynamic TripConfig from database (Zero-stale fresh Supabase lookup)
+ */
 export async function getTripConfig(): Promise<TripConfigData> {
   try {
     const config = await db.tripConfig.findUnique({
@@ -44,9 +22,9 @@ export async function getTripConfig(): Promise<TripConfigData> {
         id: config.id,
         tripTitle: config.tripTitle || DEFAULT_TRIP_CONFIG.tripTitle,
         subtitle: config.subtitle || DEFAULT_TRIP_CONFIG.subtitle,
-        totalCapacity: config.totalCapacity || DEFAULT_TRIP_CONFIG.totalCapacity,
-        packagePrice: config.packagePrice || DEFAULT_TRIP_CONFIG.packagePrice,
-        depositPrice: config.depositPrice || DEFAULT_TRIP_CONFIG.depositPrice,
+        totalCapacity: Number(config.totalCapacity) || DEFAULT_TRIP_CONFIG.totalCapacity,
+        packagePrice: Number(config.packagePrice) || DEFAULT_TRIP_CONFIG.packagePrice,
+        depositPrice: Number(config.depositPrice) || DEFAULT_TRIP_CONFIG.depositPrice,
         pickupLocation: config.pickupLocation || DEFAULT_TRIP_CONFIG.pickupLocation,
         reportingTime: config.reportingTime || DEFAULT_TRIP_CONFIG.reportingTime,
         departureDate: config.departureDate || DEFAULT_TRIP_CONFIG.departureDate,
@@ -66,9 +44,13 @@ export async function getTripConfig(): Promise<TripConfigData> {
   return memoryConfigCache;
 }
 
+/**
+ * Persist trip config updates
+ */
 export async function updateTripConfig(data: Partial<TripConfigData>): Promise<TripConfigData> {
+  const current = await getTripConfig();
   const merged: TripConfigData = {
-    ...memoryConfigCache,
+    ...current,
     ...data,
     id: 'global',
   };
@@ -79,29 +61,29 @@ export async function updateTripConfig(data: Partial<TripConfigData>): Promise<T
       update: {
         tripTitle: merged.tripTitle,
         subtitle: merged.subtitle,
-        totalCapacity: merged.totalCapacity,
-        packagePrice: merged.packagePrice,
-        depositPrice: merged.depositPrice,
+        totalCapacity: Number(merged.totalCapacity),
+        packagePrice: Number(merged.packagePrice),
+        depositPrice: Number(merged.depositPrice),
         pickupLocation: merged.pickupLocation,
         reportingTime: merged.reportingTime,
         departureDate: merged.departureDate,
         emergencyHelplines: merged.emergencyHelplines,
         announcementBanner: merged.announcementBanner,
-        announcementActive: merged.announcementActive,
+        announcementActive: Boolean(merged.announcementActive),
       },
       create: {
         id: 'global',
         tripTitle: merged.tripTitle,
         subtitle: merged.subtitle,
-        totalCapacity: merged.totalCapacity,
-        packagePrice: merged.packagePrice,
-        depositPrice: merged.depositPrice,
+        totalCapacity: Number(merged.totalCapacity),
+        packagePrice: Number(merged.packagePrice),
+        depositPrice: Number(merged.depositPrice),
         pickupLocation: merged.pickupLocation,
         reportingTime: merged.reportingTime,
         departureDate: merged.departureDate,
         emergencyHelplines: merged.emergencyHelplines,
         announcementBanner: merged.announcementBanner,
-        announcementActive: merged.announcementActive,
+        announcementActive: Boolean(merged.announcementActive),
       },
     });
 
@@ -109,15 +91,15 @@ export async function updateTripConfig(data: Partial<TripConfigData>): Promise<T
       id: updated.id,
       tripTitle: updated.tripTitle,
       subtitle: updated.subtitle,
-      totalCapacity: updated.totalCapacity,
-      packagePrice: updated.packagePrice,
-      depositPrice: updated.depositPrice,
+      totalCapacity: Number(updated.totalCapacity),
+      packagePrice: Number(updated.packagePrice),
+      depositPrice: Number(updated.depositPrice),
       pickupLocation: updated.pickupLocation,
       reportingTime: updated.reportingTime,
       departureDate: updated.departureDate,
       emergencyHelplines: updated.emergencyHelplines,
       announcementBanner: updated.announcementBanner,
-      announcementActive: updated.announcementActive,
+      announcementActive: Boolean(updated.announcementActive),
     };
     return memoryConfigCache;
   } catch (error) {
@@ -125,4 +107,71 @@ export async function updateTripConfig(data: Partial<TripConfigData>): Promise<T
     memoryConfigCache = merged;
     return merged;
   }
+}
+
+export interface SeatAvailabilityResult {
+  totalCapacity: number;
+  confirmedCount: number;
+  heldCount: number;
+  blockedCount: number;
+  availableSeats: number;
+  tripConfig: TripConfigData;
+}
+
+/**
+ * SINGLE SOURCE OF TRUTH (SSOT) Seat Availability Calculation
+ * Formula: availableSeats = max(0, totalCapacity - confirmedCount - heldCount - blockedCount)
+ */
+export async function getSeatAvailability(): Promise<SeatAvailabilityResult> {
+  const tripConfig = await getTripConfig();
+  const totalCapacity = tripConfig.totalCapacity || 75;
+
+  let confirmedCount = 0;
+  let heldCount = 0;
+  let blockedCount = 0;
+
+  try {
+    // Eagerly purge any expired holds first
+    await cleanExpiredHolds().catch(() => {});
+
+    // 1. Confirmed bookings count (including multi-traveller groups)
+    const confirmedBookings = await db.booking.findMany({
+      where: { bookingStatus: 'CONFIRMED' },
+      select: {
+        travellersCount: true,
+        travellers: { select: { id: true } },
+      },
+    });
+
+    confirmedCount = confirmedBookings.reduce(
+      (acc, b) => acc + Math.max(b.travellers?.length || 0, b.travellersCount || 1),
+      0
+    );
+
+    // 2. Active temporary seat holds (within 10-minute validity)
+    heldCount = await db.seatHold.count({
+      where: {
+        expiresAt: { gt: new Date() },
+        status: 'ACTIVE',
+      },
+    });
+
+    // 3. Blocked seats (reserved by coordinators/luggage)
+    blockedCount = await db.busSeat.count({
+      where: { status: 'BLOCKED' },
+    });
+  } catch (error) {
+    console.error('[SSOT_CALCULATION_ERROR]:', error);
+  }
+
+  const availableSeats = Math.max(0, totalCapacity - confirmedCount - heldCount - blockedCount);
+
+  return {
+    totalCapacity,
+    confirmedCount,
+    heldCount,
+    blockedCount,
+    availableSeats,
+    tripConfig,
+  };
 }

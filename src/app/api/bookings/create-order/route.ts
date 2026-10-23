@@ -1,4 +1,6 @@
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { createRazorpayOrder } from '@/lib/razorpay';
@@ -6,6 +8,8 @@ import { generateBookingId } from '@/lib/qr';
 import { cleanExpiredHolds, createAuditLog } from '@/lib/server-utils';
 import { TravellerInput } from '@/types';
 import { getUserSessionFromRequest } from '@/lib/auth';
+import { getTripConfig } from '@/lib/trip-config';
+
 
 export async function POST(request: NextRequest) {
   try {
@@ -94,14 +98,15 @@ export async function POST(request: NextRequest) {
 
     const primaryTraveller = travellers[0];
 
-    // 4. Strict Server-Side Calculation (Never trust client pricing)
-    // depositAmount = travellers.length * 1000
-    // totalPackage = travellers.length * 6200
-    // balanceDue = totalPackage - depositAmount
+    // 4. Strict Server-Side Calculation (Dynamic SSOT TripConfig)
+    const tripConfig = await getTripConfig();
     const travellersCount = travellers.length;
-    const depositAmount = travellersCount * 1000;
-    const totalPackage = travellersCount * 6200;
-    const balanceDue = totalPackage - depositAmount;
+    const pricePerTraveller = Number(tripConfig.packagePrice) || 6200;
+    const depositPerTraveller = Number(tripConfig.depositPrice) || 1000;
+    const depositAmount = travellersCount * depositPerTraveller;
+    const totalPackage = travellersCount * pricePerTraveller;
+    const balanceDue = Math.max(0, totalPackage - depositAmount);
+
 
     // 5. Generate unique booking ID
     const bookingId = generateBookingId();
@@ -212,7 +217,7 @@ export async function POST(request: NextRequest) {
       isMock: orderResult.isMock,
       pricing: {
         travellersCount,
-        pricePerTraveller: 6200,
+        pricePerTraveller,
         totalAmount: totalPackage,
         totalPackage,
         depositAmount,

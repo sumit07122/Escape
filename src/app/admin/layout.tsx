@@ -37,9 +37,13 @@ export default function AdminLayout({
   const fetchStats = useCallback(async () => {
     try {
       setStatsLoading(true);
-      const res = await fetch('/api/admin/dashboard/stats');
+      const res = await fetch(`/api/admin/dashboard/stats?t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' },
+      });
       if (res.ok) {
         const json = await res.json();
+
         if (json?.stats) {
           setStats({
             capacity: json.stats.capacity || 75,

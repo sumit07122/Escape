@@ -1,7 +1,12 @@
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { getCurrentAdmin, createAuditLog } from '@/lib/server-utils';
+
 
 export async function GET() {
   try {
@@ -125,8 +130,18 @@ export async function PATCH(request: NextRequest) {
 
     const performedBy = `Admin: ${admin.name} (${admin.email})`;
 
-    // Helper to fetch all updated buses
+    // Helper to fetch all updated buses and revalidate paths
     const fetchUpdatedBuses = async () => {
+      try {
+        revalidatePath('/', 'layout');
+        revalidatePath('/', 'page');
+        revalidatePath('/book', 'page');
+        revalidatePath('/admin', 'page');
+        revalidatePath('/my-bookings', 'page');
+      } catch (revalErr) {
+        console.warn('[SEAT_MUTATION_REVALIDATE_WARN]:', revalErr);
+      }
+
       return db.bus.findMany({
         orderBy: { orderIndex: 'asc' },
         include: {
@@ -142,6 +157,7 @@ export async function PATCH(request: NextRequest) {
         },
       });
     };
+
 
     // ACTION: LOCK
     // Sets isBookable: false (blocks the seat for luggage, organizers, or offline reservation)

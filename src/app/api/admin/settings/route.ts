@@ -1,7 +1,13 @@
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { getCurrentAdmin, createAuditLog } from '@/lib/server-utils';
+import { updateTripConfig } from '@/lib/trip-config';
+
 
 export async function GET() {
   try {
@@ -113,6 +119,10 @@ async function handleUpdateSettings(request: NextRequest) {
       db.globalSettings.findFirst(),
     ]);
 
+    if (updatedCapacity) {
+      await updateTripConfig({ totalCapacity: updatedCapacity }).catch(() => {});
+    }
+
     await createAuditLog({
       action: 'ADMIN_SETTINGS_UPDATED',
       entityType: 'SETTINGS',
@@ -123,12 +133,24 @@ async function handleUpdateSettings(request: NextRequest) {
         : `Updated ${settings?.length || 0} settings`,
     });
 
+    try {
+      revalidatePath('/', 'layout');
+      revalidatePath('/', 'page');
+      revalidatePath('/book', 'page');
+      revalidatePath('/admin', 'page');
+      revalidatePath('/my-bookings', 'page');
+    } catch (revalErr) {
+      console.warn('[SETTINGS_REVALIDATION_WARN]:', revalErr);
+    }
+
     return NextResponse.json({
       success: true,
       tripCapacity: globalSettings?.tripCapacity ?? updatedCapacity ?? 75,
       globalSettings,
       settings: updatedSettings,
+      timestamp: Date.now(),
     });
+
   } catch (error) {
     console.error('Error updating settings:', error);
     return NextResponse.json({ error: 'Failed to update settings' }, { status: 500 });
