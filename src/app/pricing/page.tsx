@@ -22,7 +22,7 @@ export default async function PricingPage() {
   const remSoloPrice = Math.max(0, pkgPrice - depPrice);
   const remGroupPrice = Math.max(0, groupPrice - depPrice);
 
-  const pricingTable = [1, 2, 3, 4, 5, 6].map((count) => {
+  const pricingTable = [1, 2, 3, 4, 5, 6, 8, 10].map((count) => {
     const isGroup = count >= threshold;
     const perHead = isGroup ? groupPrice : pkgPrice;
     const total = count * perHead;
@@ -134,7 +134,7 @@ export default async function PricingPage() {
       <div className="p-8 rounded-3xl bg-white border border-[#D8D2C4] space-y-6 shadow-sm">
         <div>
           <h3 className="text-xl font-bold text-[#171918]">Complete Tiered Payment Matrix</h3>
-          <p className="text-xs text-[#646864]">Exact breakdown of per-head rate, total package, reservation deposit and gate balance.</p>
+          <p className="text-xs text-[#646864]">Exact breakdown of per-head rate, total package, reservation deposit and gate balance by party size.</p>
         </div>
 
         <div className="overflow-x-auto">
@@ -167,6 +167,39 @@ export default async function PricingPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* 3-Pillar Transparent Booking Guarantees */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="p-6 rounded-2xl bg-white border border-[#D8D2C4] space-y-2">
+          <span className="text-[11px] font-bold text-[#D87945] uppercase tracking-wider font-mono block">
+            ₹1,000 ADVANCE DEPOSIT
+          </span>
+          <h4 className="text-sm font-bold text-[#171918]">Low Commitment Lock-in</h4>
+          <p className="text-xs text-[#646864] leading-relaxed">
+            Lock your seat instantly today for just ₹1,000 per person. Clear the remaining balance safely before boarding at Mathura.
+          </p>
+        </div>
+
+        <div className="p-6 rounded-2xl bg-white border border-[#D8D2C4] space-y-2">
+          <span className="text-[11px] font-bold text-emerald-700 uppercase tracking-wider font-mono block">
+            AUTOMATIC SQUAD DISCOUNT
+          </span>
+          <h4 className="text-sm font-bold text-[#171918]">Save ₹300 / Head in Groups</h4>
+          <p className="text-xs text-[#646864] leading-relaxed">
+            Booking with 5 or more batchmates automatically drops the rate from ₹6,500 to ₹6,200/head without needing manual intervention.
+          </p>
+        </div>
+
+        <div className="p-6 rounded-2xl bg-white border border-[#D8D2C4] space-y-2">
+          <span className="text-[11px] font-bold text-[#163C32] uppercase tracking-wider font-mono block">
+            PROMO CODES COMPATIBLE
+          </span>
+          <h4 className="text-sm font-bold text-[#171918]">Direct Coupon Redemptions</h4>
+          <p className="text-xs text-[#646864] leading-relaxed">
+            Use coordinator promo codes (like EARLYBIRD or SQUAD5) at checkout to deduct flat bonuses directly from your total bill.
+          </p>
         </div>
       </div>
 

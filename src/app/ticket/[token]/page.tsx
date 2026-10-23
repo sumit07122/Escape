@@ -370,9 +370,9 @@ export default function DigitalTicketPage({
                 OFFLINE EMERGENCY CONTACTS (STUDENT TRIP LEADS)
               </div>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span>Lead Coordinator: <a href={`tel:${CONTACT_INFO.coordinatorPhone1}`} className="text-[#163C32] font-bold hover:underline">{CONTACT_INFO.coordinatorPhone1}</a> (Aryan)</span>
-                <span>Trip Coordinator: <a href={`tel:${CONTACT_INFO.coordinatorPhone2}`} className="text-[#163C32] font-bold hover:underline">{CONTACT_INFO.coordinatorPhone2}</a> (Rohan)</span>
-                <span>Emergency Support: <a href={`tel:${CONTACT_INFO.emergencyCoordinator}`} className="text-[#163C32] font-bold hover:underline">{CONTACT_INFO.emergencyCoordinator}</a></span>
+                <span>Lead Coordinator: <a href={`tel:${CONTACT_INFO.coordinatorPhone1}`} className="text-[#163C32] font-bold hover:underline font-mono">{CONTACT_INFO.coordinatorPhone1}</a></span>
+                <span>Trip Coordinator: <a href={`tel:${CONTACT_INFO.coordinatorPhone2}`} className="text-[#163C32] font-bold hover:underline font-mono">{CONTACT_INFO.coordinatorPhone2}</a></span>
+                <span>24/7 Helpline: <a href={`tel:${CONTACT_INFO.emergencyCoordinator}`} className="text-[#163C32] font-bold hover:underline font-mono">{CONTACT_INFO.emergencyCoordinator}</a></span>
               </div>
             </div>
           </div>
