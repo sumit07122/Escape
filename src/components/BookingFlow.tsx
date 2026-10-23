@@ -47,10 +47,8 @@ export default function BookingFlow() {
 
   // Step: Traveller Details
   const [travellers, setTravellers] = useState<TravellerInput[]>([
-    { fullName: '', phone: '', email: '', gender: 'Male', collegeId: '' },
+    { fullName: '', phone: '', email: '', gender: 'Male', collegeId: '', emergencyContactName: '', emergencyContactPhone: '' },
   ]);
-  const [emergencyContactName, setEmergencyContactName] = useState('');
-  const [emergencyContactPhone, setEmergencyContactPhone] = useState('');
 
   // Step: Sitting Preference
   const [sittingPreference, setSittingPreference] = useState<SittingPreference>('NO_PREFERENCE');
@@ -176,6 +174,8 @@ export default function BookingFlow() {
           email: '',
           gender: 'Male',
           collegeId: '',
+          emergencyContactName: '',
+          emergencyContactPhone: '',
         });
       }
       return updated.slice(0, travellersCount);
@@ -213,10 +213,14 @@ export default function BookingFlow() {
         alert('Please enter a valid email address for the primary contact.');
         return false;
       }
-    }
-    if (!emergencyContactName.trim() || !emergencyContactPhone.trim()) {
-      alert('Please enter an emergency contact name and phone number for student safety.');
-      return false;
+      if (!t.emergencyContactName?.trim()) {
+        alert(`Please enter an emergency contact name for Traveller #${i + 1}.`);
+        return false;
+      }
+      if (!t.emergencyContactPhone?.trim() || t.emergencyContactPhone.replace(/[^0-9]/g, '').length < 10) {
+        alert(`Please enter a valid 10-digit emergency contact number for Traveller #${i + 1}.`);
+        return false;
+      }
     }
     return true;
   };
@@ -254,8 +258,6 @@ export default function BookingFlow() {
         busId: selectedBusId,
         selectedSeats,
         bookingSessionId,
-        emergencyContactName,
-        emergencyContactPhone,
         couponCode: couponInput.trim() || undefined,
       };
 
@@ -648,39 +650,50 @@ export default function BookingFlow() {
                     className="w-full sm:w-1/2 px-3 py-2 rounded-xl bg-white border border-[#D8D2C4] text-xs text-[#171918] focus:border-[#163C32] focus:outline-none"
                   />
                 </div>
+
+                <div className="rounded-xl border border-[#D8D2C4] bg-white/70 p-4 space-y-3">
+                  <div>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#163C32]">Emergency Contact (Parent / Guardian)</span>
+                    <p className="mt-1 text-[11px] text-[#646864]">Provide a contact we can reach for this traveller in an emergency.</p>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div className="space-y-1">
+                      <label className="font-bold text-[#171918]">Contact Name *</label>
+                      <input
+                        type="text"
+                        required
+                        autoComplete="name"
+                        placeholder="Parent or guardian name"
+                        value={traveller.emergencyContactName || ''}
+                        onChange={(e) => {
+                          const updated = [...travellers];
+                          updated[idx].emergencyContactName = e.target.value;
+                          setTravellers(updated);
+                        }}
+                        className="w-full px-3 py-2 rounded-xl bg-white border border-[#D8D2C4] text-xs text-[#171918] focus:border-[#163C32] focus:outline-none"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-bold text-[#171918]">Contact Phone *</label>
+                      <input
+                        type="tel"
+                        required
+                        inputMode="tel"
+                        autoComplete="tel"
+                        placeholder="10-digit phone"
+                        value={traveller.emergencyContactPhone || ''}
+                        onChange={(e) => {
+                          const updated = [...travellers];
+                          updated[idx].emergencyContactPhone = e.target.value;
+                          setTravellers(updated);
+                        }}
+                        className="w-full px-3 py-2 rounded-xl bg-white border border-[#D8D2C4] text-xs text-[#171918] focus:border-[#163C32] focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             ))}
-
-            {/* Emergency Contact */}
-            <div className="p-5 rounded-2xl bg-[#E7E2D8] border border-[#D8D2C4] space-y-3">
-              <span className="text-xs font-bold text-[#163C32] uppercase tracking-wider block">
-                Emergency Contact (Parent / Guardian)
-              </span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <div className="space-y-1">
-                  <label className="font-bold text-[#171918]">Contact Name *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Ramesh Sharma"
-                    value={emergencyContactName}
-                    onChange={(e) => setEmergencyContactName(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#D8D2C4] text-xs text-[#171918] focus:border-[#163C32] focus:outline-none"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="font-bold text-[#171918]">Contact Phone *</label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="10-digit phone"
-                    value={emergencyContactPhone}
-                    onChange={(e) => setEmergencyContactPhone(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#D8D2C4] text-xs text-[#171918] focus:border-[#163C32] focus:outline-none"
-                  />
-                </div>
-              </div>
-            </div>
           </div>
 
           <div className="flex items-center justify-between pt-4 border-t border-[#E7E2D8]">

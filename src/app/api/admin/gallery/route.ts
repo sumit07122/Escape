@@ -14,6 +14,7 @@ import {
   parseGalleryImages,
 } from '@/lib/gallery';
 import type { GalleryImageEntry } from '@/lib/gallery';
+import { deleteGalleryImages, getGalleryImageId } from '@/lib/gallery-storage';
 
 export async function GET() {
   try {
@@ -68,8 +69,21 @@ export async function PUT(request: NextRequest) {
 
     const trip = await db.trip.findFirst({ orderBy: { createdAt: 'asc' }, select: { id: true, galleryImages: true } });
     if (!trip) return NextResponse.json({ error: 'The expedition is not configured yet.' }, { status: 404 });
-    const previousCount = parseGalleryImages(trip.galleryImages).length;
+    const previousImages = parseGalleryImages(trip.galleryImages);
+    const previousCount = previousImages.length;
     await db.trip.update({ where: { id: trip.id }, data: { galleryImages: serialized } });
+
+    const retainedImageIds = new Set(images.map((image) => getGalleryImageId(image.image)).filter((id): id is string => Boolean(id)));
+    const removedImageIds = previousImages
+      .map((image) => getGalleryImageId(image.image))
+      .filter((id): id is string => id !== null && !retainedImageIds.has(id));
+    if (removedImageIds.length > 0) {
+      try {
+        await deleteGalleryImages(removedImageIds);
+      } catch (error) {
+        console.error('Could not remove unused gallery objects:', error instanceof Error ? error.name : 'UnknownError');
+      }
+    }
 
     await createAuditLog({
       action: 'ADMIN_GALLERY_UPDATED',

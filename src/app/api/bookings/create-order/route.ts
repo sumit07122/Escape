@@ -21,8 +21,6 @@ export async function POST(request: NextRequest) {
       busId,
       selectedSeats,
       bookingSessionId,
-      emergencyContactName,
-      emergencyContactPhone,
       couponCode,
     } = body;
 
@@ -43,6 +41,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         error: `Seat selection mismatch: ${selectedSeats.length} seats selected for ${travellers.length} travellers`,
       }, { status: 400 });
+    }
+
+    for (const [index, traveller] of travellers.entries()) {
+      const contactName = typeof traveller?.emergencyContactName === 'string' ? traveller.emergencyContactName.trim() : '';
+      const contactPhone = typeof traveller?.emergencyContactPhone === 'string' ? traveller.emergencyContactPhone.trim() : '';
+      if (!contactName || contactPhone.replace(/\D/g, '').length < 10) {
+        return NextResponse.json({
+          error: `A valid emergency contact name and 10-digit phone number are required for Traveller #${index + 1}.`,
+        }, { status: 400 });
+      }
     }
 
     // 1. Auto-purge expired holds before checking availability
@@ -146,8 +154,8 @@ export async function POST(request: NextRequest) {
         primaryEmail: primaryTraveller.email || customerUser?.email || 'student@gla.ac.in',
         primaryPhone: primaryTraveller.phone || '0000000000',
         gender: primaryTraveller.gender || 'NOT_SPECIFIED',
-        emergencyContactName: emergencyContactName || primaryTraveller.emergencyContactName || 'University Coordinator',
-        emergencyContactPhone: emergencyContactPhone || primaryTraveller.emergencyContactPhone || '6398412828',
+        emergencyContactName: primaryTraveller.emergencyContactName.trim(),
+        emergencyContactPhone: primaryTraveller.emergencyContactPhone.trim(),
         sittingPreference: sittingPreference || 'NO_PREFERENCE',
         travellersCount,
         totalAmount: baseTotal,
@@ -167,8 +175,8 @@ export async function POST(request: NextRequest) {
             gender: t.gender || 'NOT_SPECIFIED',
             collegeId: t.collegeId || (t as any).rollNumber || null,
             rollNumber: (t as any).rollNumber || t.collegeId || null,
-            emergencyContactName: emergencyContactName || t.emergencyContactName || primaryTraveller.emergencyContactName || '',
-            emergencyContactPhone: emergencyContactPhone || t.emergencyContactPhone || primaryTraveller.emergencyContactPhone || '',
+            emergencyContactName: t.emergencyContactName!.trim(),
+            emergencyContactPhone: t.emergencyContactPhone!.trim(),
             assignedSeatNumber: selectedSeats[index],
             assignedBusNumber: heldSeats[0]?.busId === busId ? 'Assigned' : null,
           })),

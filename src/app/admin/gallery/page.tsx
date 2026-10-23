@@ -9,15 +9,6 @@ const MAX_IMAGES = 10;
 const MAX_UPLOAD_BYTES = 12 * 1024 * 1024;
 const MAX_COMPRESSED_BYTES = 275 * 1024;
 
-function fileToDataUrl(blob: Blob) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error('Could not read this image.'));
-    reader.onload = () => typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('Could not prepare this image.'));
-    reader.readAsDataURL(blob);
-  });
-}
-
 async function compressImage(file: File) {
   if (!file.type.startsWith('image/')) throw new Error('Choose a JPG, PNG, or WebP image.');
   if (file.size > MAX_UPLOAD_BYTES) throw new Error('Choose an image under 12 MB.');
@@ -34,7 +25,7 @@ async function compressImage(file: File) {
     for (let attempt = 0; attempt < 8; attempt += 1) {
       const quality = Math.max(0.42, 0.82 - attempt * 0.055);
       const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/webp', quality));
-      if (blob && blob.size <= MAX_COMPRESSED_BYTES) return fileToDataUrl(blob);
+      if (blob && blob.size <= MAX_COMPRESSED_BYTES) return blob;
       if (attempt >= 3) {
         canvas.width = Math.max(1, Math.round(canvas.width * 0.82));
         canvas.height = Math.max(1, Math.round(canvas.height * 0.82));
@@ -85,10 +76,17 @@ export default function AdminGalleryPage() {
     setFeedback(null);
     try {
       const compressed = await compressImage(file);
-      setUploadImage(compressed);
+      const upload = new FormData();
+      upload.append('file', compressed, 'gallery-image.webp');
+      const response = await fetch('/api/admin/gallery/upload', { method: 'POST', body: upload });
+      const data = await response.json();
+      if (!response.ok || typeof data.image !== 'string') {
+        throw new Error(data.error || 'Could not upload this image.');
+      }
+      setUploadImage(data.image);
       setUploadName(file.name);
       setImageUrl('');
-      setFeedback({ text: 'Image is ready to add. Save changes to publish it.' });
+      setFeedback({ text: 'Image stored securely. Add it to your draft and save changes to publish it.' });
     } catch (error) {
       setFeedback({ text: error instanceof Error ? error.message : 'Could not prepare this image.', error: true });
     } finally {
@@ -183,7 +181,7 @@ export default function AdminGalleryPage() {
           <div className="grid gap-3 sm:grid-cols-2 sm:items-end">
             <label className="flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 bg-white/[0.025] px-3 py-3 text-xs font-semibold text-stone-200 transition hover:border-[#e8b58e]/60 hover:bg-white/[0.05]">
               {preparing ? <LoaderCircle className="h-4 w-4 animate-spin text-[#e8b58e]" /> : <Upload className="h-4 w-4 text-[#e8b58e]" />}
-              {preparing ? 'Preparing image…' : uploadName || 'Choose photo to upload'}
+              {preparing ? 'Compressing and uploading…' : uploadName || 'Choose photo to upload'}
               <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFile} disabled={preparing} className="sr-only" />
             </label>
             <label className="block text-[10px] font-semibold text-stone-400">Or paste an HTTPS image link<input value={imageUrl} onChange={(event) => { setImageUrl(event.target.value); setUploadImage(''); setUploadName(''); }} placeholder="https://…" className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#0b1512] px-3 py-3 text-xs text-white outline-none placeholder:text-stone-600 focus:border-[#e8b58e]/60" /></label>

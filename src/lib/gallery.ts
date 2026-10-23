@@ -47,6 +47,7 @@ export function parseGalleryImages(value: string | null | undefined): GalleryIma
 }
 
 export function isAllowedGalleryImageSource(source: string) {
+  if (/^\/api\/gallery\/media\/[0-9a-f-]{36}$/i.test(source)) return true;
   if (/^data:image\/(webp|jpeg|png);base64,[A-Za-z0-9+/]+=*$/i.test(source)) return true;
   if (source.startsWith('/images/') && !source.startsWith('//')) return true;
   try {
