@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import { CONTACT_INFO } from '@/lib/constants';
 import PackingChecklist from '@/components/PackingChecklist';
-import SpotifyTripHub from '@/components/SpotifyTripHub';
 
 interface Traveller {
   id: string;
@@ -262,7 +261,7 @@ export default function MyBookingsClient({ initialConfig }: { initialConfig?: an
             <div className="space-y-2 max-w-md mx-auto">
               <h3 className="text-xl font-black text-[#171918]">No Active Expeditions Found</h3>
               <p className="text-xs text-[#646864] leading-relaxed">
-                You haven&apos;t reserved your seat for the Himalayan Escape yet. Secure your spot on our luxury 2×2 coach with an advance reservation deposit!
+                You haven&apos;t reserved your seat for the Himalayan Escape yet. Choose a seat and secure it with an advance reservation deposit.
               </p>
             </div>
             <Link
@@ -323,7 +322,7 @@ export default function MyBookingsClient({ initialConfig }: { initialConfig?: an
                     <div className="p-4 rounded-2xl bg-[#F7F5EF] border border-[#D8D2C4]">
                       <span className="text-[#646864] block font-semibold">Coach & Assignment</span>
                       <p className="font-bold text-[#171918] text-sm mt-1">{busName}</p>
-                      <p className="text-[11px] text-[#646864]">Luxury 2×2 AC Coach</p>
+                      <p className="text-[11px] text-[#646864]">Dedicated air-conditioned coach</p>
                     </div>
 
                     <div className="p-4 rounded-2xl bg-[#F7F5EF] border border-[#D8D2C4]">
@@ -410,9 +409,8 @@ export default function MyBookingsClient({ initialConfig }: { initialConfig?: an
         )}
 
         {/* Student Trip Hub Extras */}
-        <div className="space-y-8 pt-4">
+        <div className="pt-4">
           <PackingChecklist />
-          <SpotifyTripHub />
         </div>
       </div>
     </div>

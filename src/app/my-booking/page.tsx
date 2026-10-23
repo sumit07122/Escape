@@ -161,7 +161,7 @@ function BookingTrackerContent() {
             <div className="p-4 rounded-2xl bg-[#F7F5EF] border border-[#D8D2C4]">
               <span className="text-[#646864] block">Coach</span>
               <p className="font-bold text-[#171918] text-sm mt-0.5">{booking.bus?.busNumber || 'Bus 01'}</p>
-              <p className="text-[11px] text-[#646864]">Luxury 2x2 AC</p>
+              <p className="text-[11px] text-[#646864]">Dedicated air-conditioned coach</p>
             </div>
             <div className="p-4 rounded-2xl bg-[#F7F5EF] border border-[#D8D2C4]">
               <span className="text-[#646864] block">Reserved Seats</span>

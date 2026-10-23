@@ -74,6 +74,17 @@ h3 {
   line-height: 1.25;
 }
 
+.hero-title {
+  color: #fff !important;
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: clamp(3.25rem, 8.8vw, 7.25rem);
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 0.98;
+  text-wrap: balance;
+  text-shadow: 0 5px 34px rgb(0 0 0 / 55%);
+}
+
 /* ======================================================== */
 /* CUSTOM UTILITY CLASSES                                   */
 /* ======================================================== */

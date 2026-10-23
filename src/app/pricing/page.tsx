@@ -6,6 +6,7 @@ import React from 'react';
 import Link from 'next/link';
 import { ArrowRight, Check, Compass, Users, UserRound } from 'lucide-react';
 import { getTripConfig } from '@/lib/trip-config';
+import ShareSquadOfferButton from '@/components/ShareSquadOfferButton';
 
 export const metadata = {
   title: 'Pricing | Himalayan Escape — Student Mountain Expedition',
@@ -40,8 +41,21 @@ export default async function PricingPage() {
             Clear prices.<br className="hidden sm:block" /> More room for the mountains.
           </h1>
           <p className="mt-5 max-w-2xl text-sm leading-7 text-[#65716b] sm:text-base">
-            One simple seat price, with an automatic saving when {threshold} or more friends book together. Your rate and deposit are shown before payment.
+            One clear seat price, plus an automatic squad saving when one booking has {threshold} or more travellers. Your rate and deposit are shown before payment.
           </p>
+          <div className="mt-7 flex max-w-4xl flex-col justify-between gap-4 rounded-[1.5rem] border border-[#ead7c3] bg-[#fffaf3] p-5 sm:flex-row sm:items-center sm:p-6">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#bd744c]">The student squad offer</span>
+              <h2 className="mt-1 text-xl font-semibold tracking-tight text-[#15392f] sm:text-2xl">Bring {threshold - 1} friends. All {threshold} get the lower rate.</h2>
+              <p className="mt-1 text-xs leading-5 text-[#65716b]">Save ₹{saving.toLocaleString('en-IN')} each — ₹{(saving * threshold).toLocaleString('en-IN')} across a {threshold}-traveller booking. It applies automatically, with no promo code or deadline.</p>
+            </div>
+            <div className="flex shrink-0 flex-col gap-2 sm:items-stretch">
+              <Link href="/book" className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#173d32] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#245b4a]">
+                Start a squad booking <ArrowRight className="h-4 w-4" />
+              </Link>
+              <ShareSquadOfferButton threshold={threshold} savingPerTraveller={saving} totalSaving={saving * threshold} />
+            </div>
+          </div>
         </div>
       </section>
 
@@ -77,7 +91,7 @@ export default async function PricingPage() {
             <div className="absolute -right-2 -top-6 h-44 w-44 rounded-full border border-white/10" />
             <div className="relative flex items-start justify-between gap-4">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/70">Better together</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/70">Student squad offer</span>
                 <h2 className="mt-3 text-2xl font-semibold tracking-tight">The squad rate</h2>
                 <p className="mt-1 text-xs text-emerald-100/65">{threshold}+ travellers on one booking</p>
               </div>
@@ -91,10 +105,10 @@ export default async function PricingPage() {
             <div className="my-7 h-px bg-white/10" />
             <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/10 p-4">
               <div>
-                <p className="text-sm font-semibold">Save ₹{saving.toLocaleString('en-IN')} per person</p>
-                <p className="mt-1 text-xs text-emerald-100/65">Applied automatically when your booking reaches {threshold} seats.</p>
+                <p className="text-sm font-semibold">Save ₹{(saving * threshold).toLocaleString('en-IN')} across {threshold} seats</p>
+                <p className="mt-1 text-xs text-emerald-100/65">Each traveller in a booking of {threshold}+ gets ₹{saving.toLocaleString('en-IN')} off. Applied automatically.</p>
               </div>
-              <span className="shrink-0 rounded-full bg-[#f0c593] px-3 py-1.5 text-[10px] font-black uppercase tracking-wide text-[#28372f]">Group deal</span>
+              <span className="shrink-0 rounded-full bg-[#f0c593] px-3 py-1.5 text-[10px] font-black uppercase tracking-wide text-[#28372f]">No code needed</span>
             </div>
             <Link href="/book" className="relative mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#e7a476] px-5 py-4 text-sm font-bold text-[#1d2e27] transition hover:bg-[#f1c49e]">
               Book together <ArrowRight className="h-4 w-4" />

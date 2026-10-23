@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
         data: {
           tripId: trip.id,
           busNumber,
-          vehicleName: vehicleName || 'Himalayan Luxury 2x2 Coach',
+          vehicleName: vehicleName || 'Himalayan Escape Coach',
           vehicleNumber,
           driverName,
           driverPhone,

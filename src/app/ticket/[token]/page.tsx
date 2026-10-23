@@ -297,7 +297,7 @@ export default function DigitalTicketPage({
               <div className="border-t border-white/20 pt-3 text-xs text-stone-300 space-y-1">
                 <p className="flex items-center gap-1.5 font-medium">
                   <Bus className="w-3.5 h-3.5 text-[#D87945]" />
-                  <span>Coach: {booking?.bus?.vehicleName || 'Himalayan Luxury 2x2 AC Tourist Coach'}</span>
+                  <span>Coach: {booking?.bus?.busNumber || busNumber}</span>
                 </p>
                 <p className="text-[11px] text-stone-300">
                   Driver: {booking?.bus?.driverName || 'Rajesh Sharma'} ({booking?.bus?.driverPhone || '6398412828'})

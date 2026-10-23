@@ -843,7 +843,7 @@ export default function BookingFlow() {
             <div className="grid grid-cols-2 gap-3 border-b border-[#D8D2C4] pb-3 text-xs">
               <div>
                 <span className="text-[10px] font-bold text-[#646864] uppercase block">COACH</span>
-                <p className="font-bold text-[#163C32]">Luxury 2x2 AC Coach</p>
+                <p className="font-bold text-[#163C32]">Dedicated AC tourist coach</p>
               </div>
               <div>
                 <span className="text-[10px] font-bold text-[#646864] uppercase block">SEATS</span>

@@ -35,7 +35,7 @@ export default function AdminTransportPage() {
           </span>
           <h1 className="text-3xl font-black text-white">Transport Fleet Manifest</h1>
           <p className="text-xs text-zinc-400">
-            Luxury 2×2 AC coaches, mountain chauffeurs, conductor contacts, and road clearances.
+            Air-conditioned coaches, mountain chauffeurs, conductor contacts, and road clearances.
           </p>
         </div>
 

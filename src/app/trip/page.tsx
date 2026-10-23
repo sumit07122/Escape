@@ -39,15 +39,15 @@ export default function TripOverviewPage() {
             <Users className="w-5 h-5" />
           </div>
           <h3 className="font-bold text-[#171918] text-base">Expedition Capacity</h3>
-          <p className="text-xs text-[#646864]">Dedicated passenger capacity limit across luxury tourist coaches.</p>
+          <p className="text-xs text-[#646864]">Dedicated passenger capacity across the expedition coaches.</p>
         </div>
 
         <div className="p-6 rounded-2xl bg-white border border-[#D8D2C4] space-y-2">
           <div className="w-10 h-10 rounded-xl bg-[#163C32]/10 text-[#163C32] flex items-center justify-center">
             <Bus className="w-5 h-5" />
           </div>
-          <h3 className="font-bold text-[#171918] text-base">Luxury 2×2 Tourist Coaches</h3>
-          <p className="text-xs text-[#646864]">23 passenger seats + 1 driver + 1 conductor per coach. Reclining pushback seats & AC.</p>
+          <h3 className="font-bold text-[#171918] text-base">Air-conditioned coach travel</h3>
+          <p className="text-xs text-[#646864]">A dedicated coach for the round trip, with passenger seating and on-road coordination.</p>
         </div>
       </div>
 

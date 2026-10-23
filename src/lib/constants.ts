@@ -93,10 +93,10 @@ export const BUS_25_SEATS_LAYOUT: SeatTemplate[] = [
 ];
 
 export const INITIAL_BUSES = [
-  { busNumber: 'Bus 01', vehicleName: 'Himalayan Eagle (2x2 AC Luxury)', vehicleNumber: 'UP-85-GLA-001', driverName: 'Rajesh Sharma', conductorName: 'Amit Verma' },
-  { busNumber: 'Bus 02', vehicleName: 'Parvati Cruiser (2x2 AC Luxury)', vehicleNumber: 'UP-85-GLA-002', driverName: 'Sunil Kumar', conductorName: 'Manoj Singh' },
-  { busNumber: 'Bus 03', vehicleName: 'Solang Glider (2x2 AC Luxury)', vehicleNumber: 'UP-85-GLA-003', driverName: 'Virender Rawat', conductorName: 'Rakesh Negi' },
-  { busNumber: 'Bus 04', vehicleName: 'Rohtang Explorer (2x2 AC Luxury)', vehicleNumber: 'UP-85-GLA-004', driverName: 'Kuldeep Thakur', conductorName: 'Deepak Dogra' },
+  { busNumber: 'Bus 01', vehicleName: 'Himalayan Eagle', vehicleNumber: 'UP-85-GLA-001', driverName: 'Rajesh Sharma', conductorName: 'Amit Verma' },
+  { busNumber: 'Bus 02', vehicleName: 'Parvati Cruiser', vehicleNumber: 'UP-85-GLA-002', driverName: 'Sunil Kumar', conductorName: 'Manoj Singh' },
+  { busNumber: 'Bus 03', vehicleName: 'Solang Glider', vehicleNumber: 'UP-85-GLA-003', driverName: 'Virender Rawat', conductorName: 'Rakesh Negi' },
+  { busNumber: 'Bus 04', vehicleName: 'Rohtang Explorer', vehicleNumber: 'UP-85-GLA-004', driverName: 'Kuldeep Thakur', conductorName: 'Deepak Dogra' },
 ];
 
 export const ITINERARY_DAYS = [
@@ -106,7 +106,7 @@ export const ITINERARY_DAYS = [
     subtitle: 'Reporting, QR Check-in & Departure',
     stayLocation: 'Bus / Overnight journey',
     mealsConfig: 'Dinner halt en route (Self-paid)',
-    description: 'Assemble at Mathura departure bay (NH-2). Complete QR digital ticket verification, seat allotment check, luggage loading, and pre-departure safety briefing before boarding our luxury AC coaches.',
+    description: 'Assemble at Mathura departure bay (NH-2). Complete QR digital ticket verification, seat allotment check, luggage loading, and pre-departure safety briefing before boarding the expedition coaches.',
     items: [
       { time: '04:30 PM', location: 'Mathura Departure Bay', activity: 'Traveller reporting & verification', description: 'Reporting and document/QR verification at Mathura bay.', isOptional: false },
       { time: '05:00 PM', location: 'Reporting Bay', activity: 'QR & Seat Verification', description: 'Digital QR scanning, luggage loading and tag assignment.', isOptional: false },
@@ -198,7 +198,7 @@ export const ITINERARY_DAYS = [
 ];
 
 export const INCLUSIONS_LIST = [
-  'Roundtrip Luxury 2x2 AC Tourist Bus transport from Mathura to Manali, Kasol & back',
+  'Round-trip air-conditioned coach transport from Mathura to Manali, Kasol & back',
   '2 Nights accommodation in 3-star resort in Manali',
   '2 Nights accommodation in premium riverside resort/camp in Kasol',
   'Configured meals: Daily Breakfast & Dinner at hotels as specified in itinerary',
@@ -243,7 +243,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: 'Can I select my exact bus seat like BookMyShow?',
-    a: 'Yes! Our platform features an interactive BookMyShow-style 23-passenger seat map for our luxury 2x2 buses. You can choose your preferred window or aisle seat in real-time, which is instantly locked for you upon reservation.',
+    a: 'Yes! Our platform features an interactive seat map. You can choose your preferred window or aisle seat in real time, and the seat is held for you during checkout.',
   },
   {
     q: 'How does seat holding work?',

@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { cookies } from 'next/headers';
 import {
   Mountain, Calendar, ArrowRight, ShieldCheck,
-  CheckCircle2, Bus, MapPin, Compass, Clock, Phone, AlertCircle
+  CheckCircle2, Bus, Users, AlertCircle
 } from 'lucide-react';
 import { TRIP_METADATA, CONTACT_INFO, ITINERARY_DAYS } from '@/lib/constants';
 import { getSeatAvailability } from '@/lib/trip-config';
@@ -16,14 +16,16 @@ import { verifyUserSession } from '@/lib/auth';
 import DestinationCarousel from '@/components/DestinationCarousel';
 import SnowEffect from '@/components/SnowEffect';
 import MountainWeatherWidget from '@/components/MountainWeatherWidget';
-import PackingChecklist from '@/components/PackingChecklist';
-import SpotifyTripHub from '@/components/SpotifyTripHub';
 
 export default async function HomePage() {
   const availability = await getSeatAvailability();
   const tripConfig = availability.tripConfig;
   const availableSeats = availability.availableSeats;
   const depPrice = Number(tripConfig.depositPrice) || 1000;
+  const soloPrice = Number(tripConfig.packagePrice) || 6500;
+  const squadPrice = Number(tripConfig.groupPackagePrice) || 6200;
+  const groupThreshold = Number(tripConfig.groupSizeThreshold) || 5;
+  const squadSaving = Math.max(0, soloPrice - squadPrice);
 
   // Retrieve user session from cookie if logged in
   const cookieStore = await cookies();
@@ -40,7 +42,7 @@ export default async function HomePage() {
         <div className="absolute inset-0 -z-20">
           <img src="/hero-mountain.jpg" alt="A forested Himalayan valley and river" className="h-full w-full object-cover object-[center_42%]" />
         </div>
-        <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(7,19,17,0.58)_0%,rgba(7,19,17,0.25)_36%,rgba(7,19,17,0.58)_68%,#091a17_100%)]" />
+        <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(7,19,17,0.48)_0%,rgba(7,19,17,0.22)_30%,rgba(7,19,17,0.48)_60%,#091a17_100%)]" />
         <div className="absolute inset-x-0 top-0 -z-10 h-40 bg-gradient-to-b from-black/30 to-transparent" />
         <SnowEffect />
 
@@ -70,11 +72,11 @@ export default async function HomePage() {
                 Manali <span className="px-1 text-white/50">/</span> Kasol <span className="px-1 text-white/50">/</span> 2026
               </p>
             )}
-            <h1 className="font-sans text-5xl font-semibold leading-[0.98] tracking-[-0.055em] text-white drop-shadow-[0_4px_30px_rgba(0,0,0,0.4)] sm:text-7xl md:text-8xl">
+            <h1 className="hero-title mx-auto max-w-6xl">
               {tripConfig.tripTitle || 'Himalayan Escape'}
             </h1>
             <p className="mx-auto max-w-2xl text-base font-light leading-relaxed text-stone-100/90 sm:text-xl md:text-2xl">
-              Six days above the ordinary. Follow the mountain roads to snow trails, cedar forests and slow evenings by the Parvati.
+              Six days from the plains to the peaks. Find snow trails in Manali, pine-scented evenings in Kasol, and a new crew for the journey.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] font-medium uppercase tracking-[0.12em] text-white/75 sm:text-xs">
               <span>6 days</span><span className="h-1 w-1 rounded-full bg-[#f0b588]" />
@@ -127,6 +129,23 @@ export default async function HomePage() {
         ))}
       </div>
 
+      <section className="mx-auto mt-12 w-full max-w-5xl px-4 sm:px-6">
+        <div className="relative overflow-hidden rounded-[2rem] bg-[#163C32] px-6 py-7 text-white shadow-[0_22px_55px_rgba(14,38,32,0.18)] sm:px-9 sm:py-8">
+          <div className="pointer-events-none absolute -right-12 -top-24 h-64 w-64 rounded-full border border-white/10" />
+          <div className="pointer-events-none absolute -right-1 -top-14 h-44 w-44 rounded-full border border-white/10" />
+          <div className="relative flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
+            <div className="max-w-2xl">
+              <span className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#f1c39e]"><Users className="h-4 w-4" /> The group-chat upgrade</span>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">Bring {groupThreshold - 1} friends. Save ₹{squadSaving.toLocaleString('en-IN')} each.</h2>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-white/75">Book {groupThreshold} or more travellers together and the lower rate applies automatically — no code needed. That&apos;s ₹{(squadSaving * groupThreshold).toLocaleString('en-IN')} saved across a {groupThreshold}-person booking.</p>
+            </div>
+            <Link href="/pricing" className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#f1c39e] px-5 py-3 text-sm font-bold text-[#17231f] transition hover:bg-white">
+              See the squad deal <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Main Content Sections with Standard Spacing */}
       <div className="w-full space-y-20 sm:space-y-28 pt-16 sm:pt-20">
         {/* ======================================================== */}
@@ -142,7 +161,7 @@ export default async function HomePage() {
             </h2>
             <div className="space-y-3 text-base text-[#171918]/80 leading-relaxed font-normal">
               <p>
-                Himalayan Escape is an independent student mountain expedition departing {tripConfig.pickupLocation}. Designed for comfort and adventure, travellers journey across the plains of North India and climb into the high valleys of Himachal Pradesh aboard dedicated 2x2 luxury tourist coaches.
+                Himalayan Escape is an independent student mountain expedition departing {tripConfig.pickupLocation}. Travel from the plains of North India into the high valleys of Himachal Pradesh, with comfortable round-trip transport and time to explore together.
               </p>
               <p>
                 From the snowy heights of Solang Valley and the engineering marvel of the Atal Tunnel to the mystical cedar forests and riverside cafés of Kasol and the spiritual hot springs of Manikaran Sahib, every day offers a balance of curated group exploration and independent freedom.
@@ -263,13 +282,8 @@ export default async function HomePage() {
         </section>
 
         {/* ======================================================== */}
-        {/* 4.5. PACKING CHECKLIST & HIGHWAY SPOTIFY HUB             */}
+        {/* 4.5. STUDENT ESSENTIALS                                   */}
         {/* ======================================================== */}
-        <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-          <PackingChecklist />
-          <SpotifyTripHub />
-        </section>
-
         {/* ======================================================== */}
         {/* 6. WHAT'S INCLUDED SECTION                               */}
         {/* ======================================================== */}
@@ -290,7 +304,7 @@ export default async function HomePage() {
             <div className="p-6 rounded-2xl bg-white border border-[#D8D2C4] space-y-2">
               <div className="flex items-center gap-2.5">
                 <CheckCircle2 className="w-5 h-5 text-[#163C32] shrink-0" />
-                <h3 className="font-bold text-base text-[#171918]">Dedicated 2x2 AC Tourist Coaches</h3>
+                <h3 className="font-bold text-base text-[#171918]">Round-trip AC coach travel</h3>
               </div>
               <p className="text-xs text-[#646864] pl-7.5 leading-relaxed">
                 Round-trip road journey from Mathura (NH-2) to Manali, Solang Valley, Kasol, and return.
@@ -340,7 +354,7 @@ export default async function HomePage() {
                   COMFORT ON THE ROAD
                 </span>
                 <h3 className="text-2xl font-black text-[#171918]">
-                  Luxury 2x2 Coach Pushback Seating
+                  Choose your coach seat
                 </h3>
                 <p className="text-xs text-[#646864]">
                   Choose your exact window or aisle seat in advance with real-time seat locks.
@@ -356,8 +370,8 @@ export default async function HomePage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
               <div className="p-4 rounded-xl bg-[#F7F5EF] border border-[#D8D2C4] space-y-1">
-                <span className="text-xs font-bold text-[#163C32]">2x2 Pushback Pairs</span>
-                <p className="text-xs text-[#646864]">Spacious aisle layout with individual charging ports.</p>
+                <span className="text-xs font-bold text-[#163C32]">Pick your preferred seat</span>
+                <p className="text-xs text-[#646864]">Choose a window or aisle seat during booking.</p>
               </div>
               <div className="p-4 rounded-xl bg-[#F7F5EF] border border-[#D8D2C4] space-y-1">
                 <span className="text-xs font-bold text-[#163C32]">10-Minute Hold Guarantee</span>
@@ -399,7 +413,7 @@ export default async function HomePage() {
             Ready for the mountains?
           </h2>
           <p className="text-sm text-[#646864] max-w-md mx-auto">
-            Seats across the 4 luxury coaches fill up quickly. Secure your seat today with just ₹{depPrice.toLocaleString('en-IN')} advance reservation.
+            Your mountain escape starts with a ₹{depPrice.toLocaleString('en-IN')} advance reservation. Review the full price and remaining balance before you pay.
           </p>
           <div className="pt-2">
             <Link

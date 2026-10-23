@@ -66,7 +66,12 @@ const STORAGE_KEY = 'himalayan_packing_checklist';
 
 export default function PackingChecklist() {
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
-  const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
+  const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({
+    alpine: true,
+    docs: true,
+    gear: true,
+    med: true,
+  });
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Load saved state from localStorage
@@ -131,17 +136,27 @@ export default function PackingChecklist() {
   };
 
   return (
-    <div className="p-6 sm:p-8 rounded-3xl bg-white border border-[#D8D2C4] shadow-sm space-y-6">
+    <details className="group rounded-2xl border border-[#D8D2C4] bg-white shadow-sm">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-2xl px-5 py-4 transition hover:bg-[#F7F5EF] [&::-webkit-details-marker]:hidden">
+        <span className="min-w-0">
+          <span className="block text-sm font-bold text-[#171918]">Quick packing checklist</span>
+          <span className="mt-1 block text-xs text-[#646864]">Optional mountain-trip essentials · {totalItems} items</span>
+        </span>
+        <span className="shrink-0 rounded-full bg-[#edf3ef] px-3 py-1.5 text-xs font-bold text-[#163C32] group-open:hidden">Open list</span>
+        <span className="hidden shrink-0 rounded-full bg-[#edf3ef] px-3 py-1.5 text-xs font-bold text-[#163C32] group-open:inline">Close list</span>
+      </summary>
+      <div className="px-4 pb-4 sm:px-5">
+    <div className="space-y-4 rounded-xl bg-[#F7F5EF] p-4">
       {/* Header with Live Progress Indicator */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E7E2D8] pb-6">
+      <div className="flex flex-col justify-between gap-3 border-b border-[#E7E2D8] pb-4 sm:flex-row sm:items-center">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-xl sm:text-2xl font-black text-[#171918]">
-              🎒 Official Expedition Packing Checklist
+            <span className="text-sm font-bold text-[#171918]">
+              Your list
             </span>
           </div>
-          <p className="text-xs text-[#646864] mt-1">
-            Tick items as you pack. Saves your progress automatically in your browser.
+          <p className="mt-1 text-[11px] text-[#646864]">
+            Tick items as you pack. Progress saves in this browser.
           </p>
         </div>
 
@@ -186,7 +201,7 @@ export default function PackingChecklist() {
       </div>
 
       {/* Categories */}
-      <div className="space-y-4">
+      <div className="space-y-2">
         {CHECKLIST_DATA.map((category) => {
           const isCollapsed = collapsedCategories[category.id];
           const catPacked = category.items.filter((item) => checkedItems[item.id]).length;
@@ -194,13 +209,13 @@ export default function PackingChecklist() {
           return (
             <div
               key={category.id}
-              className="rounded-2xl border border-[#E7E2D8] bg-[#F7F5EF]/60 overflow-hidden transition-all"
+              className="overflow-hidden rounded-xl border border-[#E7E2D8] bg-white transition-all"
             >
               {/* Category Header */}
               <button
                 type="button"
                 onClick={() => toggleCategory(category.id)}
-                className="w-full p-4 flex items-center justify-between gap-3 text-left hover:bg-[#E7E2D8]/50 transition-colors cursor-pointer select-none"
+                className="flex w-full cursor-pointer select-none items-center justify-between gap-3 p-3 text-left transition-colors hover:bg-[#F7F5EF]"
               >
                 <div className="flex items-center gap-2.5">
                   <div className="w-7 h-7 rounded-lg bg-white border border-[#D8D2C4] flex items-center justify-center shrink-0 shadow-xs">
@@ -266,5 +281,7 @@ export default function PackingChecklist() {
         })}
       </div>
     </div>
+      </div>
+    </details>
   );
 }

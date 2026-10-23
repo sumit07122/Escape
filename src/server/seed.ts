@@ -80,7 +80,7 @@ async function main() {
       price: PRICING_DEFAULTS.pricePerTraveller,
       reservationAmount: PRICING_DEFAULTS.reservationAmountPerTraveller,
       travellersCount: 1,
-      description: 'Single traveller seat with roundtrip luxury 2x2 AC transport, 3-star resort stay, daily breakfast & dinner, sightseeing and coordinator support.',
+      description: 'Single traveller seat with round-trip air-conditioned coach transport, resort stay, daily breakfast & dinner, sightseeing and coordinator support.',
       features: JSON.stringify(['1 Dedicated Bus Seat', 'Manali & Kasol Hotel Stay', 'Breakfast & Dinner Included', 'Digital QR Boarding Pass', 'Trip Coordinator Support']),
     },
     {
@@ -166,7 +166,7 @@ async function main() {
       await prisma.transport.create({
         data: {
           busId: bus.id,
-          vehicleType: 'Luxury 2x2 AC Tourist Coach',
+          vehicleType: 'Air-conditioned tourist coach',
           vehicleNumber: busDef.vehicleNumber,
           driverName: busDef.driverName || 'Chauffeur',
           driverPhone: '7017936338',
