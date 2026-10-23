@@ -60,6 +60,7 @@ export default function Navbar() {
   const navLinks = [
     { name: 'Trip', href: '/trip' },
     { name: 'Itinerary', href: '/itinerary' },
+    { name: 'Gallery', href: '/gallery' },
     { name: 'Pricing', href: '/pricing' },
     { name: 'My Bookings', href: '/my-bookings' },
   ];

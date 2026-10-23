@@ -7,7 +7,7 @@ import {
   ShieldCheck, QrCode, LogOut, RefreshCw, LayoutDashboard,
   Mountain, Lock, User, ArrowLeft, PanelsTopLeft, CalendarDays,
   Building2, Ticket, Users, CreditCard, Bus, BarChart3, Receipt,
-  Settings, ScrollText, Truck, Tag, ExternalLink
+  Settings, ScrollText, Truck, Tag, ExternalLink, Images
 } from 'lucide-react';
 
 interface AdminStats {
@@ -244,6 +244,7 @@ export default function AdminLayout({
     { label: 'Workspace', items: [
       { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
       { label: 'Site editor', href: '/admin/site-editor', icon: PanelsTopLeft },
+      { label: 'Photo gallery', href: '/admin/gallery', icon: Images },
       { label: 'Itinerary', href: '/admin/itinerary', icon: CalendarDays },
       { label: 'Hotels & stays', href: '/admin/hotels', icon: Building2 },
     ] },

@@ -14,6 +14,7 @@ import { TRIP_METADATA, CONTACT_INFO, ITINERARY_DAYS } from '@/lib/constants';
 import { getSeatAvailability } from '@/lib/trip-config';
 import { db } from '@/lib/db';
 import { verifyUserSession } from '@/lib/auth';
+import HomeScenicCarousel from '@/components/HomeScenicCarousel';
 import DestinationCarousel from '@/components/DestinationCarousel';
 import SnowEffect from '@/components/SnowEffect';
 import MountainWeatherWidget from '@/components/MountainWeatherWidget';
@@ -114,7 +115,7 @@ export default async function HomePage() {
           <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-white/65 sm:text-xs">
             Departing from {tripConfig.pickupLocation} - {tripConfig.reportingTime}
           </p>
-          <div className="w-full max-w-sm pt-1">
+          <div className="w-full max-w-xl pt-1 sm:max-w-2xl">
             <MountainWeatherWidget />
           </div>
         </div>
@@ -140,7 +141,7 @@ export default async function HomePage() {
           <div className="relative flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
             <div className="max-w-2xl">
               <span className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#f1c39e]"><Users className="h-4 w-4" /> The group-chat upgrade</span>
-              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">Bring {groupThreshold - 1} friends. Save ₹{squadSaving.toLocaleString('en-IN')} each.</h2>
+              <h2 className="squad-banner-heading mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">Bring {groupThreshold - 1} friends. Save ₹{squadSaving.toLocaleString('en-IN')} each.</h2>
               <p className="mt-2 max-w-xl text-sm leading-6 text-white/75">Book {groupThreshold} or more travellers together and the lower rate applies automatically — no code needed. That&apos;s ₹{(squadSaving * groupThreshold).toLocaleString('en-IN')} saved across a {groupThreshold}-person booking.</p>
             </div>
             <Link href="/pricing" className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#f1c39e] px-5 py-3 text-sm font-bold text-[#17231f] transition hover:bg-white">
@@ -180,45 +181,7 @@ export default async function HomePage() {
         {/* ======================================================== */}
         {/* 3. RESTRAINED EDITORIAL PHOTOGRAPHY                      */}
         {/* ======================================================== */}
-        <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-2 relative h-[380px] sm:h-[440px] rounded-3xl overflow-hidden border border-[#D8D2C4] shadow-sm">
-              <img
-                src="/images/solang-valley.jpg"
-                alt="Snow covered alpine valley in Solang near Manali"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex items-end p-6">
-                <div>
-                  <span className="text-xs font-bold text-amber-300 uppercase tracking-widest block font-mono">
-                    MANALI & SOLANG VALLEY
-                  </span>
-                  <h3 className="text-xl sm:text-2xl font-bold text-white">
-                    Alpine snow trails, cedar forests & high mountain passes
-                  </h3>
-                </div>
-              </div>
-            </div>
-
-            <div className="relative h-[380px] sm:h-[440px] rounded-3xl overflow-hidden border border-[#D8D2C4] shadow-sm">
-              <img
-                src="/images/kasol-river.jpg"
-                alt="Parvati River flowing through Kasol"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex items-end p-6">
-                <div>
-                  <span className="text-xs font-bold text-amber-300 uppercase tracking-widest block font-mono">
-                    PARVATI VALLEY & KASOL
-                  </span>
-                  <h3 className="text-lg sm:text-xl font-bold text-white">
-                    Turquoise glacial streams and riverside mountain stays
-                  </h3>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        <HomeScenicCarousel />
 
         {/* ======================================================== */}
         {/* 3.5. DESTINATION HIGHLIGHTS CAROUSEL                     */}

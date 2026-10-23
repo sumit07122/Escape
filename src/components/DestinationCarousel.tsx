@@ -59,6 +59,8 @@ const DESTINATIONS: DestinationSlide[] = [
 export default function DestinationCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
   const touchStartX = useRef<number>(0);
   const touchEndX = useRef<number>(0);
 
@@ -70,14 +72,26 @@ export default function DestinationCarousel() {
     setCurrentIndex((prev) => (prev - 1 + DESTINATIONS.length) % DESTINATIONS.length);
   }, []);
 
-  // 4.5s Auto-scroll
   useEffect(() => {
-    if (isPaused) return;
-    const interval = setInterval(() => {
-      handleNext();
-    }, 4500);
+    const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const updatePreference = () => setReducedMotion(preference.matches);
+    const updateVisibility = () => setIsVisible(!document.hidden);
+    updatePreference();
+    updateVisibility();
+    preference.addEventListener('change', updatePreference);
+    document.addEventListener('visibilitychange', updateVisibility);
+    return () => {
+      preference.removeEventListener('change', updatePreference);
+      document.removeEventListener('visibilitychange', updateVisibility);
+    };
+  }, []);
+
+  // Gently advance the carousel while it is visible and motion is allowed.
+  useEffect(() => {
+    if (isPaused || reducedMotion || !isVisible) return;
+    const interval = window.setInterval(handleNext, 6000);
     return () => clearInterval(interval);
-  }, [isPaused, handleNext]);
+  }, [isPaused, handleNext, reducedMotion, isVisible]);
 
   // Touch Swipe Handlers for Mobile
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -104,6 +118,8 @@ export default function DestinationCarousel() {
       className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
+      onFocusCapture={() => setIsPaused(true)}
+      onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsPaused(false); }}
     >
       <div className="space-y-4 mb-8 text-center sm:text-left flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>

@@ -49,6 +49,26 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
+.scenic-fade-in {
+  animation: scenic-fade-in 650ms cubic-bezier(0.2, 0.7, 0.25, 1) both;
+}
+
+@keyframes scenic-fade-in {
+  from { opacity: 0.78; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .scenic-fade-in { animation: none; }
+  *, *::before, *::after { scroll-behavior: auto !important; }
+}
+
 /* Editorial Headings: Tight tracking and high contrast */
 h1, h2, h3, h4, h5, h6 {
   color: #0E2620;
@@ -84,6 +104,16 @@ h3 {
   text-wrap: balance;
   text-shadow: 0 5px 34px rgb(0 0 0 / 55%);
 }
+
+.gallery-heading,
+.gallery-card-title,
+.squad-banner-heading {
+  color: #fff !important;
+}
+
+.gallery-photo-card { height: 320px; }
+@media (min-width: 640px) { .gallery-photo-card { height: 360px; } }
+@media (min-width: 1024px) { .gallery-photo-card { height: 390px; } }
 
 @media (max-width: 380px) {
   .hero-title {

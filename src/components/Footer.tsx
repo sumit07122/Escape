@@ -37,6 +37,7 @@ export default function Footer() {
             <ul className="space-y-1.5 text-[11px]">
               <li><Link href="/trip" className="hover:text-[#163C32] transition-colors">Trip Overview</Link></li>
               <li><Link href="/itinerary" className="hover:text-[#163C32] transition-colors">Itinerary</Link></li>
+              <li><Link href="/gallery" className="hover:text-[#163C32] transition-colors">Photo Gallery</Link></li>
               <li><Link href="/pricing" className="hover:text-[#163C32] transition-colors">Pricing</Link></li>
               <li><Link href="/book" className="hover:text-[#D87945] font-bold transition-colors">Book Now</Link></li>
               <li><Link href="/my-bookings" className="hover:text-[#163C32] transition-colors">My Bookings</Link></li>
