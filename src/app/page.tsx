@@ -9,7 +9,8 @@ import { cookies } from 'next/headers';
 import {
   Mountain, Calendar, ArrowRight, ShieldCheck,
   CheckCircle2, Bus, Users, AlertCircle,
-  Check, UserRound, Sparkles, Tag
+  Check, UserRound, Sparkles, Tag,
+  Phone, MessageCircle
 } from 'lucide-react';
 import { TRIP_METADATA, CONTACT_INFO, ITINERARY_DAYS } from '@/lib/constants';
 import { getSeatAvailability } from '@/lib/trip-config';
@@ -115,6 +116,62 @@ export default async function HomePage() {
                 </Link>
               </>
             )}
+          </div>
+
+          {/* Front-Vision Direct Contact & Helpline Card */}
+          <div className="w-full max-w-2xl mx-auto rounded-3xl border border-white/20 bg-black/45 p-4 sm:p-5 shadow-2xl backdrop-blur-md text-left transition-all hover:border-[#f1c39e]/40">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="space-y-1 text-center md:text-left">
+                <div className="flex items-center justify-center md:justify-start gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#f1c39e]">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                  </span>
+                  Direct Student Coordinators Available
+                </div>
+                <h3 className="text-base sm:text-lg font-bold !text-white text-white tracking-tight">
+                  Have questions or want group booking help?
+                </h3>
+                <p className="text-xs text-stone-200/90 leading-relaxed">
+                  Call or WhatsApp our trip coordinators directly for instant assistance.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-2.5 shrink-0 font-mono">
+                <a
+                  href={`tel:${tripConfig.emergencyHelplines[0] || CONTACT_INFO.coordinatorPhone1}`}
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#f1c39e] px-4 py-2.5 text-xs font-bold text-[#17231f] shadow-lg transition-all hover:bg-white hover:scale-105 active:scale-95"
+                  title="Direct Phone Call"
+                >
+                  <Phone className="h-4 w-4 text-[#163C32]" />
+                  <span>Call +91 {tripConfig.emergencyHelplines[0] || CONTACT_INFO.coordinatorPhone1}</span>
+                </a>
+                <a
+                  href={`https://wa.me/91${tripConfig.emergencyHelplines[1] || CONTACT_INFO.coordinatorPhone2}?text=Hi%20Coordinator,%20I'm%20interested%20in%20the%20Himalayan%20Escape%20trip.`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-xl border border-emerald-400/40 bg-emerald-950/70 px-4 py-2.5 text-xs font-bold text-emerald-200 shadow-lg backdrop-blur-sm transition-all hover:bg-emerald-800 hover:text-white hover:scale-105 active:scale-95"
+                  title="WhatsApp Chat"
+                >
+                  <MessageCircle className="h-4 w-4 text-emerald-400" />
+                  <span>WhatsApp +91 {tripConfig.emergencyHelplines[1] || CONTACT_INFO.coordinatorPhone2}</span>
+                </a>
+              </div>
+            </div>
+            <div className="mt-3 pt-2.5 border-t border-white/10 flex flex-wrap items-center justify-center md:justify-between text-[11px] text-white/70 gap-2">
+              <span className="flex items-center gap-1.5">
+                <span>Coordinator 1:</span>
+                <a href={`tel:${tripConfig.emergencyHelplines[0] || CONTACT_INFO.coordinatorPhone1}`} className="font-semibold text-white hover:text-[#f1c39e] underline">
+                  +91 {tripConfig.emergencyHelplines[0] || CONTACT_INFO.coordinatorPhone1}
+                </a>
+                <span className="text-white/40">·</span>
+                <span>Coordinator 2:</span>
+                <a href={`tel:${tripConfig.emergencyHelplines[1] || CONTACT_INFO.coordinatorPhone2}`} className="font-semibold text-white hover:text-[#f1c39e] underline">
+                  +91 {tripConfig.emergencyHelplines[1] || CONTACT_INFO.coordinatorPhone2}
+                </a>
+              </span>
+              <span className="text-[#f1c39e]/90 font-medium">Instant student-to-student coordination</span>
+            </div>
           </div>
 
           <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-white/65 sm:text-xs">
