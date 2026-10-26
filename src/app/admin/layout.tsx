@@ -250,6 +250,7 @@ export default function AdminLayout({
     { label: 'Bookings', items: [
       { label: 'Reservations', href: '/admin/bookings', icon: Ticket },
       { label: 'Travellers', href: '/admin/travellers', icon: Users },
+      { label: 'Registered users', href: '/admin/users', icon: User },
       { label: 'Groups', href: '/admin/groups', icon: Users },
       { label: 'Payments', href: '/admin/payments', icon: CreditCard },
     ] },

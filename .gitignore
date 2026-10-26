@@ -48,6 +48,8 @@ yarn-error.log*
 scratch/
 test-flow.js
 test-updates.js
+test-admin-users.cjs
+Gemini_Generated_Image_*.png
 
 # vercel
 .vercel

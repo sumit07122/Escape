@@ -14,8 +14,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Username and password are required' }, { status: 400 });
     }
 
-    const expectedUser = process.env.ADMIN_USERNAME?.trim();
-    const expectedPass = process.env.ADMIN_PASSWORD;
+    const expectedUser = (process.env.ADMIN_USERNAME || process.env.ADMIN_DEFAULT_EMAIL)?.trim();
+    const expectedPass = process.env.ADMIN_PASSWORD || process.env.ADMIN_DEFAULT_PASSWORD;
 
     let authenticatedAdmin: { email: string; name: string; role: string; id?: string } | null = null;
 

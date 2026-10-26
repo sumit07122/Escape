@@ -8,7 +8,8 @@ import Image from 'next/image';
 import { cookies } from 'next/headers';
 import {
   Mountain, Calendar, ArrowRight, ShieldCheck,
-  CheckCircle2, Bus, Users, AlertCircle
+  CheckCircle2, Bus, Users, AlertCircle,
+  Check, UserRound, Sparkles, Tag
 } from 'lucide-react';
 import { TRIP_METADATA, CONTACT_INFO, ITINERARY_DAYS } from '@/lib/constants';
 import { getSeatAvailability } from '@/lib/trip-config';
@@ -28,6 +29,8 @@ export default async function HomePage() {
   const squadPrice = Number(tripConfig.groupPackagePrice) || 6200;
   const groupThreshold = Number(tripConfig.groupSizeThreshold) || 5;
   const squadSaving = Math.max(0, soloPrice - squadPrice);
+  const soloBalance = Math.max(0, soloPrice - depPrice);
+  const squadBalance = Math.max(0, squadPrice - depPrice);
   const activeBusCount = await db.bus.count({
     where: { status: 'ACTIVE' },
   }).catch(() => 0);
@@ -134,20 +137,227 @@ export default async function HomePage() {
         ))}
       </div>
 
-      <section className="mx-auto mt-12 w-full max-w-5xl px-4 sm:px-6">
-        <div className="relative overflow-hidden rounded-[2rem] bg-[#163C32] px-6 py-7 text-white shadow-[0_22px_55px_rgba(14,38,32,0.18)] sm:px-9 sm:py-8">
-          <div className="pointer-events-none absolute -right-12 -top-24 h-64 w-64 rounded-full border border-white/10" />
-          <div className="pointer-events-none absolute -right-1 -top-14 h-44 w-44 rounded-full border border-white/10" />
-          <div className="relative flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
-            <div className="max-w-2xl">
-              <span className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#f1c39e]"><Users className="h-4 w-4" /> The group-chat upgrade</span>
-              <h2 className="squad-banner-heading mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">Bring {groupThreshold - 1} friends. Save ₹{squadSaving.toLocaleString('en-IN')} each.</h2>
-              <p className="mt-2 max-w-xl text-sm leading-6 text-white/75">Book {groupThreshold} or more travellers together and the lower rate applies automatically — no code needed. That&apos;s ₹{(squadSaving * groupThreshold).toLocaleString('en-IN')} saved across a {groupThreshold}-person booking.</p>
-            </div>
-            <Link href="/pricing" className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#f1c39e] px-5 py-3 text-sm font-bold text-[#17231f] transition hover:bg-white">
-              See the squad deal <ArrowRight className="h-4 w-4" />
-            </Link>
+      {/* ======================================================== */}
+      {/* EXPEDITION PRICING SECTION - LITTLE UNDER HERO           */}
+      {/* ======================================================== */}
+      <section id="pricing" className="mx-auto mt-12 w-full max-w-5xl px-4 sm:px-6 scroll-mt-24">
+        {/* Section Header */}
+        <div className="text-center max-w-2xl mx-auto mb-8 space-y-2.5">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#163C32]/15 bg-[#edf3ef] px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-[#163C32]">
+            <Tag className="h-3.5 w-3.5 text-[#D87945]" />
+            Transparent Expedition Pricing
           </div>
+          <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-[#171918]">
+            Clear prices. Full adventure.
+          </h2>
+          <p className="text-sm sm:text-base text-[#646864] leading-relaxed">
+            Lock your seat with a ₹{depPrice.toLocaleString('en-IN')} advance today. Pay the remaining balance before boarding. Groups of {groupThreshold}+ unlock instant squad savings.
+          </p>
+        </div>
+
+        {/* Pricing Cards Grid */}
+        <div className="grid gap-6 lg:grid-cols-2 items-stretch">
+          {/* Card 1: Solo Explorer */}
+          <div className="relative flex flex-col justify-between overflow-hidden rounded-[2rem] border border-[#e2ddd3] bg-white p-7 sm:p-8 shadow-[0_15px_45px_rgba(21,57,47,0.06)] transition-all hover:border-[#163C32]/30 hover:shadow-[0_20px_50px_rgba(21,57,47,0.10)]">
+            <div>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#718078]">
+                    Solo & Duo Travellers
+                  </span>
+                  <h3 className="mt-1 text-2xl font-bold tracking-tight text-[#163C32]">
+                    Solo Explorer
+                  </h3>
+                  <p className="mt-0.5 text-xs text-[#748078]">
+                    1 to {groupThreshold - 1} travellers
+                  </p>
+                </div>
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#edf3ef] text-[#163C32]">
+                  <UserRound className="h-5 w-5" />
+                </span>
+              </div>
+
+              {/* Price */}
+              <div className="mt-6 flex items-baseline gap-2">
+                <span className="text-4xl sm:text-5xl font-extrabold tracking-tight text-[#17251f]">
+                  ₹{soloPrice.toLocaleString('en-IN')}
+                </span>
+                <span className="text-sm font-medium text-[#77817b]">/ traveller</span>
+              </div>
+
+              {/* Deposit Pill */}
+              <div className="mt-3 inline-flex flex-wrap items-center gap-1.5 rounded-xl bg-[#f5f4ef] px-3.5 py-2 text-xs font-semibold text-[#526058] border border-[#e8e4da]">
+                <span className="text-[#163C32] font-bold">₹{depPrice.toLocaleString('en-IN')} advance</span>
+                <span className="text-[#a0a8a3]">·</span>
+                <span>₹{soloBalance.toLocaleString('en-IN')} due before departure</span>
+              </div>
+
+              <div className="my-6 h-px bg-[#eeebe2]" />
+
+              {/* Inclusions */}
+              <div className="space-y-3">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-[#718078]">
+                  What&apos;s included:
+                </p>
+                <ul className="space-y-2.5 text-xs sm:text-sm text-[#4b5852]">
+                  <li className="flex items-center gap-2.5">
+                    <Check className="h-4 w-4 shrink-0 text-[#245b4a]" />
+                    <span>Dedicated AC coach seat (pick window or aisle)</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <Check className="h-4 w-4 shrink-0 text-[#245b4a]" />
+                    <span>5 nights stay (Manali resort + Kasol camp)</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <Check className="h-4 w-4 shrink-0 text-[#245b4a]" />
+                    <span>Daily hot breakfast & dinner included</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <Check className="h-4 w-4 shrink-0 text-[#245b4a]" />
+                    <span>Solang Valley, Atal Tunnel & Kasol excursions</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <Check className="h-4 w-4 shrink-0 text-[#245b4a]" />
+                    <span>Instant digital QR boarding pass on phone</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="mt-8 pt-2">
+              <Link
+                href="/book"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#163C32] px-5 py-3.5 text-sm font-bold text-white shadow-md transition-all hover:bg-[#205345] hover:shadow-lg"
+              >
+                Choose Your Seat <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Card 2: Student Squad Deal (Highlighted) */}
+          <div className="relative flex flex-col justify-between overflow-hidden rounded-[2rem] bg-[#153a30] p-7 sm:p-8 text-white shadow-[0_24px_65px_rgba(14,47,38,0.24)] border border-emerald-400/20">
+            {/* Background ambient decorative shapes */}
+            <div className="pointer-events-none absolute -right-12 -top-16 h-56 w-56 rounded-full border border-white/10" />
+            <div className="pointer-events-none absolute -right-2 -top-6 h-36 w-36 rounded-full border border-white/10" />
+            <div className="pointer-events-none absolute bottom-0 right-0 h-40 w-40 rounded-full bg-emerald-500/10 blur-2xl" />
+
+            <div className="relative z-10">
+              {/* Highlight Badge */}
+              <div className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-[#f1c39e] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#1d2e27]">
+                <Sparkles className="h-3.5 w-3.5" />
+                Student Squad Deal · Auto-Applied
+              </div>
+
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#f1c39e]">
+                    Group Advantage
+                  </span>
+                  <h3 className="mt-1 text-2xl font-bold tracking-tight !text-white text-white">
+                    The Squad Rate
+                  </h3>
+                  <p className="mt-0.5 text-xs text-emerald-100/85">
+                    {groupThreshold}+ travellers on a single booking
+                  </p>
+                </div>
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-[#f1c39e]">
+                  <Users className="h-5 w-5" />
+                </span>
+              </div>
+
+              {/* Price & Savings */}
+              <div className="mt-6 flex flex-wrap items-baseline gap-2.5">
+                <span className="text-4xl sm:text-5xl font-extrabold tracking-tight !text-white text-white">
+                  ₹{squadPrice.toLocaleString('en-IN')}
+                </span>
+                <span className="text-sm font-medium text-emerald-100/80">/ traveller</span>
+                <span className="text-base font-semibold text-emerald-200/50 line-through">
+                  ₹{soloPrice.toLocaleString('en-IN')}
+                </span>
+              </div>
+
+              {/* Deposit Pill */}
+              <div className="mt-3 inline-flex flex-wrap items-center gap-1.5 rounded-xl bg-black/25 px-3.5 py-2 text-xs font-semibold text-emerald-100/90 border border-white/10">
+                <span className="text-[#f1c39e] font-bold">₹{depPrice.toLocaleString('en-IN')} advance</span>
+                <span className="text-white/40">·</span>
+                <span>₹{squadBalance.toLocaleString('en-IN')} due before departure</span>
+              </div>
+
+              {/* Savings Highlight Pill */}
+              <div className="mt-2.5 flex items-center justify-between gap-2 rounded-xl border border-emerald-400/25 bg-emerald-950/60 px-3.5 py-2 text-xs backdrop-blur-sm">
+                <span className="font-semibold text-emerald-100">
+                  Save ₹{squadSaving.toLocaleString('en-IN')} per seat (₹{(squadSaving * groupThreshold).toLocaleString('en-IN')} total)
+                </span>
+                <span className="shrink-0 rounded-full bg-[#f1c39e] px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-[#1d2e27]">
+                  No code needed
+                </span>
+              </div>
+
+              <div className="my-6 h-px bg-white/10" />
+
+              {/* Inclusions */}
+              <div className="space-y-3">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-200/70">
+                  Everything in Solo, plus squad perks:
+                </p>
+                <ul className="space-y-2.5 text-xs sm:text-sm text-emerald-50/90">
+                  <li className="flex items-center gap-2.5">
+                    <Check className="h-4 w-4 shrink-0 text-[#f1c39e]" />
+                    <span>Guaranteed adjacent seats for your whole group</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <Check className="h-4 w-4 shrink-0 text-[#f1c39e]" />
+                    <span>Synchronized room allocations in Manali & Kasol</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <Check className="h-4 w-4 shrink-0 text-[#f1c39e]" />
+                    <span>Single checkout with ₹{depPrice.toLocaleString('en-IN')}/seat advance</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <Check className="h-4 w-4 shrink-0 text-[#f1c39e]" />
+                    <span>All meals & excursions included without surcharge</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <Check className="h-4 w-4 shrink-0 text-[#f1c39e]" />
+                    <span>Dedicated group trip coordinator support</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="relative z-10 mt-8 space-y-2 pt-2">
+              <Link
+                href="/book"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#f1c39e] px-5 py-3.5 text-sm font-bold text-[#17231f] shadow-lg transition-all hover:bg-white hover:shadow-xl"
+              >
+                Book Squad Seats · ₹{depPrice.toLocaleString('en-IN')}/traveller <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Value & Transparency Bar */}
+        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-[#e2ddd3] bg-white/80 p-5 backdrop-blur-sm text-xs text-[#646864]">
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+            <span className="flex items-center gap-2 font-medium text-[#171918]">
+              <ShieldCheck className="h-4 w-4 text-[#163C32]" />
+              No Hidden Fees
+            </span>
+            <span className="flex items-center gap-2 font-medium text-[#171918]">
+              <CheckCircle2 className="h-4 w-4 text-[#163C32]" />
+              Pay ₹{depPrice.toLocaleString('en-IN')} Now · Rest Later
+            </span>
+            <span className="flex items-center gap-2 font-medium text-[#171918]">
+              <Users className="h-4 w-4 text-[#163C32]" />
+              Auto {groupThreshold}+ Group Discount
+            </span>
+          </div>
+          <Link
+            href="/pricing"
+            className="inline-flex items-center gap-1.5 font-bold text-[#163C32] hover:text-[#D87945] transition-colors shrink-0"
+          >
+            Explore full pricing details & FAQs <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
         </div>
       </section>
 
