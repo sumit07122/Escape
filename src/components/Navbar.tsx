@@ -22,16 +22,24 @@ export default function Navbar() {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [userSession, setUserSession] = useState<AuthUser | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const hamburgerRef = useRef<HTMLButtonElement | null>(null);
+  const mobileMenuRef = useRef<HTMLDivElement | null>(null);
+
+  // Automatically close menus on navigation
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    setUserDropdownOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
+    let isMounted = true;
     async function checkAuth() {
       try {
         const res = await fetch(`/api/auth/me?t=${Date.now()}`, {
           cache: 'no-store',
           headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' },
         });
-        if (res.ok) {
-
+        if (res.ok && isMounted) {
           const data = await res.json();
           if (data.authenticated && data.user) {
             setUserSession(data.user);
@@ -44,18 +52,43 @@ export default function Navbar() {
       }
     }
     checkAuth();
+    return () => {
+      isMounted = false;
+    };
   }, [pathname]);
 
-  // Dismiss dropdown when clicking outside
+  // Dismiss dropdown & mobile menu when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (dropdownRef.current && !dropdownRef.current.contains(target)) {
         setUserDropdownOpen(false);
       }
+      if (
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(target) &&
+        hamburgerRef.current &&
+        !hamburgerRef.current.contains(target)
+      ) {
+        setMobileMenuOpen(false);
+      }
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
   }, []);
+
+  // Safe navigation click handlers that allow Next.js router transitions to initiate
+  const handleMobileNavClick = () => {
+    setTimeout(() => {
+      setMobileMenuOpen(false);
+    }, 100);
+  };
+
+  const handleDropdownClick = () => {
+    setTimeout(() => {
+      setUserDropdownOpen(false);
+    }, 100);
+  };
 
   const navLinks = [
     { name: 'Trip', href: '/trip' },
@@ -206,16 +239,16 @@ export default function Navbar() {
                     <div className="py-1">
                       <Link
                         href="/my-bookings"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-[#171918] hover:bg-[#F7F5EF] transition-colors"
+                        onClick={handleDropdownClick}
+                        className="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-[#171918] hover:bg-[#F7F5EF] transition-colors cursor-pointer"
                       >
                         <Ticket className="w-4 h-4 text-[#163C32]" />
                         <span>My Bookings</span>
                       </Link>
                       <Link
                         href="/book"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-[#171918] hover:bg-[#F7F5EF] transition-colors"
+                        onClick={handleDropdownClick}
+                        className="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-[#171918] hover:bg-[#F7F5EF] transition-colors cursor-pointer"
                       >
                         <Compass className="w-4 h-4 text-[#D87945]" />
                         <span>Book Seats</span>
@@ -226,10 +259,10 @@ export default function Navbar() {
                       <a
                         href="/api/auth/logout"
                         onClick={() => {
-                          setUserDropdownOpen(false);
+                          handleDropdownClick();
                           setUserSession(null);
                         }}
-                        className="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-rose-700 hover:bg-rose-50 transition-colors w-full text-left"
+                        className="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-rose-700 hover:bg-rose-50 transition-colors w-full text-left cursor-pointer"
                       >
                         <LogOut className="w-4 h-4 text-rose-600" />
                         <span>Sign Out</span>
@@ -241,7 +274,7 @@ export default function Navbar() {
             ) : (
               <Link
                 href="/login"
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-[#171918] hover:text-[#163C32] border border-[#D8D2C4] bg-white hover:bg-[#F0ECE3] transition-colors"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-[#171918] hover:text-[#163C32] border border-[#D8D2C4] bg-white hover:bg-[#F0ECE3] transition-colors cursor-pointer"
               >
                 <span>Sign In</span>
               </Link>
@@ -249,7 +282,7 @@ export default function Navbar() {
 
             <Link
               href="/book"
-              className="px-5 py-2.5 rounded-xl bg-[#D87945] hover:bg-[#C26735] text-white font-bold text-xs shadow-sm transition-all hover:shadow"
+              className="px-5 py-2.5 rounded-xl bg-[#D87945] hover:bg-[#C26735] text-white font-bold text-xs shadow-sm transition-all hover:shadow cursor-pointer"
             >
               Book Now
             </Link>
@@ -259,14 +292,20 @@ export default function Navbar() {
           <div className="flex md:hidden items-center gap-2">
             <Link
               href="/book"
-              className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#D87945] px-3 text-xs font-bold text-white shadow-sm"
+              className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#D87945] px-3 text-xs font-bold text-white shadow-sm cursor-pointer"
             >
               Book Now
             </Link>
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[#D8D2C4] bg-white text-[#171918]"
+              ref={hamburgerRef}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setMobileMenuOpen(!mobileMenuOpen);
+              }}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[#D8D2C4] bg-white text-[#171918] cursor-pointer hover:bg-[#F0ECE3] transition-all"
               aria-label="Toggle menu"
+              aria-expanded={mobileMenuOpen}
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -276,14 +315,17 @@ export default function Navbar() {
 
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="max-h-[calc(100dvh-4rem)] space-y-3 overflow-y-auto border-b border-[#D8D2C4] bg-[#F7F5EF] px-4 pb-6 pt-3 md:hidden">
+        <div
+          ref={mobileMenuRef}
+          className="relative z-50 max-h-[calc(100dvh-5rem)] space-y-3 overflow-y-auto border-b border-[#D8D2C4] bg-[#F7F5EF] px-4 pb-28 pt-3 shadow-2xl md:hidden"
+        >
           <div className="flex flex-col gap-1">
             {navLinks.map((link) => (
               <Link
                 key={link.name}
                 href={link.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className="px-3.5 py-2.5 rounded-lg text-sm font-semibold text-[#171918] hover:bg-[#E7E2D8]"
+                onClick={handleMobileNavClick}
+                className="px-3.5 py-2.5 rounded-lg text-sm font-semibold text-[#171918] hover:bg-[#E7E2D8] transition-colors cursor-pointer"
               >
                 {link.name}
               </Link>
@@ -293,8 +335,8 @@ export default function Navbar() {
               href="https://chat.whatsapp.com/BpzC0H0GEM6GlhslBJWDTE"
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-bold text-emerald-800 bg-emerald-50 border border-emerald-200/80 hover:bg-emerald-100 transition-colors"
+              onClick={handleMobileNavClick}
+              className="flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-bold text-emerald-800 bg-emerald-50 border border-emerald-200/80 hover:bg-emerald-100 transition-colors cursor-pointer"
             >
               <svg className="w-4 h-4 fill-[#25D366] shrink-0" viewBox="0 0 24 24">
                 <path d="M17.472 14.382c-.301-.15-1.78-.878-2.056-.978-.276-.1-.476-.15-.677.15-.201.3-.777.978-.953 1.179-.176.2-.351.226-.652.075-.301-.15-1.27-.468-2.42-1.493-.895-.798-1.5-1.784-1.676-2.085-.176-.3-.019-.463.132-.612.136-.134.301-.35.452-.525.15-.175.2-.3.301-.5.101-.2.05-.376-.025-.526-.075-.15-.677-1.632-.928-2.235-.244-.588-.493-.508-.677-.518-.175-.008-.376-.01-.577-.01-.2 0-.526.075-.802.375-.276.3-1.053 1.029-1.053 2.509 0 1.48 1.078 2.91 1.228 3.11.15.2 2.122 3.24 5.14 4.543.718.31 1.279.495 1.716.634.721.23 1.378.197 1.897.12.578-.087 1.78-.727 2.03-1.43.25-.702.25-1.303.175-1.429-.075-.126-.276-.201-.577-.351zM12.04 21.785c-1.758 0-3.483-.473-5.002-1.371l-.358-.213-3.718.975.992-3.624-.233-.371a9.78 9.78 0 0 1-1.503-5.21c0-5.412 4.403-9.815 9.819-9.815 2.624 0 5.09 1.023 6.945 2.88 1.856 1.856 2.878 4.323 2.877 6.947 0 5.414-4.403 9.817-9.817 9.817zm7.643-17.46C17.65 2.29 14.945 1.2 12.04 1.2 6.069 1.2 1.21 6.059 1.21 12.033c0 1.909.5 3.771 1.45 5.418L1 23l5.694-1.493a10.8 10.8 0 0 0 5.346 1.405h.005c5.969 0 10.828-4.86 10.83-10.835 0-2.894-1.127-5.614-3.192-7.75z" />
@@ -319,24 +361,27 @@ export default function Navbar() {
                 </div>
                 <Link
                   href="/my-bookings"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-bold text-[#163C32] hover:bg-[#F7F5EF]"
+                  onClick={handleMobileNavClick}
+                  className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-bold text-[#163C32] hover:bg-[#F7F5EF] cursor-pointer"
                 >
                   <Ticket className="w-4 h-4" />
                   <span>My Bookings</span>
                 </Link>
                 <Link
                   href="/book"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-bold text-[#D87945] hover:bg-[#F7F5EF]"
+                  onClick={handleMobileNavClick}
+                  className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-bold text-[#D87945] hover:bg-[#F7F5EF] cursor-pointer"
                 >
                   <Compass className="w-4 h-4" />
                   <span>Book Seats</span>
                 </Link>
                 <a
                   href="/api/auth/logout"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-bold text-rose-700 hover:bg-rose-50"
+                  onClick={() => {
+                    handleMobileNavClick();
+                    setUserSession(null);
+                  }}
+                  className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-bold text-rose-700 hover:bg-rose-50 cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
                   <span>Sign Out</span>
@@ -345,8 +390,8 @@ export default function Navbar() {
             ) : (
               <Link
                 href="/login"
-                onClick={() => setMobileMenuOpen(false)}
-                className="px-3.5 py-2.5 rounded-lg text-sm font-semibold text-[#163C32] hover:bg-[#E7E2D8]"
+                onClick={handleMobileNavClick}
+                className="px-3.5 py-2.5 rounded-lg text-sm font-semibold text-[#163C32] hover:bg-[#E7E2D8] cursor-pointer"
               >
                 Sign In
               </Link>
@@ -355,8 +400,8 @@ export default function Navbar() {
 
           <Link
             href="/book"
-            onClick={() => setMobileMenuOpen(false)}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#D87945] text-white font-bold text-sm shadow-sm text-center"
+            onClick={handleMobileNavClick}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#D87945] text-white font-bold text-sm shadow-sm text-center cursor-pointer hover:bg-[#C26735] transition-all"
           >
             <span>BOOK YOUR SEAT NOW</span>
             <ArrowRight className="w-4 h-4" />
