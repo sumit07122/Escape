@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { TRIP_METADATA, CONTACT_INFO, ITINERARY_DAYS } from '@/lib/constants';
 import { getSeatAvailability } from '@/lib/trip-config';
-import { db } from '@/lib/db';
+import { db, safeDbQuery } from '@/lib/db';
 import { verifyUserSession } from '@/lib/auth';
 import HomeScenicCarousel from '@/components/HomeScenicCarousel';
 import DestinationCarousel from '@/components/DestinationCarousel';
@@ -31,9 +31,11 @@ export default async function HomePage() {
   const squadSaving = Math.max(0, soloPrice - squadPrice);
   const soloBalance = Math.max(0, soloPrice - depPrice);
   const squadBalance = Math.max(0, squadPrice - depPrice);
-  const activeBusCount = await db.bus.count({
-    where: { status: 'ACTIVE' },
-  }).catch(() => 0);
+  const activeBusCount = await safeDbQuery(
+    () => db.bus.count({ where: { status: 'ACTIVE' } }),
+    2,
+    1000
+  );
 
   // Retrieve user session from cookie if logged in
   const cookieStore = await cookies();

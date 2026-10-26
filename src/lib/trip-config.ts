@@ -1,4 +1,4 @@
-import { db } from '@/lib/db';
+import { db, safeDbQuery, isDbTemporarilyOffline } from '@/lib/db';
 import { cleanExpiredHolds } from '@/lib/server-utils';
 import { TripConfigData, DEFAULT_TRIP_CONFIG } from './trip-config-shared';
 
@@ -26,12 +26,18 @@ const LEGACY_CONFIG_KEYS = {
 } as const;
 
 async function readLegacyTripConfig() {
+  if (isDbTemporarilyOffline()) return memoryConfigCache;
   try {
     const keys = Object.values(LEGACY_CONFIG_KEYS);
-    const [settings, globalSettings] = await Promise.all([
-      db.settings.findMany({ where: { key: { in: [...keys] } } }),
-      db.globalSettings.findUnique({ where: { id: 'global_default' } }),
-    ]);
+    const [settings, globalSettings] = await safeDbQuery(
+      () => Promise.all([
+        db.settings.findMany({ where: { key: { in: [...keys] } } }),
+        db.globalSettings.findUnique({ where: { id: 'global_default' } }),
+      ]),
+      [[], null],
+      1200
+    );
+    if (!settings || settings.length === 0) return memoryConfigCache;
     const values = new Map(settings.map((setting) => [setting.key, setting.value]));
     const getNumber = (key: keyof typeof LEGACY_CONFIG_KEYS, fallback: number) => {
       const value = Number(values.get(LEGACY_CONFIG_KEYS[key]));
@@ -96,10 +102,15 @@ async function persistLegacyTripConfig(config: TripConfigData) {
  * Fetch dynamic TripConfig from database (Zero-stale fresh Supabase lookup)
  */
 export async function getTripConfig(): Promise<TripConfigData> {
+  if (isDbTemporarilyOffline()) return memoryConfigCache;
   try {
-    const config = await db.tripConfig.findUnique({
-      where: { id: 'global' },
-    });
+    const config = await safeDbQuery(
+      () => db.tripConfig.findUnique({
+        where: { id: 'global' },
+      }),
+      null,
+      1200
+    );
 
     if (config) {
       const merged: TripConfigData = {
@@ -124,9 +135,9 @@ export async function getTripConfig(): Promise<TripConfigData> {
       memoryConfigCache = merged;
       return merged;
     }
+    await readLegacyTripConfig();
   } catch (error) {
     console.warn('[TRIP_CONFIG_DB_FETCH_WARNING]: Using cached or default configuration', error);
-    await readLegacyTripConfig();
   }
 
   return memoryConfigCache;
@@ -232,38 +243,41 @@ export async function getSeatAvailability(): Promise<SeatAvailabilityResult> {
   let heldCount = 0;
   let blockedCount = 0;
 
-  try {
-    // Eagerly purge any expired holds first
-    await cleanExpiredHolds().catch(() => {});
+  if (!isDbTemporarilyOffline()) {
+    try {
+      await safeDbQuery(
+        async () => {
+          await cleanExpiredHolds().catch(() => {});
+          const confirmedBookings = await db.booking.findMany({
+            where: { bookingStatus: 'CONFIRMED' },
+            select: {
+              travellersCount: true,
+              travellers: { select: { id: true } },
+            },
+          });
 
-    // 1. Confirmed bookings count (including multi-traveller groups)
-    const confirmedBookings = await db.booking.findMany({
-      where: { bookingStatus: 'CONFIRMED' },
-      select: {
-        travellersCount: true,
-        travellers: { select: { id: true } },
-      },
-    });
+          confirmedCount = confirmedBookings.reduce(
+            (acc, b) => acc + Math.max(b.travellers?.length || 0, b.travellersCount || 1),
+            0
+          );
 
-    confirmedCount = confirmedBookings.reduce(
-      (acc, b) => acc + Math.max(b.travellers?.length || 0, b.travellersCount || 1),
-      0
-    );
+          heldCount = await db.seatHold.count({
+            where: {
+              expiresAt: { gt: new Date() },
+              status: 'ACTIVE',
+            },
+          });
 
-    // 2. Active temporary seat holds (within 10-minute validity)
-    heldCount = await db.seatHold.count({
-      where: {
-        expiresAt: { gt: new Date() },
-        status: 'ACTIVE',
-      },
-    });
-
-    // 3. Blocked seats (reserved by coordinators/luggage)
-    blockedCount = await db.busSeat.count({
-      where: { status: 'BLOCKED' },
-    });
-  } catch (error) {
-    console.error('[SSOT_CALCULATION_ERROR]:', error);
+          blockedCount = await db.busSeat.count({
+            where: { status: 'BLOCKED' },
+          });
+        },
+        undefined,
+        1500
+      );
+    } catch (error) {
+      console.error('[SSOT_CALCULATION_ERROR]:', error);
+    }
   }
 
   const availableSeats = Math.max(0, totalCapacity - confirmedCount - heldCount - blockedCount);
