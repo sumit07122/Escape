@@ -4,9 +4,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { verifyPassword, signSessionToken } from '@/lib/auth';
 import { createAuditLog } from '@/lib/server-utils';
+import { checkRateLimit, resetRateLimit } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'admin_ip';
+    const rateCheck = checkRateLimit(`admin_login_${ip}`, 5, 15 * 60 * 1000);
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { error: `Too many failed login attempts. Please wait ${rateCheck.retryAfterSeconds} seconds.` },
+        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfterSeconds) } }
+      );
+    }
+
     const body = await request.json().catch(() => ({}));
     const username = String(body.username || body.email || '').trim();
     const password = String(body.password || '');
@@ -52,6 +62,8 @@ export async function POST(request: NextRequest) {
     if (!authenticatedAdmin) {
       return NextResponse.json({ error: 'Invalid coordinator credentials' }, { status: 401 });
     }
+
+    resetRateLimit(`admin_login_${ip}`);
 
     // Issue admin session token
     const token = signSessionToken({

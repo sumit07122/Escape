@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { signUserSession } from '@/lib/auth';
+import { signUserSession, verifyOAuthState, sanitizeReturnUrl } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,11 +12,9 @@ export async function GET(request: NextRequest) {
 
   let returnUrl = '/book';
   if (stateParam) {
-    try {
-      const decoded = JSON.parse(Buffer.from(stateParam, 'base64url').toString('utf-8'));
-      if (decoded.returnUrl) returnUrl = decoded.returnUrl;
-    } catch {
-      // Ignore invalid state
+    const verifiedState = verifyOAuthState(stateParam);
+    if (verifiedState?.returnUrl && typeof verifiedState.returnUrl === 'string') {
+      returnUrl = sanitizeReturnUrl(verifiedState.returnUrl);
     }
   }
 

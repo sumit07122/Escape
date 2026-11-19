@@ -1,9 +1,11 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
+import { sanitizeReturnUrl, createOAuthState } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const returnUrl = searchParams.get('returnUrl') || '/book';
+  const rawReturnUrl = searchParams.get('returnUrl');
+  const returnUrl = sanitizeReturnUrl(rawReturnUrl);
 
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -25,7 +27,7 @@ export async function GET(request: NextRequest) {
     clientId.trim().length > 5;
 
   if (isRealClientId && isRealSecret) {
-    const state = Buffer.from(JSON.stringify({ returnUrl })).toString('base64url');
+    const state = createOAuthState({ returnUrl });
     const googleAuthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
     googleAuthUrl.searchParams.set('client_id', clientId!);
     googleAuthUrl.searchParams.set('redirect_uri', redirectUri);

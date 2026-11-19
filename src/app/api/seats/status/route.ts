@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { cleanExpiredHolds } from '@/lib/server-utils';
+import { cleanExpiredHolds, getCurrentAdmin } from '@/lib/server-utils';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -12,6 +12,9 @@ export async function GET(request: NextRequest) {
     const busId = searchParams.get('busId');
     const tripId = searchParams.get('tripId');
     const bookingSessionId = searchParams.get('bookingSessionId') || '';
+
+    // Check admin authorization for sensitive passenger data exposure
+    const admin = await getCurrentAdmin();
 
     // 1. Eagerly purge all expired holds
     await cleanExpiredHolds();
@@ -85,7 +88,7 @@ export async function GET(request: NextRequest) {
         isAvailable: status === 'AVAILABLE' || status === 'SELECTED',
         heldSecondsRemaining,
         isMyHold,
-        bookedDetails: seat.seatBooking
+        bookedDetails: (admin && seat.seatBooking)
           ? {
               travellerName: seat.seatBooking.traveller?.fullName || 'Confirmed Passenger',
               bookingId: seat.seatBooking.booking?.bookingId || '',

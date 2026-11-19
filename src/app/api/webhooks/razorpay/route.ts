@@ -6,23 +6,21 @@ import { generateTicketQrToken, generateTicketNumber } from '@/lib/qr';
 import { createAuditLog } from '@/lib/server-utils';
 
 function checkWebhookSignature(rawBody: string, signature: string, secret: string): boolean {
-  if (!secret) {
-    // If no secret configured in test/sandbox environment, allow event processing
-    return true;
+  if (!secret || !signature) {
+    return false;
   }
-  if (!signature) return false;
 
   const expectedSignature = crypto
     .createHmac('sha256', secret)
     .update(rawBody)
     .digest('hex');
 
-  if (signature.length !== expectedSignature.length) return false;
+  const sigBuffer = Buffer.from(signature, 'utf-8');
+  const expBuffer = Buffer.from(expectedSignature, 'utf-8');
 
-  return crypto.timingSafeEqual(
-    Buffer.from(signature, 'utf-8'),
-    Buffer.from(expectedSignature, 'utf-8')
-  );
+  if (sigBuffer.length !== expBuffer.length) return false;
+
+  return crypto.timingSafeEqual(sigBuffer, expBuffer);
 }
 
 export async function POST(request: NextRequest) {
@@ -80,6 +78,14 @@ export async function POST(request: NextRequest) {
 
       // Atomically transition to CONFIRMED, assign traveller seatIds, generate QR tickets, and purge holds
       await db.$transaction(async (tx) => {
+        const freshBooking = await tx.booking.findUnique({
+          where: { id: booking.id },
+          select: { bookingStatus: true, paymentStatus: true },
+        });
+        if (freshBooking?.bookingStatus === 'CONFIRMED') {
+          return;
+        }
+
         const busId = booking.busId;
         const seatNumbers: string[] = [];
 
@@ -300,6 +306,46 @@ export async function POST(request: NextRequest) {
       });
 
       return NextResponse.json({ status: 'ok', action: 'PAYMENT_FAILED', bookingId: booking.bookingId });
+    }
+
+    // -----------------------------------------------------------------
+    // EVENT: refund.created or refund.processed
+    // -----------------------------------------------------------------
+    if (eventType === 'refund.created' || eventType === 'refund.processed') {
+      const refundEntity = payload?.refund?.entity;
+      const paymentId = refundEntity?.payment_id;
+      const refundAmount = refundEntity?.amount ? refundEntity.amount / 100 : 0;
+
+      if (paymentId) {
+        const payment = await db.payment.findUnique({
+          where: { razorpayPaymentId: paymentId },
+          include: { booking: true },
+        });
+
+        if (payment) {
+          await db.$transaction(async (tx) => {
+            await tx.payment.update({
+              where: { id: payment.id },
+              data: { status: 'REFUNDED' },
+            });
+            await tx.booking.update({
+              where: { id: payment.bookingId },
+              data: { paymentStatus: 'REFUNDED' },
+            });
+          });
+
+          await createAuditLog({
+            action: 'WEBHOOK_REFUND_PROCESSED',
+            entityType: 'PAYMENT',
+            entityId: payment.id,
+            bookingId: payment.booking.bookingId,
+            performedBy: 'Razorpay Webhook',
+            newValue: `Refund of ₹${refundAmount} processed. Payment and booking marked REFUNDED`,
+          });
+        }
+      }
+
+      return NextResponse.json({ status: 'ok', action: 'REFUND_PROCESSED' });
     }
 
     return NextResponse.json({ status: 'ok', message: `Unhandled event ${eventType} ignored` });

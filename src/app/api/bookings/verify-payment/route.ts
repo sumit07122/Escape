@@ -53,6 +53,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
     }
 
+    // Verify orderId matches this specific booking
+    const matchingPayment = booking.payments.find(
+      (p) => p.razorpayOrderId === razorpayOrderId
+    );
+    if (!matchingPayment) {
+      return NextResponse.json(
+        { error: 'Invalid payment order reference for this booking' },
+        { status: 400 }
+      );
+    }
+
+    // Check for duplicate payment transaction reuse across different bookings
+    const duplicatePayment = await db.payment.findFirst({
+      where: {
+        razorpayPaymentId,
+        NOT: { bookingId: booking.id },
+      },
+    });
+    if (duplicatePayment) {
+      return NextResponse.json(
+        { error: 'This payment transaction ID has already been applied to another booking' },
+        { status: 409 }
+      );
+    }
+
     // If already confirmed, return current details
     if (booking.bookingStatus === 'CONFIRMED') {
       return NextResponse.json({
@@ -68,6 +93,25 @@ export async function POST(request: NextRequest) {
 
     // 3. Atomically confirm booking and seats in transaction
     const confirmationResult = await db.$transaction(async (tx) => {
+      // Re-check booking status inside transaction to prevent concurrent execution races
+      const freshBooking = await tx.booking.findUnique({
+        where: { id: booking.id },
+        include: {
+          travellers: { include: { ticket: true } },
+          bus: true,
+          package: true,
+          tickets: true,
+        },
+      });
+
+      if (freshBooking?.bookingStatus === 'CONFIRMED') {
+        return {
+          confirmedBooking: freshBooking,
+          bookingDbId: booking.id,
+          bookingId: booking.bookingId,
+          reservationAmount: booking.reservationAmount,
+        };
+      }
       // Confirm each seat
       for (const traveller of booking.travellers) {
         if (!traveller.assignedSeatNumber || !booking.busId) continue;

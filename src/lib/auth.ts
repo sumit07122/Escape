@@ -71,7 +71,9 @@ export function verifySessionToken(token: string): AdminSessionPayload | null {
     if (!base64Data || !signature) return null;
 
     const expectedSignature = crypto.createHmac('sha256', getAdminSecret()).update(base64Data).digest('base64url');
-    if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) {
+    const sigBuf = Buffer.from(signature);
+    const expBuf = Buffer.from(expectedSignature);
+    if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
       return null;
     }
 
@@ -105,7 +107,9 @@ export function verifyUserSession(token: string): UserSessionPayload | null {
     if (!base64Data || !signature) return null;
 
     const expectedSignature = crypto.createHmac('sha256', getAuthSecret()).update(base64Data).digest('base64url');
-    if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) {
+    const sigBuf = Buffer.from(signature);
+    const expBuf = Buffer.from(expectedSignature);
+    if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
       return null;
     }
 
@@ -195,4 +199,65 @@ export async function canAccessBooking(
   }
 
   return false;
+}
+
+/**
+ * Sanitize open redirect URLs to ensure only relative internal paths are allowed
+ */
+export function sanitizeReturnUrl(url?: string | null): string {
+  if (!url) return '/book';
+  const trimmed = url.trim();
+  if (
+    trimmed.startsWith('/') &&
+    !trimmed.startsWith('//') &&
+    !trimmed.includes('\\') &&
+    !trimmed.includes('\r') &&
+    !trimmed.includes('\n')
+  ) {
+    return trimmed;
+  }
+  return '/book';
+}
+
+/**
+ * Creates a signed OAuth state token to prevent CSRF in authentication flows
+ */
+export function createOAuthState(payload: Record<string, unknown>): string {
+  const data = JSON.stringify({ ...payload, exp: Date.now() + 15 * 60 * 1000 });
+  const base64Data = Buffer.from(data).toString('base64url');
+  let secret = '';
+  try {
+    secret = getAuthSecret();
+  } catch {
+    secret = 'fallback-oauth-state-secret-salt';
+  }
+  const sig = crypto.createHmac('sha256', secret).update(base64Data).digest('base64url');
+  return `${base64Data}.${sig}`;
+}
+
+/**
+ * Verifies a signed OAuth state token
+ */
+export function verifyOAuthState(state: string): Record<string, unknown> | null {
+  try {
+    const [base64Data, sig] = state.split('.');
+    if (!base64Data || !sig) return null;
+    let secret = '';
+    try {
+      secret = getAuthSecret();
+    } catch {
+      secret = 'fallback-oauth-state-secret-salt';
+    }
+    const expectedSig = crypto.createHmac('sha256', secret).update(base64Data).digest('base64url');
+    const sigBuf = Buffer.from(sig);
+    const expBuf = Buffer.from(expectedSig);
+    if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+      return null;
+    }
+    const payload = JSON.parse(Buffer.from(base64Data, 'base64url').toString('utf-8'));
+    if (payload.exp && Date.now() > payload.exp) return null;
+    return payload;
+  } catch {
+    return null;
+  }
 }

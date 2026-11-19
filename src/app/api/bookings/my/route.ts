@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
 
     if (session.phone) {
       const cleanPhone = session.phone.replace(/[^0-9]/g, '').slice(-10);
-      if (cleanPhone) {
+      if (cleanPhone && cleanPhone.length === 10) {
         orConditions.push({ primaryPhone: { contains: cleanPhone } });
         orConditions.push({ travellers: { some: { phone: { contains: cleanPhone } } } });
       }

@@ -133,9 +133,24 @@ export async function POST(request: NextRequest) {
               seatNumber,
             },
           },
+          include: { seatHold: true, seatBooking: true },
         });
 
         if (!busSeat) continue;
+
+        // Concurrency safeguard: ensure seat wasn't booked or held by a competing session
+        if (busSeat.status === 'BOOKED' || busSeat.seatBooking) {
+          throw new Error(`Seat ${seatNumber} was booked by another student. Please retry.`);
+        }
+
+        if (
+          busSeat.seatHold &&
+          busSeat.seatHold.status === 'ACTIVE' &&
+          busSeat.seatHold.expiresAt > now &&
+          busSeat.seatHold.bookingSessionId !== bookingSessionId
+        ) {
+          throw new Error(`Seat ${seatNumber} is currently held by another student. Please retry.`);
+        }
 
         await tx.seatHold.upsert({
           where: { busSeatId: busSeat.id },

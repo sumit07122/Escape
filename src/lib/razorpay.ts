@@ -80,12 +80,19 @@ export function verifyRazorpaySignature(
   paymentId: string,
   signature: string
 ): boolean {
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+  if (!orderId || !paymentId || !signature) {
+    return false;
+  }
 
-  // In test sandbox mode
+  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+  const isProduction = process.env.NODE_ENV === 'production';
+  const hasRealSecret = !!(keySecret && !keySecret.includes('YourRazorpaySecretHere'));
+
+  // In test sandbox mode (strictly restricted to non-production when no real secret is configured)
   if (orderId.startsWith('order_test_')) {
-    // For test simulation, require matching pattern or test signature
-    return signature.length > 0 && paymentId.length > 0;
+    if (!isProduction && !hasRealSecret) {
+      return signature.length > 0 && paymentId.length > 0;
+    }
   }
 
   if (!keySecret) {
