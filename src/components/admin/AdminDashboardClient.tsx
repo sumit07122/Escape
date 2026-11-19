@@ -179,17 +179,17 @@ export default function AdminDashboardClient({ initialConfig }: AdminDashboardCl
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-white/5">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-[#c4d8cc] uppercase tracking-widest">
+            <span className="text-[11px] font-mono font-bold text-emerald-400 uppercase tracking-widest">
               TRIP COORDINATOR CONTROL ROOM
             </span>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-[10px] text-[#d8e3dc] font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#9ec2aa]" /> Live
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-300 font-semibold font-mono">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> LIVE
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-sans font-bold text-stone-100 tracking-tight mt-0.5">
+          <h1 className="text-2xl sm:text-3xl font-sans font-extrabold text-white tracking-tight mt-1">
             Operational Dashboard
           </h1>
-          <p className="text-xs text-stone-400 mt-1">
+          <p className="text-xs text-stone-300 mt-1">
             Himalayan Escape • Manali × Kasol ({totalCap} Capacity • {stats?.availableCapacity ?? (totalCap - confirmedPax)} Seats Left)
           </p>
         </div>

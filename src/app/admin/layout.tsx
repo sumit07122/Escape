@@ -379,8 +379,19 @@ export default function AdminLayout({
             </button>
           </div>
 
-          {/* Right: Direct Actions (QR Scanner & Sign Out) */}
+          {/* Right: Direct Actions (View Site, QR Scanner & Sign Out) */}
           <div className="flex items-center gap-2 sm:gap-3">
+            <a
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-stone-900/80 hover:bg-stone-800 border border-white/10 hover:border-white/20 text-stone-300 hover:text-white text-xs font-semibold transition-all"
+              title="Open public website in a new tab"
+            >
+              <ExternalLink className="w-3.5 h-3.5 text-stone-400" />
+              <span>Public Site</span>
+            </a>
+
             {isScannerPage ? (
               <Link
                 href="/admin"

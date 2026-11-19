@@ -1,11 +1,17 @@
 'use client';
 
 import React, { useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 const WHATSAPP_GROUP_URL = 'https://chat.whatsapp.com/BpzC0H0GEM6GlhslBJWDTE';
 
 export default function WhatsAppCommunityButton() {
+  const pathname = usePathname();
   const [isHovered, setIsHovered] = useState(false);
+
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
 
   return (
     <div className="fixed right-5 bottom-[calc(env(safe-area-inset-bottom)+6.5rem)] z-50 flex items-center group md:bottom-6 md:right-6">

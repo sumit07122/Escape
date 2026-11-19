@@ -98,6 +98,10 @@ export default function Navbar() {
     { name: 'My Bookings', href: '/my-bookings' },
   ];
 
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
+
   return (
     <header className="sticky top-0 z-50 w-full bg-[#F7F5EF]/95 backdrop-blur-md border-b border-[#E7E2D8]">
       {/* Top Front-Vision Coordinator Contact Bar */}

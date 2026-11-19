@@ -69,29 +69,53 @@ html {
   *, *::before, *::after { scroll-behavior: auto !important; }
 }
 
-/* Editorial Headings: Tight tracking and high contrast */
-h1, h2, h3, h4, h5, h6 {
-  color: #0E2620;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
-  text-rendering: optimizeLegibility;
-  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+/* Editorial Headings: Tight tracking and high contrast in base layer */
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  h1 {
+    letter-spacing: -0.04em;
+    line-height: 1.05;
+  }
+
+  h2 {
+    letter-spacing: -0.035em;
+    line-height: 1.15;
+  }
+
+  h3 {
+    letter-spacing: -0.025em;
+    line-height: 1.25;
+  }
 }
 
-h1 {
-  letter-spacing: -0.04em;
-  line-height: 1.05;
+/* Admin Portal Dark Theme Typography & Contrast Rules */
+.admin-root,
+[data-admin-root="true"] {
+  background-color: #101916;
+  color: #f5f5f4;
+  color-scheme: dark;
 }
 
-h2 {
-  letter-spacing: -0.035em;
-  line-height: 1.15;
-}
-
-h3 {
-  letter-spacing: -0.025em;
-  line-height: 1.25;
+.admin-root h1,
+.admin-root h2,
+.admin-root h3,
+.admin-root h4,
+.admin-root h5,
+.admin-root h6,
+[data-admin-root="true"] h1,
+[data-admin-root="true"] h2,
+[data-admin-root="true"] h3,
+[data-admin-root="true"] h4,
+[data-admin-root="true"] h5,
+[data-admin-root="true"] h6 {
+  color: inherit;
 }
 
 .hero-title {

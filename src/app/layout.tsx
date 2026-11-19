@@ -1,10 +1,7 @@
 import type { Metadata } from 'next';
 import { Manrope, Playfair_Display } from 'next/font/google';
 import './globals.css';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import MobileBottomBar from '@/components/MobileBottomBar';
-import WhatsAppCommunityButton from '@/components/WhatsAppCommunityButton';
+import PublicSiteLayout from '@/components/PublicSiteLayout';
 import { Analytics } from '@vercel/analytics/next';
 
 const manrope = Manrope({ subsets: ['latin'], variable: '--font-manrope' });
@@ -80,11 +77,9 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icon.png" />
       </head>
       <body className="min-h-full flex flex-col bg-[#F7F5EF] text-[#171918] selection:bg-[#163C32] selection:text-white">
-        <Navbar />
-        <main className="flex-1 w-full pb-20 md:pb-0">{children}</main>
-        <Footer />
-        <MobileBottomBar />
-        <WhatsAppCommunityButton />
+        <PublicSiteLayout>
+          {children}
+        </PublicSiteLayout>
         <Analytics />
       </body>
     </html>
