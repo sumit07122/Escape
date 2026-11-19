@@ -56,7 +56,10 @@ export async function createRazorpayOrder(options: CreateOrderOptions): Promise<
         isMock: false,
       };
     } catch (err: unknown) {
-      console.warn('Real Razorpay order failed, falling back to sandbox mode:', err instanceof Error ? err.message : err);
+      console.error('Real Razorpay order failed:', err instanceof Error ? err.message : err);
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error('Payment gateway connection error. Please try again or contact support.');
+      }
     }
   }
 

@@ -11,17 +11,18 @@ export const db =
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
   });
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = db;
+// Maintain singleton across warm serverless invocations and dev HMR
+globalForPrisma.prisma = db;
 
 export function isDbTemporarilyOffline(): boolean {
   return typeof globalForPrisma.dbOfflineUntil === 'number' && Date.now() < globalForPrisma.dbOfflineUntil;
 }
 
-export function markDbOffline(durationMs: number = 45000): void {
+export function markDbOffline(durationMs: number = 10000): void {
   globalForPrisma.dbOfflineUntil = Date.now() + durationMs;
 }
 
-export async function safeDbQuery<T>(queryFn: () => Promise<T>, fallback: T, timeoutMs = 1200): Promise<T> {
+export async function safeDbQuery<T>(queryFn: () => Promise<T>, fallback: T, timeoutMs = 3500): Promise<T> {
   if (isDbTemporarilyOffline()) {
     return fallback;
   }
@@ -34,7 +35,7 @@ export async function safeDbQuery<T>(queryFn: () => Promise<T>, fallback: T, tim
     ]);
     return result;
   } catch {
-    markDbOffline(45000);
+    markDbOffline(10000);
     return fallback;
   }
 }

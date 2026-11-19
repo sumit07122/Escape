@@ -10,8 +10,12 @@ import { Analytics } from '@vercel/analytics/next';
 const manrope = Manrope({ subsets: ['latin'], variable: '--font-manrope' });
 const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair', display: 'swap' });
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_APP_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://escape-nine-lake.vercel.app');
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
+  metadataBase: new URL(siteUrl),
   title: 'HIMALAYAN ESCAPE 🏔️ | Manali × Kasol 2026 Student Expedition',
   description:
     'Official booking portal for Himalayan Escape. Reserve your seat, select your bus cabin, and generate your boarding pass.',
