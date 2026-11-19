@@ -9,7 +9,9 @@ export async function GET(request: NextRequest) {
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || 'localhost:3000';
   const proto = request.headers.get("x-forwarded-proto") || (request.url.startsWith('https') ? 'https' : 'http');
-  const origin = process.env.NEXTAUTH_URL || `${proto}://${host}`;
+  const origin = process.env.NEXTAUTH_URL
+    ? process.env.NEXTAUTH_URL.replace(/\/$/, '')
+    : `${proto}://${host}`;
   const redirectUri = `${origin}/api/auth/google/callback`;
 
   const isRealSecret =

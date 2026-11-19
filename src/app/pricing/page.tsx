@@ -15,9 +15,9 @@ export const metadata = {
 
 export default async function PricingPage() {
   const config = await getTripConfig();
-  const soloPrice = Number(config.packagePrice) || 6500;
+  const soloPrice = Number(config.packagePrice) || 6200;
   const squadPrice = Number(config.groupPackagePrice) || 6200;
-  const threshold = Number(config.groupSizeThreshold) || 5;
+  const threshold = Number(config.groupSizeThreshold) || 1;
   const deposit = Number(config.depositPrice) || 1000;
   const soloBalance = Math.max(0, soloPrice - deposit);
   const squadBalance = Math.max(0, squadPrice - deposit);

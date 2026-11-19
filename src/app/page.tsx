@@ -26,9 +26,9 @@ export default async function HomePage() {
   const tripConfig = availability.tripConfig;
   const availableSeats = availability.availableSeats;
   const depPrice = Number(tripConfig.depositPrice) || 1000;
-  const soloPrice = Number(tripConfig.packagePrice) || 6500;
+  const soloPrice = Number(tripConfig.packagePrice) || 6200;
   const squadPrice = Number(tripConfig.groupPackagePrice) || 6200;
-  const groupThreshold = Number(tripConfig.groupSizeThreshold) || 5;
+  const groupThreshold = Number(tripConfig.groupSizeThreshold) || 1;
   const squadSaving = Math.max(0, soloPrice - squadPrice);
   const soloBalance = Math.max(0, soloPrice - depPrice);
   const squadBalance = Math.max(0, squadPrice - depPrice);
@@ -210,7 +210,7 @@ export default async function HomePage() {
             Clear prices. Full adventure.
           </h2>
           <p className="text-sm sm:text-base text-[#646864] leading-relaxed">
-            Lock your seat with a ₹{depPrice.toLocaleString('en-IN')} advance today. Pay the remaining balance before boarding. Groups of {groupThreshold}+ unlock instant squad savings.
+            Lock your seat with a ₹{depPrice.toLocaleString('en-IN')} advance deposit today. Flat ₹{soloPrice.toLocaleString('en-IN')} all-inclusive per traveller. Pay the remaining ₹{soloBalance.toLocaleString('en-IN')} balance before boarding.
           </p>
         </div>
 

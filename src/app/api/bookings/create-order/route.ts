@@ -10,12 +10,12 @@ import { TravellerInput } from '@/types';
 import { getUserSessionFromRequest } from '@/lib/auth';
 import { getTripConfig } from '@/lib/trip-config';
 import { calculateDynamicBookingPricing } from '@/lib/pricing';
-
+import { findBestAdjacentSeats, calculateHoldExpiration } from '@/lib/bus-seating';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const {
+    let {
       travellers,
       sittingPreference = 'NO_PREFERENCE',
       busId,
@@ -24,16 +24,83 @@ export async function POST(request: NextRequest) {
       couponCode,
     } = body;
 
-    if (!busId || !selectedSeats || !Array.isArray(selectedSeats) || selectedSeats.length === 0) {
-      return NextResponse.json({ error: 'Missing bus or seat selection' }, { status: 400 });
-    }
-
     if (!travellers || !Array.isArray(travellers) || travellers.length === 0) {
       return NextResponse.json({ error: 'Traveller details are required' }, { status: 400 });
     }
 
     if (!bookingSessionId) {
       return NextResponse.json({ error: 'Booking session ID is missing' }, { status: 400 });
+    }
+
+    // Auto-allocate seats if not explicitly provided
+    if (!busId || !selectedSeats || !Array.isArray(selectedSeats) || selectedSeats.length === 0) {
+      const activeBuses = await db.bus.findMany({
+        where: { status: 'ACTIVE' },
+        orderBy: { busNumber: 'asc' },
+        include: {
+          seats: {
+            where: { isBookable: true },
+            include: { seatHold: true, seatBooking: true },
+          },
+        },
+      });
+
+      const now = new Date();
+      let assignedBusId: string | null = null;
+      let assignedSeats: string[] = [];
+
+      for (const b of activeBuses) {
+        const avail = b.seats
+          .filter(
+            (s) =>
+              !s.seatBooking &&
+              s.status !== 'BOOKED' &&
+              s.status !== 'BLOCKED' &&
+              (!s.seatHold ||
+                s.seatHold.status !== 'ACTIVE' ||
+                s.seatHold.expiresAt <= now ||
+                s.seatHold.bookingSessionId === bookingSessionId)
+          )
+          .map((s) => s.seatNumber);
+
+        if (avail.length >= travellers.length) {
+          const target = findBestAdjacentSeats(avail, travellers.length, sittingPreference);
+          if (target.length === travellers.length) {
+            assignedBusId = b.id;
+            assignedSeats = target;
+
+            // Atomically create hold for these seats
+            const expiresAt = calculateHoldExpiration(10);
+            for (const seatNumber of target) {
+              const busSeat = await db.busSeat.findUnique({
+                where: { busId_seatNumber: { busId: b.id, seatNumber } },
+              });
+              if (busSeat) {
+                await db.seatHold.upsert({
+                  where: { busSeatId: busSeat.id },
+                  update: { bookingSessionId, status: 'ACTIVE', expiresAt },
+                  create: { busSeatId: busSeat.id, bookingSessionId, status: 'ACTIVE', expiresAt },
+                });
+                await db.busSeat.update({
+                  where: { id: busSeat.id },
+                  data: { status: 'HELD', isAvailable: false },
+                });
+              }
+            }
+            break;
+          }
+        }
+      }
+
+      if (!assignedBusId || assignedSeats.length < travellers.length) {
+        return NextResponse.json(
+          { error: 'Could not automatically allocate seats. Please select seats from the seat map.' },
+          { status: 409 }
+        );
+      }
+
+      busId = assignedBusId;
+      selectedSeats = assignedSeats;
     }
 
     // Number of seats must equal number of travellers

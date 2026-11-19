@@ -14,13 +14,13 @@ export const TRIP_METADATA = {
 };
 
 export const PRICING_DEFAULTS = {
-  pricePerTraveller: 6500, // ₹6,500 standard solo rate
-  groupPricePerTraveller: 6200, // ₹6,200 group rate
-  groupThreshold: 5,
-  singlePrice: 6500,
+  pricePerTraveller: 6200, // ₹6,200 flat student rate
+  groupPricePerTraveller: 6200, // ₹6,200 rate
+  groupThreshold: 1,
+  singlePrice: 6200,
   reservationAmountPerTraveller: 1000, // ₹1,000 reservation deposit per traveller
   reservationAmount: 1000,
-  remainingBalancePerTraveller: 5500, // ₹5,500 remaining balance per solo traveller
+  remainingBalancePerTraveller: 5200, // ₹5,200 remaining balance per traveller
   seatHoldMinutes: 10, // 10-minute hold duration
 };
 

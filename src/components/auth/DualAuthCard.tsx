@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Lock, Eye, EyeOff, Loader2, AlertCircle, ArrowRight, User, Phone, CheckCircle2 } from 'lucide-react';
 
@@ -150,6 +151,13 @@ export default function DualAuthCard({
           </svg>
           <span>Continue with Google</span>
         </a>
+
+        <p className="text-[10.5px] text-center text-[#646864] leading-tight px-1">
+          By signing in with Google, you agree to our{' '}
+          <Link href="/terms" target="_blank" className="text-[#163C32] underline font-medium">Terms</Link>{' '}
+          and acknowledge our{' '}
+          <Link href="/privacy-policy" target="_blank" className="text-[#163C32] underline font-medium">Privacy Policy</Link>.
+        </p>
 
         {/* Subtle Divider */}
         <div className="relative flex py-1.5 items-center">
@@ -325,6 +333,17 @@ export default function DualAuthCard({
           </>
         )}
       </p>
+
+      {/* Legal Disclosures */}
+      <div className="pt-2 border-t border-[#E7E2D8] flex items-center justify-center gap-3 text-[10px] text-[#646864]">
+        <Link href="/privacy-policy" target="_blank" className="hover:text-[#163C32] transition-colors underline">
+          Privacy Policy
+        </Link>
+        <span>•</span>
+        <Link href="/terms" target="_blank" className="hover:text-[#163C32] transition-colors underline">
+          Terms & Conditions
+        </Link>
+      </div>
     </div>
   );
 }

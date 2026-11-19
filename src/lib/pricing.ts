@@ -19,12 +19,12 @@ export async function calculateDynamicBookingPricing(input: PricingCalculationIn
   const rawCount = Number(input.travellersCount) || 1;
   const travellersCount = Math.max(1, Math.min(rawCount, config.totalCapacity || 75));
 
-  const standardPackagePrice = Number(config.packagePrice) || 6500;
+  const standardPackagePrice = Number(config.packagePrice) || 6200;
   const groupPackagePrice = Number(config.groupPackagePrice) || 6200;
-  const groupThreshold = Number(config.groupSizeThreshold) || 5;
+  const groupThreshold = Number(config.groupSizeThreshold) || 1;
 
-  const isGroupRate = travellersCount >= groupThreshold;
-  const pricePerTraveller = isGroupRate ? groupPackagePrice : standardPackagePrice;
+  // Canonical business rule: flat ₹6,200 per traveller
+  const pricePerTraveller = standardPackagePrice;
   const reservationAmountPerTraveller = Number(config.depositPrice) || 1000;
 
   const rawTotal = travellersCount * pricePerTraveller;
@@ -46,20 +46,15 @@ export async function calculateDynamicBookingPricing(input: PricingCalculationIn
         }
       }
     } catch {
-      // In-memory fallback coupons
-      if (cleanCode === 'EARLYBIRD') {
-        couponDiscount = 200;
-        appliedCouponCode = 'EARLYBIRD';
-      } else if (cleanCode === 'SQUAD5') {
-        couponDiscount = 500;
-        appliedCouponCode = 'SQUAD5';
-      }
+      // In offline/fallback mode, no unauthorized arbitrary coupon discounts
+      couponDiscount = 0;
+      appliedCouponCode = null;
     }
   }
 
   const finalTotal = Math.max(0, rawTotal - couponDiscount);
   const gateBalanceDue = Math.max(0, finalTotal - depositTotal);
-  const savingsPerTraveller = isGroupRate ? Math.max(0, standardPackagePrice - groupPackagePrice) : 0;
+  const savingsPerTraveller = 0;
 
   return {
     travellersCount,
@@ -71,7 +66,7 @@ export async function calculateDynamicBookingPricing(input: PricingCalculationIn
     remainingBalance: gateBalanceDue,
     finalAmount: finalTotal,
     discountAmount: couponDiscount,
-    isGroupRate,
+    isGroupRate: false,
     groupThreshold,
     groupPackagePrice,
     standardPackagePrice,
@@ -88,12 +83,12 @@ export function calculateBookingPricing(input: PricingCalculationInput): Booking
   const rawCount = Number(input.travellersCount) || 1;
   const travellersCount = Math.max(1, Math.min(rawCount, 75));
 
-  const standardPackagePrice = 6500;
+  // Canonical business pricing: ₹6,200 flat, ₹1,000 deposit, ₹5,200 balance
+  const standardPackagePrice = 6200;
   const groupPackagePrice = 6200;
-  const groupThreshold = 5;
+  const groupThreshold = 1;
 
-  const isGroupRate = travellersCount >= groupThreshold;
-  const pricePerTraveller = isGroupRate ? groupPackagePrice : standardPackagePrice;
+  const pricePerTraveller = 6200;
   const reservationAmountPerTraveller = 1000;
 
   const rawTotal = travellersCount * pricePerTraveller;
@@ -111,10 +106,10 @@ export function calculateBookingPricing(input: PricingCalculationInput): Booking
     remainingBalance: gateBalanceDue,
     finalAmount: finalTotal,
     discountAmount: 0,
-    isGroupRate,
+    isGroupRate: false,
     groupThreshold,
     groupPackagePrice,
     standardPackagePrice,
-    savingsPerTraveller: isGroupRate ? 300 : 0,
+    savingsPerTraveller: 0,
   };
 }

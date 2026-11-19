@@ -49,7 +49,7 @@ export default async function BookPage() {
         </p>
       </div>
 
-      <BookingFlow />
+      <BookingFlow initialConfig={tripConfig} />
     </div>
   );
 }

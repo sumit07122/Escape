@@ -172,7 +172,7 @@ export default function AdminDashboardClient({ initialConfig }: AdminDashboardCl
             <section className="grid gap-3 sm:grid-cols-3">
               {[
                 { label: 'Trip capacity', value: `${tripConfig?.totalCapacity ?? totalCap} travellers`, detail: 'Current booking limit' },
-                { label: 'Standard rate', value: `₹${(tripConfig?.packagePrice || 6500).toLocaleString('en-IN')}`, detail: 'Per traveller' },
+                { label: 'Standard rate', value: `₹${(tripConfig?.packagePrice || 6200).toLocaleString('en-IN')}`, detail: 'Per traveller' },
                 { label: 'Next departure', value: tripConfig?.departureDate || 'Set a date', detail: tripConfig?.returnDate ? `Returns ${tripConfig.returnDate}` : 'Update in Site editor' },
               ].map((metric) => <article key={metric.label} className="rounded-2xl border border-white/10 bg-stone-900/70 p-5"><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-500">{metric.label}</p><strong className="mt-2 block text-xl font-semibold tracking-tight text-white">{metric.value}</strong><span className="mt-1 block text-[11px] text-stone-500">{metric.detail}</span></article>)}
             </section>

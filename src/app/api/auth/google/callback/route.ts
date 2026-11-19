@@ -28,9 +28,14 @@ export async function GET(request: NextRequest) {
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   
   // Standardize Redirect URI Resolution dynamically
-  const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || 'himalaya-escape.vercel.app';
-  const proto = request.headers.get('x-forwarded-proto') || (request.url.startsWith('https') ? 'https' : 'http');
-  const redirectUri = `${proto}://${host}/api/auth/google/callback`;
+  let redirectUri = '';
+  if (process.env.NEXTAUTH_URL) {
+    redirectUri = `${process.env.NEXTAUTH_URL.replace(/\/$/, '')}/api/auth/google/callback`;
+  } else {
+    const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || 'localhost:3000';
+    const proto = request.headers.get('x-forwarded-proto') || (request.url.startsWith('https') ? 'https' : 'http');
+    redirectUri = `${proto}://${host}/api/auth/google/callback`;
+  }
 
   const isRealSecret =
     clientSecret &&

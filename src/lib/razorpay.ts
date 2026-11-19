@@ -97,10 +97,14 @@ export function verifyRazorpaySignature(
     .update(`${orderId}|${paymentId}`)
     .digest('hex');
 
-  return crypto.timingSafeEqual(
-    Buffer.from(signature, 'utf-8'),
-    Buffer.from(expectedSignature, 'utf-8')
-  );
+  const sigBuffer = Buffer.from(signature, 'utf-8');
+  const expBuffer = Buffer.from(expectedSignature, 'utf-8');
+
+  if (sigBuffer.length !== expBuffer.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(sigBuffer, expBuffer);
 }
 
 /**
@@ -118,8 +122,12 @@ export function verifyWebhookSignature(
     .update(rawBody)
     .digest('hex');
 
-  return crypto.timingSafeEqual(
-    Buffer.from(signature, 'utf-8'),
-    Buffer.from(expectedSignature, 'utf-8')
-  );
+  const sigBuffer = Buffer.from(signature, 'utf-8');
+  const expBuffer = Buffer.from(expectedSignature, 'utf-8');
+
+  if (sigBuffer.length !== expBuffer.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(sigBuffer, expBuffer);
 }

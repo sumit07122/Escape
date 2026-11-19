@@ -49,7 +49,7 @@ export default function Footer() {
             <h4 className="font-bold text-[#171918] uppercase text-[11px] tracking-wider">Policies</h4>
             <ul className="space-y-1.5 text-[11px]">
               <li><Link href="/terms" className="hover:text-[#163C32] transition-colors">Terms & Conditions</Link></li>
-              <li><Link href="/privacy" className="hover:text-[#163C32] transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/privacy-policy" className="hover:text-[#163C32] transition-colors">Privacy Policy</Link></li>
               <li><Link href="/cancellation" className="hover:text-[#163C32] transition-colors">Cancellation Policy</Link></li>
             </ul>
           </div>

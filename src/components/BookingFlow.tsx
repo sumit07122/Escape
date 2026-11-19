@@ -1,16 +1,18 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Script from 'next/script';
 import Link from 'next/link';
 import {
   User, CheckCircle2, ArrowRight,
-  Loader2, AlertCircle
+  Loader2, AlertCircle, UserCheck, Sparkles, ShieldCheck,
+  ChevronDown, ChevronUp, Users, Bus, Clock
 } from 'lucide-react';
 import BusSeatMap from './BusSeatMap';
-import DualAuthCard from '@/components/auth/DualAuthCard';
+import GoogleContactsImportModal from '@/components/booking/GoogleContactsImportModal';
 import { SittingPreference, TravellerInput, BookingPricing } from '@/types';
-import { PRICING_DEFAULTS } from '@/lib/constants';
+import { TripConfigData, DEFAULT_TRIP_CONFIG } from '@/lib/trip-config-shared';
+import SeatHoldTimer from './SeatHoldTimer';
 
 declare global {
   interface Window {
@@ -28,49 +30,116 @@ interface UserSession {
   role?: string;
 }
 
-export default function BookingFlow() {
-  // Steps:
-  // 1: Google Login (if unauthenticated)
-  // 2: Travellers count
-  // 3: Traveller details
-  // 4: Choose seats & preference
-  // 5: Review & Payment
-  // 6: Confirmation
+interface BookingFlowProps {
+  initialConfig?: TripConfigData;
+}
+
+export default function BookingFlow({ initialConfig }: BookingFlowProps) {
+  const config = initialConfig || DEFAULT_TRIP_CONFIG;
+  const packagePrice = Number(config.packagePrice) || 6200;
+  const depositPerHead = Number(config.depositPrice) || 1000;
+
+  // 3 Step High-Converting Flow:
+  // 1: Travellers & Instant Pricing
+  // 2: Passenger Details (with streamlined shared emergency contact)
+  // 3: Smart Seat Allocation & Review/Pay
+  // 4: Confirmation & Boarding Pass
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [bookingSessionId, setBookingSessionId] = useState<string>('');
 
   // Authentication State
   const [userSession, setUserSession] = useState<UserSession | null>(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(false);
 
-  // Step: Travellers Count
+  // Step 1: Travellers Count
   const [travellersCount, setTravellersCount] = useState<number>(1);
 
-  // Step: Traveller Details
+  // Step 2: Passenger Details
   const [travellers, setTravellers] = useState<TravellerInput[]>([
     { fullName: '', phone: '', email: '', gender: 'Male', collegeId: '', emergencyContactName: '', emergencyContactPhone: '' },
   ]);
+  const [useSameEmergencyForAll, setUseSameEmergencyForAll] = useState(true);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  // Step: Sitting Preference
+  // Step 3: Smart Seat Allocation
   const [sittingPreference, setSittingPreference] = useState<SittingPreference>('NO_PREFERENCE');
-
-  // Step: Bus & Seat Selection
-  const [selectedBusId, setSelectedBusId] = useState('');
+  const [selectedBusId, setSelectedBusId] = useState<string>('');
+  const [selectedBusName, setSelectedBusName] = useState<string>('Coach 01 (Himalayan Eagle)');
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
+  const [isAutoAssigningSeats, setIsAutoAssigningSeats] = useState(false);
+  const [isSeatMapExpanded, setIsSeatMapExpanded] = useState(false);
+  const [seatHoldTimerSeconds, setSeatHoldTimerSeconds] = useState<number>(0);
   const [squadFriendSeats, setSquadFriendSeats] = useState<string[]>([]);
   const [squadLinkNotice, setSquadLinkNotice] = useState<string | null>(null);
 
-  // Step: Pricing & Payment
-  const [pricing, setPricing] = useState<BookingPricing | null>(null);
+  // Pricing & Payment: Canonical Flat ₹6,200 per traveller, ₹1,000 deposit, ₹5,200 balance
+  const [pricing, setPricing] = useState<BookingPricing>(() => {
+    const rate = 6200;
+    return {
+      travellersCount: 1,
+      baseAmount: rate,
+      totalAmount: rate,
+      pricePerTraveller: rate,
+      reservationAmountPerTraveller: 1000,
+      reservationAmount: 1000,
+      remainingBalance: 5200,
+      finalAmount: rate,
+      discountAmount: 0,
+      isGroupRate: false,
+      groupThreshold: 1,
+      groupPackagePrice: 6200,
+      standardPackagePrice: 6200,
+      savingsPerTraveller: 0,
+    };
+  });
+
   const [couponInput, setCouponInput] = useState('');
   const [couponMessage, setCouponMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
-  // Step: Confirmed Booking Details
+  // Step 4: Confirmed Booking Details
   const [confirmedBooking, setConfirmedBooking] = useState<any>(null);
 
-  // Restore the coach and seats shared by a friend without taking their seats.
+  // Google Contacts State (strictly in-memory)
+  const [googleContactsToken, setGoogleContactsToken] = useState<string | null>(null);
+  const [isContactsModalOpen, setIsContactsModalOpen] = useState(false);
+  const [contactsTarget, setContactsTarget] = useState<{ type: 'traveller' | 'emergency'; index: number } | null>(null);
+  const [contactsFeedback, setContactsFeedback] = useState<string | null>(null);
+
+  const openGoogleContactsModal = (target: { type: 'traveller' | 'emergency'; index: number }) => {
+    setContactsTarget(target);
+    setIsContactsModalOpen(true);
+  };
+
+  const handleContactSelected = (contact: { name: string; phone: string; email: string }) => {
+    if (!contactsTarget) return;
+
+    setTravellers((prev) => {
+      const updated = [...prev];
+      const targetTraveller = updated[contactsTarget.index];
+      if (!targetTraveller) return prev;
+
+      if (contactsTarget.type === 'traveller') {
+        if (contact.name) targetTraveller.fullName = contact.name;
+        if (contact.phone) targetTraveller.phone = contact.phone;
+        if (contactsTarget.index === 0 && contact.email) {
+          targetTraveller.email = contact.email;
+        }
+      } else if (contactsTarget.type === 'emergency') {
+        if (contact.name) targetTraveller.emergencyContactName = contact.name;
+        if (contact.phone) targetTraveller.emergencyContactPhone = contact.phone;
+      }
+
+      return updated;
+    });
+
+    setContactsFeedback(`Autofilled details from Google Contact: ${contact.name}. You may review and edit before proceeding.`);
+    setTimeout(() => setContactsFeedback(null), 6000);
+  };
+
+  // Restore coach/seats shared by a squad friend from URL query
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const bus = params.get('bus');
@@ -94,6 +163,7 @@ export default function BookingFlow() {
 
     async function checkAuth() {
       try {
+        setIsCheckingAuth(true);
         const res = await fetch('/api/auth/me');
         if (res.ok) {
           const data = await res.json();
@@ -104,66 +174,52 @@ export default function BookingFlow() {
               if (updated[0]) {
                 updated[0].fullName = updated[0].fullName || data.user.name || '';
                 updated[0].email = updated[0].email || data.user.email || '';
+                if (data.user.phone) {
+                  updated[0].phone = updated[0].phone || data.user.phone;
+                }
               }
               return updated;
             });
-            setCurrentStep((step) => (step === 1 ? 2 : step));
           }
         }
       } catch {
-        // Fallback
+        // Continue gracefully as guest
+      } finally {
+        setIsCheckingAuth(false);
       }
     }
     checkAuth();
   }, []);
 
-  const refreshPricing = useCallback(async (count: number, couponOverride?: string) => {
-    try {
-      const codeToSend = couponOverride !== undefined ? couponOverride : couponInput;
-      const res = await fetch(`/api/pricing/calculate?t=${Date.now()}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-        },
-        body: JSON.stringify({ travellersCount: count, couponCode: codeToSend ? codeToSend.trim() : undefined }),
-        cache: 'no-store',
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setPricing(data.pricing);
-        if (codeToSend && codeToSend.trim()) {
-          if (data.pricing?.couponDiscount > 0) {
-            setCouponMessage({
-              type: 'success',
-              text: `Promo "${data.pricing.couponCode}" applied! ₹${data.pricing.couponDiscount} discount.`,
-            });
-          } else {
-            setCouponMessage({ type: 'error', text: 'Invalid or expired promo code' });
-          }
-        }
-      }
-    } catch {
-      setPricing({
-        travellersCount: count,
-        baseAmount: count * 6500,
-        totalAmount: count * 6500,
-        pricePerTraveller: count >= 5 ? 6200 : 6500,
-        reservationAmountPerTraveller: 1000,
-        reservationAmount: count * 1000,
-        remainingBalance: count * (count >= 5 ? 5200 : 5500),
-        finalAmount: count * (count >= 5 ? 6200 : 6500),
-        discountAmount: 0,
-        isGroupRate: count >= 5,
-        groupThreshold: 5,
-        groupPackagePrice: 6200,
-        standardPackagePrice: 6500,
-        savingsPerTraveller: count >= 5 ? 300 : 0,
-      });
-    }
-  }, [couponInput]);
+  // Instant Client Pricing calculation (Canonical: ₹6,200 flat per traveller, ₹1,000 deposit, ₹5,200 balance)
+  const updatePricing = useCallback((count: number, couponDiscount = 0, couponCode: string | null = null) => {
+    const rate = 6200;
+    const rawTotal = count * rate;
+    const depositTotal = count * 1000;
+    const finalTotal = Math.max(0, rawTotal - couponDiscount);
+    const balanceDue = Math.max(0, finalTotal - depositTotal);
 
-  // 2. Adjust travellers array whenever count changes
+    setPricing({
+      travellersCount: count,
+      baseAmount: rawTotal,
+      totalAmount: finalTotal,
+      pricePerTraveller: rate,
+      reservationAmountPerTraveller: 1000,
+      reservationAmount: depositTotal,
+      remainingBalance: balanceDue,
+      finalAmount: finalTotal,
+      discountAmount: couponDiscount,
+      isGroupRate: false,
+      groupThreshold: 1,
+      groupPackagePrice: 6200,
+      standardPackagePrice: 6200,
+      savingsPerTraveller: 0,
+      couponCode: couponCode || undefined,
+      couponDiscount,
+    });
+  }, []);
+
+  // Adjust travellers array instantly when count changes
   useEffect(() => {
     setTravellers((prev) => {
       const updated = [...prev];
@@ -185,47 +241,155 @@ export default function BookingFlow() {
       setSelectedSeats([]);
     }
 
-    refreshPricing(travellersCount);
-  }, [travellersCount, refreshPricing, selectedSeats.length]);
+    updatePricing(travellersCount);
+  }, [travellersCount, updatePricing, selectedSeats.length]);
 
-  const handleSignOut = async () => {
+  const handleApplyCoupon = async () => {
+    if (!couponInput.trim()) return;
+    setApplyingCoupon(true);
+    setCouponMessage(null);
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      setUserSession(null);
-      setCurrentStep(1);
+      const res = await fetch(`/api/pricing/calculate?t=${Date.now()}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ travellersCount, couponCode: couponInput.trim() }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.pricing) {
+          setPricing(data.pricing);
+          if (data.pricing.couponDiscount > 0) {
+            setCouponMessage({
+              type: 'success',
+              text: `Promo "${data.pricing.couponCode}" applied! ₹${data.pricing.couponDiscount} discount.`,
+            });
+          } else {
+            setCouponMessage({ type: 'error', text: 'Invalid or expired promo code' });
+          }
+        }
+      }
     } catch {
-      // Continue
+      setCouponMessage({ type: 'error', text: 'Could not verify coupon right now.' });
+    } finally {
+      setApplyingCoupon(false);
     }
   };
 
+  // Auto-allocate best adjacent seats when entering Step 3
+  const triggerAutoSeatAssignment = useCallback(async (pref = sittingPreference) => {
+    if (!bookingSessionId) return;
+    setIsAutoAssigningSeats(true);
+    try {
+      const res = await fetch('/api/seats/auto-assign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookingSessionId,
+          count: travellersCount,
+          busId: selectedBusId || undefined,
+          preference: pref,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.seatNumbers && data.seatNumbers.length > 0) {
+          setSelectedSeats(data.seatNumbers);
+          setSelectedBusId(data.busId);
+          setSelectedBusName(`${data.busNumber} (${data.vehicleName || 'Coach'})`);
+          setSeatHoldTimerSeconds(data.heldSecondsRemaining || 600);
+        }
+      }
+    } catch (err) {
+      console.warn('Auto seat allocation fallback:', err);
+    } finally {
+      setIsAutoAssigningSeats(false);
+    }
+  }, [bookingSessionId, travellersCount, selectedBusId, sittingPreference]);
+
+  // Validation for Step 2
   const validateTravellerDetails = () => {
-    for (let i = 0; i < travellers.length; i++) {
+    const errors: Record<string, string> = {};
+    const primary = travellers[0];
+
+    if (!primary.fullName.trim()) {
+      errors['name_0'] = 'Full legal name is required';
+    }
+    if (!primary.phone.trim() || primary.phone.replace(/\D/g, '').length < 10) {
+      errors['phone_0'] = 'Valid 10-digit phone number is required';
+    }
+    if (!primary.email.trim() || !primary.email.includes('@')) {
+      errors['email_0'] = 'Valid email is required to receive QR ticket';
+    }
+
+    const primaryEmergencyName = primary.emergencyContactName?.trim();
+    const primaryEmergencyPhone = primary.emergencyContactPhone?.trim();
+
+    if (!primaryEmergencyName) {
+      errors['em_name_0'] = 'Emergency contact name is required';
+    }
+    if (!primaryEmergencyPhone || primaryEmergencyPhone.replace(/\D/g, '').length < 10) {
+      errors['em_phone_0'] = 'Valid 10-digit emergency contact phone is required';
+    }
+
+    for (let i = 1; i < travellers.length; i++) {
       const t = travellers[i];
       if (!t.fullName.trim()) {
-        alert(`Please enter the full name for Traveller #${i + 1}`);
-        return false;
+        errors[`name_${i}`] = `Full name is required for Traveller #${i + 1}`;
       }
-      if (!t.phone.trim() || t.phone.replace(/[^0-9]/g, '').length < 10) {
-        alert(`Please enter a valid 10-digit phone number for Traveller #${i + 1}`);
-        return false;
+      if (!t.phone.trim() || t.phone.replace(/\D/g, '').length < 10) {
+        errors[`phone_${i}`] = `10-digit phone is required for Traveller #${i + 1}`;
       }
-      if (i === 0 && (!t.email.trim() || !t.email.includes('@'))) {
-        alert('Please enter a valid email address for the primary contact.');
-        return false;
-      }
-      if (!t.emergencyContactName?.trim()) {
-        alert(`Please enter an emergency contact name for Traveller #${i + 1}.`);
-        return false;
-      }
-      if (!t.emergencyContactPhone?.trim() || t.emergencyContactPhone.replace(/[^0-9]/g, '').length < 10) {
-        alert(`Please enter a valid 10-digit emergency contact number for Traveller #${i + 1}.`);
-        return false;
+      if (!useSameEmergencyForAll) {
+        if (!t.emergencyContactName?.trim()) {
+          errors[`em_name_${i}`] = `Emergency contact name required for #${i + 1}`;
+        }
+        if (!t.emergencyContactPhone?.trim() || t.emergencyContactPhone.replace(/\D/g, '').length < 10) {
+          errors[`em_phone_${i}`] = `10-digit emergency phone required for #${i + 1}`;
+        }
       }
     }
-    return true;
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
-  const handleSeatSelect = (busId: string, seatNumbers: string[]) => {
+  const handleProceedToStep3 = () => {
+    if (!validateTravellerDetails()) {
+      // Scroll to first error smoothly
+      const firstErrorEl = document.querySelector('[data-error="true"]');
+      if (firstErrorEl) {
+        firstErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return;
+    }
+
+    // Propagate shared emergency contact to additional travellers if checked
+    if (useSameEmergencyForAll) {
+      const primary = travellers[0];
+      setTravellers((prev) =>
+        prev.map((t, idx) =>
+          idx === 0
+            ? t
+            : {
+                ...t,
+                emergencyContactName: primary.emergencyContactName,
+                emergencyContactPhone: primary.emergencyContactPhone,
+              }
+        )
+      );
+    }
+
+    setCurrentStep(3);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Auto-allocate seats immediately if none selected yet
+    if (selectedSeats.length !== travellersCount) {
+      triggerAutoSeatAssignment();
+    }
+  };
+
+  const handleSeatSelectFromMap = (busId: string, seatNumbers: string[]) => {
     setSelectedBusId(busId);
     setSelectedSeats(seatNumbers);
   };
@@ -242,21 +406,29 @@ export default function BookingFlow() {
       setSquadLinkNotice('Squad link copied! Send it in your WhatsApp group to lock seats together.');
       window.setTimeout(() => setSquadLinkNotice(null), 4500);
     } catch {
-      setSquadLinkNotice('Could not copy automatically. Please allow clipboard access and try again.');
+      setSquadLinkNotice('Could not copy automatically. Please copy the browser URL.');
     }
   };
 
   const handleProceedToPayment = async () => {
+    if (isProcessingPayment) return;
     setIsProcessingPayment(true);
     setPaymentError(null);
 
     try {
       const primary = travellers[0];
+      // Normalize emergency contacts across all travellers
+      const normalizedTravellers = travellers.map((t) => ({
+        ...t,
+        emergencyContactName: t.emergencyContactName?.trim() || primary.emergencyContactName?.trim(),
+        emergencyContactPhone: t.emergencyContactPhone?.trim() || primary.emergencyContactPhone?.trim(),
+      }));
+
       const payload = {
-        travellers,
+        travellers: normalizedTravellers,
         sittingPreference,
-        busId: selectedBusId,
-        selectedSeats,
+        busId: selectedBusId || undefined,
+        selectedSeats: selectedSeats.length === travellersCount ? selectedSeats : undefined,
         bookingSessionId,
         couponCode: couponInput.trim() || undefined,
       };
@@ -300,21 +472,7 @@ export default function BookingFlow() {
           modal: {
             ondismiss: async function () {
               setIsProcessingPayment(false);
-              try {
-                await fetch('/api/seats/release-batch', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    bookingSessionId,
-                    busId: selectedBusId,
-                    seatNumbers: selectedSeats,
-                    bookingId: orderData.bookingId,
-                  }),
-                });
-              } catch (err) {
-                console.error('Error rolling back abandoned seats:', err);
-              }
-              setPaymentError('Payment window was closed. Your temporary seat hold has been released.');
+              setPaymentError('Payment window was closed. Your seats remain reserved for 10 minutes.');
             },
           },
         };
@@ -346,10 +504,10 @@ export default function BookingFlow() {
       }
 
       setConfirmedBooking(data.booking);
-      setCurrentStep(6);
+      setCurrentStep(4);
 
       if (typeof window.confetti === 'function') {
-        window.confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        window.confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Verification failed';
@@ -359,49 +517,48 @@ export default function BookingFlow() {
     }
   };
 
-  const bookingSteps = [
-    { num: 2, label: '01 Travellers' },
-    { num: 3, label: '02 Details' },
-    { num: 4, label: '03 Seats' },
-    { num: 5, label: '04 Review & Pay' },
+  const stepsList = [
+    { num: 1, label: '01 Travellers' },
+    { num: 2, label: '02 Details' },
+    { num: 3, label: '03 Review & Pay' },
   ];
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 py-8 space-y-8 bg-[#F7F5EF] text-[#171918]">
+    <div className="w-full max-w-3xl mx-auto px-4 py-4 sm:py-8 space-y-6 bg-[#F7F5EF] text-[#171918] pb-28 sm:pb-8">
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       <Script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" strategy="lazyOnload" />
 
-      {/* Booking Header & Progress Bar */}
-      {currentStep !== 6 && (
-        <div className="bg-white rounded-2xl p-5 border border-[#D8D2C4] space-y-4 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#E7E2D8] pb-3">
+      {/* Progress Header */}
+      {currentStep !== 4 && (
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#D8D2C4] space-y-3 shadow-xs">
+          <div className="flex items-center justify-between gap-2 border-b border-[#E7E2D8] pb-3">
             <div>
               <span className="text-[10px] font-bold uppercase tracking-widest text-[#D87945]">
                 RESERVATION PORTAL
               </span>
-              <h1 className="text-xl sm:text-2xl font-black text-[#171918]">
-                BOOK YOUR SEAT
+              <h1 className="text-lg sm:text-xl font-black text-[#171918] leading-tight">
+                {currentStep === 1 && 'Select Travellers & Pricing'}
+                {currentStep === 2 && 'Passenger Contact Details'}
+                {currentStep === 3 && 'Seat Allocation & Payment'}
               </h1>
             </div>
             {userSession && (
-              <div className="flex items-center gap-2 text-xs text-[#646864]">
-                <span>Signed in as <strong>{userSession.name?.split(' ')[0]}</strong></span>
-                <button onClick={handleSignOut} className="text-[#D87945] font-semibold hover:underline">
-                  Logout
-                </button>
+              <div className="flex items-center gap-1.5 text-xs text-[#646864]">
+                <User className="w-3.5 h-3.5 text-[#163C32]" />
+                <span className="font-semibold text-[#171918]">{userSession.name?.split(' ')[0]}</span>
               </div>
             )}
           </div>
 
-          {/* Simple Progress Bar (Section 15) */}
-          <div className="flex items-center justify-between gap-1 text-xs">
-            {bookingSteps.map((s) => {
+          {/* Clean 3-Step Progress Bar */}
+          <div className="flex items-center justify-between gap-1.5 text-xs">
+            {stepsList.map((s) => {
               const isActive = currentStep === s.num;
               const isPast = currentStep > s.num;
               return (
                 <div
                   key={s.num}
-                  className={`flex-1 py-1.5 px-2 rounded-lg text-center font-bold transition-all ${
+                  className={`flex-1 py-1.5 px-2 rounded-lg text-center font-bold transition-all text-[11px] sm:text-xs ${
                     isActive
                       ? 'bg-[#163C32] text-white shadow-xs'
                       : isPast
@@ -409,7 +566,7 @@ export default function BookingFlow() {
                       : 'bg-[#F7F5EF] text-[#B4AA96]'
                   }`}
                 >
-                  <span className="truncate block">{s.label}</span>
+                  <span>{s.label}</span>
                 </div>
               );
             })}
@@ -418,50 +575,23 @@ export default function BookingFlow() {
       )}
 
       {/* ======================================================== */}
-      {/* ======================================================== */}
-      {/* STEP 1: AUTH GATE (DUAL AUTH: GOOGLE + PHONE & PASSWORD) */}
+      {/* STEP 1: SELECT TRAVELLERS & INSTANT PRICING             */}
       {/* ======================================================== */}
       {currentStep === 1 && (
-        <div className="animate-in fade-in duration-200">
-          <DualAuthCard
-            returnUrl="/book"
-            title="Sign In to Select Coach Seats"
-            subtitle="Sign in with your Google account or Mobile Number to select coach seats and receive your digital QR boarding pass."
-            onAuthSuccess={(user) => {
-              setUserSession(user);
-              setTravellers((prev) => {
-                const updated = [...prev];
-                if (updated[0]) {
-                  updated[0].fullName = updated[0].fullName || user.name || '';
-                  updated[0].email = updated[0].email || user.email || '';
-                  updated[0].phone = updated[0].phone || user.phone || '';
-                }
-                return updated;
-              });
-              setCurrentStep(2);
-            }}
-          />
-        </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* STEP 2: WHO'S COMING? (TRAVELLER QUANTITY SELECTOR)      */}
-      {/* ======================================================== */}
-      {currentStep === 2 && (
-        <div className="bg-white rounded-3xl p-6 sm:p-10 border border-[#D8D2C4] space-y-8 text-center shadow-sm animate-in fade-in duration-200">
-          <div className="max-w-md mx-auto space-y-2">
-            <span className="text-xs font-bold text-[#D87945] uppercase tracking-widest">
-              01 • PASSENGER COUNT
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#D8D2C4] space-y-6 text-center shadow-xs animate-in fade-in duration-200">
+          <div className="max-w-md mx-auto space-y-1.5">
+            <span className="text-[11px] font-bold text-[#D87945] uppercase tracking-widest">
+              STEP 01 • PASSENGER COUNT
             </span>
             <h2 className="text-2xl sm:text-3xl font-black text-[#171918]">
-              Who's coming?
+              How many are travelling?
             </h2>
             <p className="text-xs text-[#646864]">
-              Select the number of seats you wish to reserve together on the same coach.
+              Select the number of seats to reserve together. Pricing updates instantly below.
             </p>
           </div>
 
-          {/* Large Quantity Selector (Section 17) */}
+          {/* Stepper */}
           <div className="max-w-xs mx-auto p-4 rounded-2xl bg-[#F7F5EF] border border-[#D8D2C4] space-y-3">
             <div className="flex items-center justify-between">
               <button
@@ -469,6 +599,7 @@ export default function BookingFlow() {
                 disabled={travellersCount <= 1}
                 onClick={() => setTravellersCount((prev) => Math.max(1, prev - 1))}
                 className="w-12 h-12 rounded-xl bg-white border border-[#D8D2C4] text-xl font-bold text-[#171918] hover:bg-[#E7E2D8] disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-xs"
+                aria-label="Decrease travellers count"
               >
                 −
               </button>
@@ -485,235 +616,51 @@ export default function BookingFlow() {
                 disabled={travellersCount >= 6}
                 onClick={() => setTravellersCount((prev) => Math.min(6, prev + 1))}
                 className="w-12 h-12 rounded-xl bg-white border border-[#D8D2C4] text-xl font-bold text-[#171918] hover:bg-[#E7E2D8] disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-xs"
+                aria-label="Increase travellers count"
               >
                 +
               </button>
             </div>
 
-            {/* Live Tiered Squad Pricing Tag */}
+            {/* Flat Rate Badge */}
             <div className="pt-2">
-              {travellersCount < (pricing?.groupThreshold || 5) ? (
-                <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-center space-y-0.5">
-                  <div className="text-xs font-bold text-amber-900 font-mono">
-                    ₹{(pricing?.standardPackagePrice || 6500).toLocaleString('en-IN')} / person
-                  </div>
-                  <div className="text-[11px] text-amber-800 font-medium">
-                    ⚡ Add {(pricing?.groupThreshold || 5) - travellersCount} more friend{(pricing?.groupThreshold || 5) - travellersCount > 1 ? 's' : ''} to unlock <span className="font-bold text-amber-950 font-mono">₹{(pricing?.groupPackagePrice || 6200).toLocaleString('en-IN')} / person</span> group rate!
-                  </div>
+              <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-0.5">
+                <div className="text-xs font-bold text-emerald-950 font-mono">
+                  Flat ₹6,200 / person · All-Inclusive Mountain Expedition
                 </div>
-              ) : (
-                <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/35 text-center space-y-0.5 animate-in fade-in">
-                  <div className="text-xs font-black text-emerald-800 font-mono flex items-center justify-center gap-1">
-                    <span>🎉 Group Discount Unlocked!</span>
-                  </div>
-                  <div className="text-[11px] text-emerald-900 font-semibold">
-                    Flat ₹{(pricing?.groupPackagePrice || 6200).toLocaleString('en-IN')} / person applied (Saved ₹{(pricing?.savingsPerTraveller || 300).toLocaleString('en-IN')} per head)
-                  </div>
+                <div className="text-[11px] text-emerald-800 font-medium">
+                  Lock your seat today with only <strong className="text-emerald-950 font-mono">₹1,000 reservation deposit</strong>
                 </div>
-              )}
+              </div>
             </div>
 
-            {/* Transparent Calculation */}
-            <div className="pt-2 border-t border-[#D8D2C4] text-xs space-y-1">
+            {/* Transparent Instant Math Table */}
+            <div className="pt-3 border-t border-[#D8D2C4] text-xs space-y-1.5">
               <div className="flex justify-between text-[#171918] font-bold">
-                <span>Total Package:</span>
-                <span>₹{(pricing?.totalAmount ?? (travellersCount * (pricing?.pricePerTraveller || 6500))).toLocaleString('en-IN')}</span>
+                <span>Total Trip Cost:</span>
+                <span className="font-mono">₹{pricing.totalAmount.toLocaleString('en-IN')}</span>
               </div>
-              <div className="flex justify-between text-[#D87945] font-semibold">
+              <div className="flex justify-between text-[#D87945] font-bold">
                 <span>Reservation Deposit (Today):</span>
-                <span>₹{(pricing?.reservationAmount ?? (travellersCount * (pricing?.reservationAmountPerTraveller || 1000))).toLocaleString('en-IN')}</span>
+                <span className="font-mono">₹{pricing.reservationAmount.toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between text-[#646864] text-[11px]">
                 <span>Remaining before boarding:</span>
-                <span>₹{(pricing?.remainingBalance ?? (travellersCount * ((pricing?.pricePerTraveller || 6500) - (pricing?.reservationAmountPerTraveller || 1000)))).toLocaleString('en-IN')}</span>
+                <span className="font-mono">₹{pricing.remainingBalance.toLocaleString('en-IN')}</span>
               </div>
             </div>
           </div>
 
-          <div className="flex justify-center pt-2">
-            <button
-              type="button"
-              onClick={() => setCurrentStep(3)}
-              className="px-8 py-3.5 rounded-xl bg-[#D87945] hover:bg-[#C26735] text-white font-bold text-xs shadow-md transition-all flex items-center gap-2"
-            >
-              <span>CONTINUE TO TRAVELLER DETAILS</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* STEP 3: TRAVELLER DETAILS FORM                           */}
-      {/* ======================================================== */}
-      {currentStep === 3 && (
-        <div className="bg-white rounded-3xl p-6 sm:p-10 border border-[#D8D2C4] space-y-8 shadow-sm animate-in fade-in duration-200">
-          <div className="space-y-2">
-            <span className="text-xs font-bold text-[#D87945] uppercase tracking-widest">
-              02 • PASSENGER INFORMATION
-            </span>
-            <h2 className="text-2xl font-black text-[#171918]">Traveller Details</h2>
-            <p className="text-xs text-[#646864]">
-              Enter the legal names and contact numbers for all {travellersCount} travellers.
-            </p>
-          </div>
-
-          <div className="space-y-6">
-            {travellers.map((traveller, idx) => (
-              <div key={idx} className="p-5 rounded-2xl bg-[#F7F5EF] border border-[#D8D2C4] space-y-4">
-                <div className="flex items-center justify-between border-b border-[#D8D2C4] pb-2">
-                  <span className="text-xs font-black text-[#163C32] uppercase tracking-wider">
-                    {idx === 0 ? 'Lead Traveller (Primary Contact)' : `Traveller #${idx + 1}`}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-                  <div className="space-y-1">
-                    <label className="font-bold text-[#171918]">Full Legal Name *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Rahul Sharma"
-                      value={traveller.fullName}
-                      onChange={(e) => {
-                        const updated = [...travellers];
-                        updated[idx].fullName = e.target.value;
-                        setTravellers(updated);
-                      }}
-                      className="w-full px-3 py-2 rounded-xl bg-white border border-[#D8D2C4] text-xs text-[#171918] focus:border-[#163C32] focus:outline-none"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="font-bold text-[#171918]">Phone Number *</label>
-                    <input
-                      type="tel"
-                      required
-                      placeholder="10-digit mobile"
-                      value={traveller.phone}
-                      onChange={(e) => {
-                        const updated = [...travellers];
-                        updated[idx].phone = e.target.value;
-                        setTravellers(updated);
-                      }}
-                      className="w-full px-3 py-2 rounded-xl bg-white border border-[#D8D2C4] text-xs text-[#171918] focus:border-[#163C32] focus:outline-none"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="font-bold text-[#171918]">Email Address {idx === 0 ? '*' : '(Optional)'}</label>
-                    <input
-                      type="email"
-                      required={idx === 0}
-                      placeholder="To receive ticket"
-                      value={traveller.email}
-                      onChange={(e) => {
-                        const updated = [...travellers];
-                        updated[idx].email = e.target.value;
-                        setTravellers(updated);
-                      }}
-                      className="w-full px-3 py-2 rounded-xl bg-white border border-[#D8D2C4] text-xs text-[#171918] focus:border-[#163C32] focus:outline-none"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="font-bold text-[#171918]">Gender</label>
-                    <select
-                      value={traveller.gender}
-                      onChange={(e) => {
-                        const updated = [...travellers];
-                        updated[idx].gender = e.target.value as 'Male' | 'Female' | 'Other';
-                        setTravellers(updated);
-                      }}
-                      className="w-full px-3 py-2 rounded-xl bg-white border border-[#D8D2C4] text-xs text-[#171918] focus:border-[#163C32] focus:outline-none"
-                    >
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="space-y-1 pt-1">
-                  <label className="font-bold text-[#171918] text-xs">
-                    Student ID / College Roll No (Optional / For ID Verification)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 2115000123 / College Roll No"
-                    value={traveller.collegeId || ''}
-                    onChange={(e) => {
-                      const updated = [...travellers];
-                      updated[idx].collegeId = e.target.value;
-                      setTravellers(updated);
-                    }}
-                    className="w-full sm:w-1/2 px-3 py-2 rounded-xl bg-white border border-[#D8D2C4] text-xs text-[#171918] focus:border-[#163C32] focus:outline-none"
-                  />
-                </div>
-
-                <div className="rounded-xl border border-[#D8D2C4] bg-white/70 p-4 space-y-3">
-                  <div>
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#163C32]">Emergency Contact (Parent / Guardian)</span>
-                    <p className="mt-1 text-[11px] text-[#646864]">Provide a contact we can reach for this traveller in an emergency.</p>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                    <div className="space-y-1">
-                      <label className="font-bold text-[#171918]">Contact Name *</label>
-                      <input
-                        type="text"
-                        required
-                        autoComplete="name"
-                        placeholder="Parent or guardian name"
-                        value={traveller.emergencyContactName || ''}
-                        onChange={(e) => {
-                          const updated = [...travellers];
-                          updated[idx].emergencyContactName = e.target.value;
-                          setTravellers(updated);
-                        }}
-                        className="w-full px-3 py-2 rounded-xl bg-white border border-[#D8D2C4] text-xs text-[#171918] focus:border-[#163C32] focus:outline-none"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="font-bold text-[#171918]">Contact Phone *</label>
-                      <input
-                        type="tel"
-                        required
-                        inputMode="tel"
-                        autoComplete="tel"
-                        placeholder="10-digit phone"
-                        value={traveller.emergencyContactPhone || ''}
-                        onChange={(e) => {
-                          const updated = [...travellers];
-                          updated[idx].emergencyContactPhone = e.target.value;
-                          setTravellers(updated);
-                        }}
-                        className="w-full px-3 py-2 rounded-xl bg-white border border-[#D8D2C4] text-xs text-[#171918] focus:border-[#163C32] focus:outline-none"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex items-center justify-between pt-4 border-t border-[#E7E2D8]">
-            <button
-              type="button"
-              onClick={() => setCurrentStep(2)}
-              className="px-5 py-2.5 rounded-xl bg-[#F7F5EF] border border-[#D8D2C4] text-xs font-bold text-[#171918] hover:bg-[#E7E2D8]"
-            >
-              Back
-            </button>
+          <div className="pt-2">
             <button
               type="button"
               onClick={() => {
-                if (validateTravellerDetails()) {
-                  setCurrentStep(4);
-                }
+                setCurrentStep(2);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="px-7 py-3 rounded-xl bg-[#D87945] hover:bg-[#C26735] text-white font-bold text-xs shadow-md flex items-center gap-2"
+              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-[#D87945] hover:bg-[#C26735] text-white font-bold text-xs shadow-md transition-all inline-flex items-center justify-center gap-2"
             >
-              <span>CONTINUE TO SEAT MAP</span>
+              <span>CONTINUE TO PASSENGER DETAILS</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -721,167 +668,515 @@ export default function BookingFlow() {
       )}
 
       {/* ======================================================== */}
-      {/* STEP 4: CHOOSE SEATS & SITTING PREFERENCE                */}
+      {/* STEP 2: STREAMLINED PASSENGER DETAILS                   */}
       {/* ======================================================== */}
-      {currentStep === 4 && (
-        <div className="bg-white rounded-3xl p-6 sm:p-10 border border-[#D8D2C4] space-y-8 shadow-sm animate-in fade-in duration-200">
-          <div className="space-y-2">
-            <span className="text-xs font-bold text-[#D87945] uppercase tracking-widest">
-              03 • SEAT ALLOCATION
+      {currentStep === 2 && (
+        <div className="bg-white rounded-3xl p-5 sm:p-8 border border-[#D8D2C4] space-y-6 shadow-xs animate-in fade-in duration-200">
+          <div className="space-y-1">
+            <span className="text-[11px] font-bold text-[#D87945] uppercase tracking-widest">
+              STEP 02 • PASSENGER DETAILS
             </span>
-            <h2 className="text-2xl font-black text-[#171918]">Choose Your Seats</h2>
+            <h2 className="text-xl sm:text-2xl font-black text-[#171918]">Enter Traveller Information</h2>
             <p className="text-xs text-[#646864]">
-              Select exactly <strong>{travellersCount}</strong> {travellersCount === 1 ? 'seat' : 'seats'}. 
-              Seats are held for 10 minutes while you complete checkout.
+              Lead contact receives booking confirmations, updates, and digital QR boarding passes.
             </p>
           </div>
 
-          {/* Sitting Preference Pills */}
-          <div className="p-4 rounded-2xl bg-[#F7F5EF] border border-[#D8D2C4] space-y-2">
-            <span className="text-xs font-bold text-[#163C32] uppercase tracking-wider block">
-              Seating Preference (Highlights Matching Seats with ★):
-            </span>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { id: 'WINDOW', label: 'Window' },
-                { id: 'AISLE', label: 'Aisle' },
-                { id: 'FRONT', label: 'Front Rows' },
-                { id: 'BACK', label: 'Rear Cabin' },
-                { id: 'NO_PREFERENCE', label: 'No Preference' },
-              ].map((pref) => (
-                <button
-                  key={pref.id}
-                  type="button"
-                  onClick={() => setSittingPreference(pref.id as SittingPreference)}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                    sittingPreference === pref.id
-                      ? 'bg-[#163C32] text-white shadow-xs'
-                      : 'bg-white border border-[#D8D2C4] text-[#171918] hover:border-[#163C32]'
-                  }`}
-                >
-                  {pref.label}
-                </button>
-              ))}
+          {/* Quick Autofill / Google Contacts Card */}
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-[#F7F5EF] border border-[#D8D2C4] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-white border border-[#D8D2C4] flex items-center justify-center shrink-0">
+                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                </svg>
+              </div>
+              <div>
+                <span className="text-xs font-bold text-[#171918] block">Google Contacts Quick-Fill</span>
+                <span className="text-[11px] text-[#646864]">Import traveller contact details in 1 tap without typing.</span>
+              </div>
             </div>
+
+            <button
+              type="button"
+              onClick={() => openGoogleContactsModal({ type: 'traveller', index: 0 })}
+              className="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-white hover:bg-[#FAF9F5] border border-[#D8D2C4] hover:border-[#163C32] text-[#171918] font-bold text-xs shadow-2xs transition-all flex items-center justify-center gap-1.5"
+            >
+              <UserCheck className="w-3.5 h-3.5 text-[#D87945]" />
+              <span>Import Lead Contact</span>
+            </button>
           </div>
 
-          {/* Bus Seating Map */}
-          <BusSeatMap
-            requiredSeatsCount={travellersCount}
-            selectedSeats={selectedSeats}
-            selectedBusId={selectedBusId}
-            onSeatSelect={handleSeatSelect}
-            bookingSessionId={bookingSessionId}
-            preference={sittingPreference}
-            squadFriendSeats={squadFriendSeats}
-          />
-
-          {selectedSeats.length >= 1 && selectedSeats.length <= 4 && (
-            <div className="w-full max-w-xl mx-auto p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-violet-50 to-amber-50 border border-violet-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-black text-[#171918]">Booking with your crew?</p>
-                <p className="text-xs text-[#646864] mt-1">
-                  Add {5 - selectedSeats.length} more {5 - selectedSeats.length === 1 ? 'friend' : 'friends'} to unlock the ₹6,200/head squad deal!
-                </p>
-                {squadLinkNotice && (
-                  <p role="status" className="text-xs font-bold text-emerald-700 mt-2">
-                    {squadLinkNotice}
-                  </p>
-                )}
+          {contactsFeedback && (
+            <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center justify-between gap-2 animate-in fade-in">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>{contactsFeedback}</span>
               </div>
               <button
                 type="button"
-                onClick={handleShareSquadLink}
-                className="shrink-0 px-4 py-3 rounded-xl bg-violet-700 hover:bg-violet-800 text-white font-extrabold text-xs shadow-md transition-colors"
+                onClick={() => setContactsFeedback(null)}
+                className="text-xs text-emerald-700 hover:text-emerald-900 font-bold"
               >
-                🔗 Share Squad Link
+                Dismiss
               </button>
+            </div>
+          )}
+
+          {/* Lead Traveller Card */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#F7F5EF] border border-[#D8D2C4] space-y-4">
+            <div className="flex items-center justify-between border-b border-[#D8D2C4] pb-2">
+              <span className="text-xs font-black text-[#163C32] uppercase tracking-wider flex items-center gap-1.5">
+                <span className="w-5 h-5 rounded-full bg-[#163C32] text-white flex items-center justify-center text-[10px]">1</span>
+                <span>Lead Traveller (Primary Contact)</span>
+              </span>
+              <span className="text-[10px] font-bold text-[#D87945] uppercase tracking-wider">Receives QR Ticket</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div className="space-y-1" data-error={!!fieldErrors['name_0']}>
+                <label className="font-bold text-[#171918]">Full Legal Name *</label>
+                <input
+                  type="text"
+                  required
+                  autoComplete="name"
+                  placeholder="e.g. Rahul Sharma"
+                  value={travellers[0].fullName}
+                  onChange={(e) => {
+                    const updated = [...travellers];
+                    updated[0].fullName = e.target.value;
+                    setTravellers(updated);
+                    if (fieldErrors['name_0']) setFieldErrors((prev) => ({ ...prev, name_0: '' }));
+                  }}
+                  className={`w-full px-3 py-2.5 rounded-xl bg-white border ${
+                    fieldErrors['name_0'] ? 'border-red-500' : 'border-[#D8D2C4]'
+                  } text-xs text-[#171918] focus:border-[#163C32] focus:outline-none`}
+                />
+                {fieldErrors['name_0'] && <p className="text-[10px] text-red-600 font-medium">{fieldErrors['name_0']}</p>}
+              </div>
+
+              <div className="space-y-1" data-error={!!fieldErrors['phone_0']}>
+                <label className="font-bold text-[#171918]">Mobile Phone (WhatsApp) *</label>
+                <input
+                  type="tel"
+                  inputMode="tel"
+                  required
+                  autoComplete="tel"
+                  placeholder="10-digit mobile number"
+                  value={travellers[0].phone}
+                  onChange={(e) => {
+                    const updated = [...travellers];
+                    updated[0].phone = e.target.value;
+                    setTravellers(updated);
+                    if (fieldErrors['phone_0']) setFieldErrors((prev) => ({ ...prev, phone_0: '' }));
+                  }}
+                  className={`w-full px-3 py-2.5 rounded-xl bg-white border ${
+                    fieldErrors['phone_0'] ? 'border-red-500' : 'border-[#D8D2C4]'
+                  } text-xs text-[#171918] focus:border-[#163C32] focus:outline-none`}
+                />
+                {fieldErrors['phone_0'] && <p className="text-[10px] text-red-600 font-medium">{fieldErrors['phone_0']}</p>}
+              </div>
+
+              <div className="space-y-1" data-error={!!fieldErrors['email_0']}>
+                <label className="font-bold text-[#171918]">Email Address *</label>
+                <input
+                  type="email"
+                  inputMode="email"
+                  required
+                  autoComplete="email"
+                  placeholder="For digital boarding pass"
+                  value={travellers[0].email}
+                  onChange={(e) => {
+                    const updated = [...travellers];
+                    updated[0].email = e.target.value;
+                    setTravellers(updated);
+                    if (fieldErrors['email_0']) setFieldErrors((prev) => ({ ...prev, email_0: '' }));
+                  }}
+                  className={`w-full px-3 py-2.5 rounded-xl bg-white border ${
+                    fieldErrors['email_0'] ? 'border-red-500' : 'border-[#D8D2C4]'
+                  } text-xs text-[#171918] focus:border-[#163C32] focus:outline-none`}
+                />
+                {fieldErrors['email_0'] && <p className="text-[10px] text-red-600 font-medium">{fieldErrors['email_0']}</p>}
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-[#171918]">Gender</label>
+                <select
+                  value={travellers[0].gender}
+                  onChange={(e) => {
+                    const updated = [...travellers];
+                    updated[0].gender = e.target.value as 'Male' | 'Female' | 'Other';
+                    setTravellers(updated);
+                  }}
+                  className="w-full px-3 py-2.5 rounded-xl bg-white border border-[#D8D2C4] text-xs text-[#171918] focus:border-[#163C32] focus:outline-none"
+                >
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
+              <div className="space-y-1">
+                <label className="font-bold text-[#171918]">Student ID / College Roll No (Optional)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 2115000123"
+                  value={travellers[0].collegeId || ''}
+                  onChange={(e) => {
+                    const updated = [...travellers];
+                    updated[0].collegeId = e.target.value;
+                    setTravellers(updated);
+                  }}
+                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#D8D2C4] text-xs text-[#171918] focus:border-[#163C32] focus:outline-none"
+                />
+              </div>
+
+              {/* Lead Emergency Contact */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-[#163C32] text-xs">Emergency Contact (Parent / Guardian) *</label>
+                  <button
+                    type="button"
+                    onClick={() => openGoogleContactsModal({ type: 'emergency', index: 0 })}
+                    className="text-[10px] font-bold text-[#D87945] hover:underline"
+                  >
+                    Import Contact
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div data-error={!!fieldErrors['em_name_0']}>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Contact Name"
+                      value={travellers[0].emergencyContactName || ''}
+                      onChange={(e) => {
+                        const updated = [...travellers];
+                        updated[0].emergencyContactName = e.target.value;
+                        setTravellers(updated);
+                        if (fieldErrors['em_name_0']) setFieldErrors((prev) => ({ ...prev, em_name_0: '' }));
+                      }}
+                      className={`w-full px-3 py-2 rounded-xl bg-white border ${
+                        fieldErrors['em_name_0'] ? 'border-red-500' : 'border-[#D8D2C4]'
+                      } text-xs text-[#171918] focus:border-[#163C32] focus:outline-none`}
+                    />
+                  </div>
+                  <div data-error={!!fieldErrors['em_phone_0']}>
+                    <input
+                      type="tel"
+                      inputMode="tel"
+                      required
+                      placeholder="10-digit Phone"
+                      value={travellers[0].emergencyContactPhone || ''}
+                      onChange={(e) => {
+                        const updated = [...travellers];
+                        updated[0].emergencyContactPhone = e.target.value;
+                        setTravellers(updated);
+                        if (fieldErrors['em_phone_0']) setFieldErrors((prev) => ({ ...prev, em_phone_0: '' }));
+                      }}
+                      className={`w-full px-3 py-2 rounded-xl bg-white border ${
+                        fieldErrors['em_phone_0'] ? 'border-red-500' : 'border-[#D8D2C4]'
+                      } text-xs text-[#171918] focus:border-[#163C32] focus:outline-none`}
+                    />
+                  </div>
+                </div>
+                {(fieldErrors['em_name_0'] || fieldErrors['em_phone_0']) && (
+                  <p className="text-[10px] text-red-600 font-medium">Valid emergency contact name and phone required.</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Additional Travellers (if count > 1) */}
+          {travellers.length > 1 && (
+            <div className="space-y-4">
+              {/* Single Shared Emergency Toggle */}
+              <div className="p-3 rounded-xl bg-[#F7F5EF] border border-[#D8D2C4] flex items-center justify-between">
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-[#171918]">
+                  <input
+                    type="checkbox"
+                    checked={useSameEmergencyForAll}
+                    onChange={(e) => setUseSameEmergencyForAll(e.target.checked)}
+                    className="w-4 h-4 rounded text-[#163C32] focus:ring-[#163C32] border-[#D8D2C4]"
+                  />
+                  <span>Use Lead Traveller's emergency contact for all travellers</span>
+                </label>
+                <span className="text-[11px] text-[#646864] hidden sm:inline">Streamlined registration</span>
+              </div>
+
+              {travellers.slice(1).map((traveller, index) => {
+                const idx = index + 1;
+                return (
+                  <div key={idx} className="p-4 rounded-2xl bg-[#F7F5EF] border border-[#D8D2C4] space-y-3">
+                    <div className="flex items-center justify-between border-b border-[#D8D2C4] pb-2">
+                      <span className="text-xs font-bold text-[#163C32] flex items-center gap-1.5">
+                        <span className="w-5 h-5 rounded-full bg-[#E7E2D8] text-[#163C32] flex items-center justify-center text-[10px] font-bold">
+                          {idx + 1}
+                        </span>
+                        <span>Traveller #{idx + 1}</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => openGoogleContactsModal({ type: 'traveller', index: idx })}
+                        className="text-[11px] font-bold text-[#D87945] hover:underline inline-flex items-center gap-1"
+                      >
+                        <UserCheck className="w-3 h-3" />
+                        <span>Autofill</span>
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                      <div className="space-y-1" data-error={!!fieldErrors[`name_${idx}`]}>
+                        <label className="font-bold text-[#171918]">Full Legal Name *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Passenger Name"
+                          value={traveller.fullName}
+                          onChange={(e) => {
+                            const updated = [...travellers];
+                            updated[idx].fullName = e.target.value;
+                            setTravellers(updated);
+                            if (fieldErrors[`name_${idx}`]) setFieldErrors((prev) => ({ ...prev, [`name_${idx}`]: '' }));
+                          }}
+                          className={`w-full px-3 py-2 rounded-xl bg-white border ${
+                            fieldErrors[`name_${idx}`] ? 'border-red-500' : 'border-[#D8D2C4]'
+                          } text-xs text-[#171918] focus:border-[#163C32] focus:outline-none`}
+                        />
+                      </div>
+
+                      <div className="space-y-1" data-error={!!fieldErrors[`phone_${idx}`]}>
+                        <label className="font-bold text-[#171918]">Mobile Phone *</label>
+                        <input
+                          type="tel"
+                          inputMode="tel"
+                          required
+                          placeholder="10-digit mobile"
+                          value={traveller.phone}
+                          onChange={(e) => {
+                            const updated = [...travellers];
+                            updated[idx].phone = e.target.value;
+                            setTravellers(updated);
+                            if (fieldErrors[`phone_${idx}`]) setFieldErrors((prev) => ({ ...prev, [`phone_${idx}`]: '' }));
+                          }}
+                          className={`w-full px-3 py-2 rounded-xl bg-white border ${
+                            fieldErrors[`phone_${idx}`] ? 'border-red-500' : 'border-[#D8D2C4]'
+                          } text-xs text-[#171918] focus:border-[#163C32] focus:outline-none`}
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="font-bold text-[#171918]">Gender</label>
+                        <select
+                          value={traveller.gender}
+                          onChange={(e) => {
+                            const updated = [...travellers];
+                            updated[idx].gender = e.target.value as 'Male' | 'Female' | 'Other';
+                            setTravellers(updated);
+                          }}
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-[#D8D2C4] text-xs text-[#171918] focus:border-[#163C32] focus:outline-none"
+                        >
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {!useSameEmergencyForAll && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-2 border-t border-[#D8D2C4]">
+                        <div className="space-y-1" data-error={!!fieldErrors[`em_name_${idx}`]}>
+                          <label className="font-bold text-[#171918]">Emergency Contact Name *</label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="Contact Name"
+                            value={traveller.emergencyContactName || ''}
+                            onChange={(e) => {
+                              const updated = [...travellers];
+                              updated[idx].emergencyContactName = e.target.value;
+                              setTravellers(updated);
+                            }}
+                            className="w-full px-3 py-2 rounded-xl bg-white border border-[#D8D2C4] text-xs"
+                          />
+                        </div>
+                        <div className="space-y-1" data-error={!!fieldErrors[`em_phone_${idx}`]}>
+                          <label className="font-bold text-[#171918]">Emergency Contact Phone *</label>
+                          <input
+                            type="tel"
+                            inputMode="tel"
+                            required
+                            placeholder="10-digit Phone"
+                            value={traveller.emergencyContactPhone || ''}
+                            onChange={(e) => {
+                              const updated = [...travellers];
+                              updated[idx].emergencyContactPhone = e.target.value;
+                              setTravellers(updated);
+                            }}
+                            className="w-full px-3 py-2 rounded-xl bg-white border border-[#D8D2C4] text-xs"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
 
           <div className="flex items-center justify-between pt-4 border-t border-[#E7E2D8]">
             <button
               type="button"
-              onClick={() => setCurrentStep(3)}
+              onClick={() => {
+                setCurrentStep(1);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
               className="px-5 py-2.5 rounded-xl bg-[#F7F5EF] border border-[#D8D2C4] text-xs font-bold text-[#171918] hover:bg-[#E7E2D8]"
             >
               Back
             </button>
             <button
               type="button"
-              disabled={selectedSeats.length !== travellersCount}
-              onClick={() => setCurrentStep(5)}
-              className="px-7 py-3 rounded-xl bg-[#D87945] hover:bg-[#C26735] disabled:opacity-40 text-white font-bold text-xs shadow-md flex items-center gap-2"
+              onClick={handleProceedToStep3}
+              className="px-7 py-3 rounded-xl bg-[#D87945] hover:bg-[#C26735] text-white font-bold text-xs shadow-md flex items-center gap-2"
             >
-              <span>REVIEW & PAY ({selectedSeats.length}/{travellersCount} Selected)</span>
+              <span>CONTINUE TO SEATS & REVIEW</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
+
+          <GoogleContactsImportModal
+            isOpen={isContactsModalOpen}
+            onClose={() => setIsContactsModalOpen(false)}
+            onSelectContact={handleContactSelected}
+            targetLabel={
+              contactsTarget
+                ? contactsTarget.type === 'traveller'
+                  ? contactsTarget.index === 0
+                    ? 'Lead Traveller'
+                    : `Traveller #${contactsTarget.index + 1}`
+                  : `Emergency Contact for Traveller #${contactsTarget.index + 1}`
+                : 'Traveller Details'
+            }
+            inMemoryAccessToken={googleContactsToken}
+            onTokenChange={setGoogleContactsToken}
+          />
         </div>
       )}
 
       {/* ======================================================== */}
-      {/* STEP 5: REVIEW & PAYMENT (SECTION 22 & 23)               */}
+      {/* STEP 3: SMART SEAT ALLOCATION & REVIEW / PAY            */}
       {/* ======================================================== */}
-      {currentStep === 5 && (
-        <div className="bg-white rounded-3xl p-6 sm:p-10 border border-[#D8D2C4] space-y-8 shadow-sm animate-in fade-in duration-200">
-          <div className="space-y-2 text-center max-w-md mx-auto">
-            <span className="text-xs font-bold text-[#D87945] uppercase tracking-widest">
-              04 • FINAL REVIEW
+      {currentStep === 3 && (
+        <div className="bg-white rounded-3xl p-5 sm:p-8 border border-[#D8D2C4] space-y-6 shadow-xs animate-in fade-in duration-200">
+          <div className="space-y-1">
+            <span className="text-[11px] font-bold text-[#D87945] uppercase tracking-widest">
+              STEP 03 • FINAL REVIEW & PAYMENT
             </span>
-            <h2 className="text-2xl font-black text-[#171918]">Review Your Booking</h2>
+            <h2 className="text-xl sm:text-2xl font-black text-[#171918]">Confirm Reservation</h2>
             <p className="text-xs text-[#646864]">
-              Transparent summary. No hidden fees or unexpected charges.
+              Transparent summary. Seats are held atomically for 10 minutes.
             </p>
           </div>
 
-          {/* Sticky Summary Card */}
-          <div className="max-w-md mx-auto p-6 sm:p-8 rounded-2xl bg-[#F7F5EF] border border-[#D8D2C4] space-y-4">
-            <div className="border-b border-[#D8D2C4] pb-3">
-              <span className="text-[10px] font-bold text-[#646864] uppercase tracking-wider block">EXPEDITION</span>
-              <p className="text-base font-black text-[#171918]">Mathura → Manali → Kasol → Mathura</p>
+          {/* Smart Seat Allocation Status Card */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#F7F5EF] border border-[#D8D2C4] space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#D8D2C4] pb-3">
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <Bus className="w-4 h-4 text-[#163C32]" />
+                  <span className="text-xs font-black text-[#163C32] uppercase tracking-wider">
+                    {selectedBusName}
+                  </span>
+                </div>
+                <div className="text-xs font-bold text-[#171918] mt-0.5">
+                  Assigned Seats: {isAutoAssigningSeats ? (
+                    <span className="text-amber-800 font-normal">Allocating best adjacent seats...</span>
+                  ) : selectedSeats.length > 0 ? (
+                    <span className="text-emerald-800 font-mono text-sm">{selectedSeats.join(', ')}</span>
+                  ) : (
+                    <span className="text-stone-500 font-normal">None selected</span>
+                  )}
+                </div>
+              </div>
+
+              {seatHoldTimerSeconds > 0 && (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-950 text-xs font-bold">
+                  <Clock className="w-3.5 h-3.5 text-amber-800" />
+                  <span>Held for: {Math.floor(seatHoldTimerSeconds / 60)}:{(seatHoldTimerSeconds % 60).toString().padStart(2, '0')}</span>
+                </div>
+              )}
             </div>
 
-            <div className="grid grid-cols-2 gap-3 border-b border-[#D8D2C4] pb-3 text-xs">
-              <div>
-                <span className="text-[10px] font-bold text-[#646864] uppercase block">DURATION</span>
-                <p className="font-bold text-[#171918]">6 Days / 5 Nights</p>
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs">
+              <span className="text-[#646864] text-[11px]">
+                {selectedSeats.length > 1
+                  ? '✨ Best adjacent seats clustered together automatically.'
+                  : '✨ Prime coach seat allocated automatically.'}
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsSeatMapExpanded(!isSeatMapExpanded)}
+                className="inline-flex items-center gap-1 text-xs font-bold text-[#163C32] hover:text-[#D87945] underline transition-colors"
+              >
+                <span>{isSeatMapExpanded ? 'Hide Coach Map' : 'Change Seats on Bus Map'}</span>
+                {isSeatMapExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+
+            {/* Optional Collapsible Bus Seat Map */}
+            {isSeatMapExpanded && (
+              <div className="pt-3 border-t border-[#D8D2C4] animate-in fade-in duration-200">
+                <BusSeatMap
+                  requiredSeatsCount={travellersCount}
+                  selectedSeats={selectedSeats}
+                  selectedBusId={selectedBusId}
+                  onSeatSelect={handleSeatSelectFromMap}
+                  bookingSessionId={bookingSessionId}
+                  preference={sittingPreference}
+                  squadFriendSeats={squadFriendSeats}
+                />
               </div>
+            )}
+          </div>
+
+          {/* Expedition Summary Breakdown Card */}
+          <div className="p-5 sm:p-6 rounded-2xl bg-[#F7F5EF] border border-[#D8D2C4] space-y-3.5 text-xs">
+            <div className="border-b border-[#D8D2C4] pb-2.5">
+              <span className="text-[10px] font-bold text-[#646864] uppercase tracking-wider block">EXPEDITION</span>
+              <p className="text-sm font-black text-[#171918]">Mathura → Manali → Kasol → Mathura</p>
+              <p className="text-[11px] text-[#646864]">6 Days / 5 Nights • Luxury AC Tourist Coach</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 border-b border-[#D8D2C4] pb-2.5">
               <div>
                 <span className="text-[10px] font-bold text-[#646864] uppercase block">TRAVELLERS</span>
                 <p className="font-bold text-[#171918]">{travellersCount} Person(s)</p>
               </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 border-b border-[#D8D2C4] pb-3 text-xs">
               <div>
-                <span className="text-[10px] font-bold text-[#646864] uppercase block">COACH</span>
-                <p className="font-bold text-[#163C32]">Dedicated AC tourist coach</p>
-              </div>
-              <div>
-                <span className="text-[10px] font-bold text-[#646864] uppercase block">SEATS</span>
-                <p className="font-black text-[#163C32]">{selectedSeats.join(', ')}</p>
+                <span className="text-[10px] font-bold text-[#646864] uppercase block">LEAD CONTACT</span>
+                <p className="font-bold text-[#171918] truncate">{travellers[0].fullName || 'Primary Traveller'}</p>
               </div>
             </div>
 
             {/* Promo Code Input */}
-            <div className="pt-2 pb-1 border-y border-[#D8D2C4] space-y-2">
+            <div className="pt-1 pb-1 border-b border-[#D8D2C4] space-y-2">
               <div className="flex gap-2">
                 <input
                   type="text"
                   value={couponInput}
                   onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                  placeholder="Enter Promo Code (e.g. SQUAD5)"
+                  placeholder="Promo Code (e.g. SQUAD5)"
                   className="flex-1 px-3 py-2 rounded-xl bg-white border border-[#D8D2C4] text-xs font-mono font-bold text-[#171918] uppercase placeholder:normal-case placeholder:font-normal focus:border-[#D87945] focus:outline-none"
                 />
                 <button
                   type="button"
                   disabled={applyingCoupon || !couponInput.trim()}
-                  onClick={async () => {
-                    setApplyingCoupon(true);
-                    await refreshPricing(travellersCount, couponInput.trim());
-                    setApplyingCoupon(false);
-                  }}
+                  onClick={handleApplyCoupon}
                   className="px-4 py-2 rounded-xl bg-[#163C32] hover:bg-[#112F27] text-white text-xs font-bold transition-all disabled:opacity-50"
                 >
                   {applyingCoupon ? 'Checking...' : 'Apply'}
@@ -889,43 +1184,33 @@ export default function BookingFlow() {
               </div>
 
               {couponMessage && (
-                <p
-                  className={`text-[11px] font-semibold ${
-                    couponMessage.type === 'success' ? 'text-emerald-700' : 'text-rose-600'
-                  }`}
-                >
+                <p className={`text-[11px] font-semibold ${couponMessage.type === 'success' ? 'text-emerald-700' : 'text-rose-600'}`}>
                   {couponMessage.text}
                 </p>
               )}
             </div>
 
-            <div className="space-y-1.5 pt-1 text-xs">
+            {/* Financial Calculation */}
+            <div className="space-y-1.5 pt-1">
               <div className="flex justify-between text-[#646864]">
-                <span>Total Trip Cost:</span>
-                <span className="font-bold text-[#171918]">₹{(pricing?.baseAmount ?? (travellersCount * (pricing?.pricePerTraveller || 6500))).toLocaleString('en-IN')}</span>
+                <span>Total Package Price:</span>
+                <span className="font-bold text-[#171918] font-mono">₹{pricing.baseAmount.toLocaleString('en-IN')}</span>
               </div>
 
-              {pricing?.discountAmount && pricing.discountAmount > 0 ? (
+              {pricing.discountAmount > 0 && (
                 <div className="flex justify-between text-emerald-700 font-bold">
                   <span>Promo Discount ({pricing.couponCode}):</span>
-                  <span>−₹{pricing.discountAmount.toLocaleString('en-IN')}</span>
+                  <span className="font-mono">−₹{pricing.discountAmount.toLocaleString('en-IN')}</span>
                 </div>
-              ) : null}
+              )}
 
-              {pricing?.isGroupRate ? (
-                <div className="flex justify-between text-emerald-700 text-[11px] font-semibold">
-                  <span>Squad Group Discount:</span>
-                  <span>Flat ₹{(pricing.groupPackagePrice || 6200).toLocaleString('en-IN')}/head</span>
-                </div>
-              ) : null}
-
-              <div className="flex justify-between text-[#D87945] font-bold text-sm">
-                <span>Reservation Deposit (Today):</span>
-                <span className="text-base">₹{(pricing?.reservationAmount ?? (travellersCount * (pricing?.reservationAmountPerTraveller || 1000))).toLocaleString('en-IN')}</span>
+              <div className="flex justify-between text-[#D87945] font-bold text-sm pt-1 border-t border-[#D8D2C4]">
+                <span>Reservation Deposit Due Today:</span>
+                <span className="text-base font-mono">₹{pricing.reservationAmount.toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between text-[#646864] text-[11px]">
-                <span>Balance Before Boarding:</span>
-                <span className="text-[#171918]">₹{(pricing?.remainingBalance ?? (travellersCount * ((pricing?.pricePerTraveller || 6500) - (pricing?.reservationAmountPerTraveller || 1000)))).toLocaleString('en-IN')}</span>
+                <span>Remaining Balance Before Boarding:</span>
+                <span className="text-[#171918] font-mono">₹{pricing.remainingBalance.toLocaleString('en-IN')}</span>
               </div>
             </div>
 
@@ -938,61 +1223,62 @@ export default function BookingFlow() {
 
             <button
               type="button"
-              disabled={isProcessingPayment}
+              disabled={isProcessingPayment || (selectedSeats.length > 0 && selectedSeats.length !== travellersCount)}
               onClick={handleProceedToPayment}
-              className="w-full py-3.5 rounded-xl bg-[#D87945] hover:bg-[#C26735] text-white font-extrabold text-sm shadow-md flex items-center justify-center gap-2 transition-all mt-2"
+              className="w-full py-3.5 rounded-xl bg-[#D87945] hover:bg-[#C26735] disabled:opacity-50 text-white font-extrabold text-sm shadow-md flex items-center justify-center gap-2 transition-all mt-2"
             >
               {isProcessingPayment ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin text-white" />
-                  <span>Processing Payment...</span>
+                  <span>Securing Order with Razorpay...</span>
                 </>
               ) : (
-                <span>PAY RESERVATION (₹{(pricing?.reservationAmount ?? (travellersCount * (pricing?.reservationAmountPerTraveller || 1000))).toLocaleString('en-IN')})</span>
+                <span>PAY RESERVATION DEPOSIT · ₹{pricing.reservationAmount.toLocaleString('en-IN')}</span>
               )}
             </button>
           </div>
 
-          <div className="flex items-center justify-between pt-4 border-t border-[#E7E2D8]">
+          <div className="flex items-center justify-between pt-2 border-t border-[#E7E2D8]">
             <button
               type="button"
               disabled={isProcessingPayment}
-              onClick={() => setCurrentStep(4)}
+              onClick={() => {
+                setCurrentStep(2);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
               className="px-5 py-2.5 rounded-xl bg-[#F7F5EF] border border-[#D8D2C4] text-xs font-bold text-[#171918] hover:bg-[#E7E2D8]"
             >
-              Back to Seats
+              Back to Details
             </button>
           </div>
         </div>
       )}
 
       {/* ======================================================== */}
-      {/* STEP 6: CONFIRMATION & DIGITAL BOARDING PASS             */}
+      {/* STEP 4: CONFIRMATION & DIGITAL BOARDING PASS             */}
       {/* ======================================================== */}
-      {currentStep === 6 && confirmedBooking && (
-        <div className="bg-white rounded-3xl p-6 sm:p-10 border border-[#D8D2C4] space-y-8 animate-in fade-in duration-300 shadow-sm">
-          <div className="text-center space-y-2 max-w-md mx-auto">
-            <div className="w-14 h-14 rounded-full bg-[#163C32]/10 text-[#163C32] flex items-center justify-center mx-auto border border-[#163C32]/20">
-              <CheckCircle2 className="w-8 h-8" />
-            </div>
+      {currentStep === 4 && confirmedBooking && (
+        <div className="bg-white rounded-3xl p-6 sm:p-10 border border-[#D8D2C4] space-y-6 animate-in fade-in duration-300 shadow-sm text-center">
+          <div className="w-14 h-14 rounded-full bg-[#163C32]/10 text-[#163C32] flex items-center justify-center mx-auto border border-[#163C32]/20">
+            <CheckCircle2 className="w-8 h-8" />
+          </div>
+          <div className="space-y-1">
             <span className="text-xs font-black text-[#163C32] uppercase tracking-widest block">
               BOOKING CONFIRMED
             </span>
             <h2 className="text-2xl sm:text-3xl font-black text-[#171918]">
-              You're going to the mountains.
+              You're going to the mountains!
             </h2>
             <p className="text-xs text-[#646864]">
               Booking ID: <strong className="font-mono text-[#171918]">#{confirmedBooking.bookingId}</strong>
             </p>
           </div>
 
-          {/* Ticket Preview Card */}
-          <div className="max-w-md mx-auto p-6 rounded-2xl bg-[#F7F5EF] border border-[#D8D2C4] space-y-4 text-xs">
-            <div className="flex items-center justify-between border-b border-[#D8D2C4] pb-3">
+          <div className="max-w-md mx-auto p-5 rounded-2xl bg-[#F7F5EF] border border-[#D8D2C4] space-y-3 text-xs text-left">
+            <div className="flex items-center justify-between border-b border-[#D8D2C4] pb-2">
               <div>
                 <span className="text-[10px] font-bold text-[#D87945] uppercase tracking-wider block">EXPEDITION</span>
                 <span className="font-black text-[#171918] text-sm">HIMALAYAN ESCAPE</span>
-                <p className="text-[10px] text-[#646864]">MANALI × KASOL • 6D / 5N</p>
               </div>
               <div className="text-right">
                 <span className="text-[10px] font-bold text-[#646864] uppercase block">COACH</span>
@@ -1002,7 +1288,7 @@ export default function BookingFlow() {
               </div>
             </div>
 
-            <div className="space-y-2 text-[#171918]">
+            <div className="space-y-1.5 text-[#171918]">
               <div className="flex justify-between">
                 <span className="text-[#646864]">Primary Traveller:</span>
                 <span className="font-bold">{confirmedBooking.primaryTravellerName}</span>
@@ -1010,7 +1296,7 @@ export default function BookingFlow() {
               <div className="flex justify-between">
                 <span className="text-[#646864]">Confirmed Seats:</span>
                 <span className="font-bold text-[#163C32]">
-                  {confirmedBooking.travellers?.map((t: any) => t.assignedSeatNumber).join(', ')}
+                  {confirmedBooking.travellers?.map((t: any) => t.assignedSeatNumber).filter(Boolean).join(', ') || 'Assigned'}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -1039,6 +1325,68 @@ export default function BookingFlow() {
             </Link>
           </div>
         </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* MOBILE STICKY BOTTOM ACTION BAR (<640px)                 */}
+      {/* ======================================================== */}
+      {currentStep !== 4 && (
+        <aside
+          aria-label="Mobile booking action bar"
+          className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-[#D8D2C4] p-3 px-4 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] z-40 sm:hidden flex items-center justify-between gap-3"
+        >
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#646864] block">
+              {currentStep === 1 ? 'RESERVATION DEPOSIT' : currentStep === 2 ? 'DEPOSIT DUE' : 'TOTAL DUE TODAY'}
+            </span>
+            <span className="text-base font-black text-[#D87945] font-mono leading-none">
+              ₹{pricing.reservationAmount.toLocaleString('en-IN')}
+            </span>
+            <span className="text-[10px] text-[#646864] block font-medium">
+              for {travellersCount} {travellersCount === 1 ? 'traveller' : 'travellers'}
+            </span>
+          </div>
+
+          {currentStep === 1 && (
+            <button
+              type="button"
+              onClick={() => {
+                setCurrentStep(2);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="px-5 py-2.5 rounded-xl bg-[#D87945] active:bg-[#C26735] text-white font-bold text-xs shadow-sm flex items-center gap-1.5"
+            >
+              <span>Continue</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          )}
+
+          {currentStep === 2 && (
+            <button
+              type="button"
+              onClick={handleProceedToStep3}
+              className="px-5 py-2.5 rounded-xl bg-[#D87945] active:bg-[#C26735] text-white font-bold text-xs shadow-sm flex items-center gap-1.5"
+            >
+              <span>Review & Pay</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          )}
+
+          {currentStep === 3 && (
+            <button
+              type="button"
+              disabled={isProcessingPayment || (selectedSeats.length > 0 && selectedSeats.length !== travellersCount)}
+              onClick={handleProceedToPayment}
+              className="px-5 py-2.5 rounded-xl bg-[#D87945] active:bg-[#C26735] disabled:opacity-50 text-white font-bold text-xs shadow-sm flex items-center gap-1.5"
+            >
+              {isProcessingPayment ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <span>Pay ₹{pricing.reservationAmount.toLocaleString('en-IN')}</span>
+              )}
+            </button>
+          )}
+        </aside>
       )}
     </div>
   );

@@ -83,7 +83,7 @@ export default function TripPricingConfigTab() {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  const standardPrice = Number(config.packagePrice) || 6500;
+  const standardPrice = Number(config.packagePrice) || 6200;
   const groupPrice = Number(config.groupPackagePrice) || 6200;
   const depositPrice = Number(config.depositPrice) || 1000;
   const soloGateBalance = Math.max(0, standardPrice - depositPrice);
