@@ -422,3 +422,16 @@ html {
     margin-top: 8px !important;
   }
 }
+
+/* Chrome Isolation: Ensure public navbar, footer, and mobile bottom bar never render on admin routes */
+body:has([data-admin-root="true"]) > header:not([data-admin-header="true"]),
+body:has([data-admin-root="true"]) > nav,
+body:has([data-admin-root="true"]) > footer,
+body:has([data-admin-root="true"]) .mobile-bottom-bar,
+.admin-root ~ header:not([data-admin-header="true"]),
+.admin-root ~ nav,
+.admin-root ~ footer,
+.admin-root ~ .mobile-bottom-bar {
+  display: none !important;
+}
+

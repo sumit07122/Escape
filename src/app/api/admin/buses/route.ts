@@ -262,13 +262,21 @@ export async function PATCH(request: NextRequest) {
       for (const seatDef of desiredSeats) {
         const current = existingMap.get(seatDef.seatNumber);
         if (current) {
-          seatsToUpdate.push({
-            id: current.id,
-            seatType: seatDef.seatType,
-            rowNumber: seatDef.rowNumber,
-            side: seatDef.side,
-            position: seatDef.position,
-          });
+          // Only queue update if geometry or type actually changed
+          if (
+            current.seatType !== seatDef.seatType ||
+            current.rowNumber !== seatDef.rowNumber ||
+            current.side !== seatDef.side ||
+            current.position !== seatDef.position
+          ) {
+            seatsToUpdate.push({
+              id: current.id,
+              seatType: seatDef.seatType,
+              rowNumber: seatDef.rowNumber,
+              side: seatDef.side,
+              position: seatDef.position,
+            });
+          }
         } else {
           seatsToCreate.push({
             busId,
@@ -284,20 +292,18 @@ export async function PATCH(request: NextRequest) {
         }
       }
 
-      // Batch update existing
-      await Promise.all(
-        seatsToUpdate.map((s) =>
-          db.busSeat.update({
-            where: { id: s.id },
-            data: {
-              seatType: s.seatType as any,
-              rowNumber: s.rowNumber,
-              side: s.side as any,
-              position: s.position as any,
-            },
-          })
-        )
-      );
+      // Safely update changed seats without saturating the database pool
+      for (const s of seatsToUpdate) {
+        await db.busSeat.update({
+          where: { id: s.id },
+          data: {
+            seatType: s.seatType as any,
+            rowNumber: s.rowNumber,
+            side: s.side as any,
+            position: s.position as any,
+          },
+        });
+      }
 
       // Create new seats
       if (seatsToCreate.length > 0) {

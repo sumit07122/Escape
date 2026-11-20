@@ -201,7 +201,7 @@ export default function BusSeatMap({
       } catch {
         // Silently continue on background poll drop
       }
-    }, 4000);
+    }, 8000);
 
     return () => clearInterval(interval);
   }, [activeBusId, bookingSessionId, selectedSeats, onSeatSelect]);
@@ -536,20 +536,27 @@ export default function BusSeatMap({
           </div>
 
           {/* Reserved Cabin Positions: Driver & Conductor */}
-          <div className="grid grid-cols-2 gap-4 px-4">
+          <div className="grid grid-cols-2 gap-3 px-2">
             <div className="p-2.5 rounded-xl bg-[#F7F5EF] border border-[#D8D2C4] flex items-center justify-between">
-              <span className="text-xs font-bold text-[#646864]">DRIVER</span>
+              <span className="text-xs font-bold text-[#646864] flex items-center gap-1.5">
+                <span>🚗</span> DRIVER
+              </span>
               <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-white text-[#646864] border border-[#D8D2C4] uppercase">
-                NON-BOOKABLE
+                RESERVED CREW
               </span>
             </div>
             <div className="p-2.5 rounded-xl bg-[#F7F5EF] border border-[#D8D2C4] flex items-center justify-between">
-              <span className="text-xs font-bold text-[#646864]">CONDUCTOR</span>
+              <span className="text-xs font-bold text-[#646864] flex items-center gap-1.5">
+                <span>📋</span> CONDUCTOR
+              </span>
               <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-white text-[#646864] border border-[#D8D2C4] uppercase">
-                NON-BOOKABLE
+                RESERVED CREW
               </span>
             </div>
           </div>
+          <p className="text-[9px] text-[#8FA69F] mt-2 text-center uppercase tracking-wider font-semibold">
+            Cabin crew reserved • Excluded from 25 student passenger seats
+          </p>
         </div>
 
         {/* Passenger Seating Layout (2x2 Geometry) */}

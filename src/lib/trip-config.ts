@@ -35,7 +35,7 @@ async function readLegacyTripConfig() {
         db.globalSettings.findUnique({ where: { id: 'global_default' } }),
       ]),
       [[], null],
-      1200
+      4000
     );
     if (!settings || settings.length === 0) return memoryConfigCache;
     const values = new Map(settings.map((setting) => [setting.key, setting.value]));
@@ -109,7 +109,7 @@ export async function getTripConfig(): Promise<TripConfigData> {
         where: { id: 'global' },
       }),
       null,
-      1200
+      4000
     );
 
     if (config) {

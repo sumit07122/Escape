@@ -1,50 +1,87 @@
+require('dotenv').config();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-async function main() {
+async function syncAllPricing() {
+  console.log('Synchronizing pricing across TripConfig, Trip, and Settings...');
+
+  // 1. Update TripConfig
+  await prisma.tripConfig.upsert({
+    where: { id: 'global' },
+    update: {
+      packagePrice: 6200,
+      groupPackagePrice: 5800,
+      groupSizeThreshold: 3,
+      depositPrice: 1000,
+      totalCapacity: 75,
+      departureDate: '2026-10-24',
+      returnDate: '2026-10-28',
+      reportingTime: '07:00 PM',
+      pickupLocation: 'Near Main Gate (NH-2), Mathura',
+    },
+    create: {
+      id: 'global',
+      tripTitle: 'Himalayan Escape 2026',
+      subtitle: 'Five days from the plains to the peaks. Find snow trails in Manali, pine-scented evenings in Kasol, and a new crew for the journey.',
+      packagePrice: 6200,
+      groupPackagePrice: 5800,
+      groupSizeThreshold: 3,
+      depositPrice: 1000,
+      totalCapacity: 75,
+      departureDate: '2026-10-24',
+      returnDate: '2026-10-28',
+      reportingTime: '07:00 PM',
+      pickupLocation: 'Near Main Gate (NH-2), Mathura',
+      emergencyHelplines: ['6398412828', '8126854850'],
+      announcementActive: false,
+    },
+  });
+  console.log('TripConfig updated to 6200 / 5800 / 1000 / 75.');
+
+  // 2. Update master Trip
   const trip = await prisma.trip.findFirst();
   if (trip) {
-    console.log(`Current trip packagePrice: ${trip.packagePrice}, reservationAmount: ${trip.reservationAmount}`);
     await prisma.trip.update({
       where: { id: trip.id },
       data: {
         packagePrice: 6200,
         packagePricePerTraveller: 6200,
-        reservationAmount: 1000,
-        reservationAmountPerTraveller: 1000,
+        capacity: 75,
+        duration: '5 Days / 4 Nights',
       },
     });
-    console.log('✓ Updated trip packagePrice to 6200, reservationAmount to 1000 in DB');
+    console.log('Master trip updated to 6200, 75 capacity, 5 Days / 4 Nights.');
   }
 
-  // Update Settings table if price_single exists
-  const singleSetting = await prisma.settings.findUnique({ where: { key: 'price_single' } });
-  if (singleSetting) {
-    await prisma.settings.update({
-      where: { key: 'price_single' },
-      data: { value: '6200' },
-    });
-    console.log('✓ Updated Settings price_single to 6200');
-  } else {
-    await prisma.settings.create({
-      data: { key: 'price_single', value: '6200', description: 'Standard Single Person Package Price' },
-    });
-    console.log('✓ Created Settings price_single as 6200');
-  }
+  // 3. Update legacy settings keys
+  const settingsToUpdate = [
+    { key: 'price_single', value: '6200' },
+    { key: 'price_group', value: '5800' },
+    { key: 'group_size_threshold', value: '3' },
+    { key: 'price_reservation', value: '1000' },
+    { key: 'trip_capacity', value: '75' },
+    { key: 'departure_date', value: '2026-10-24' },
+    { key: 'return_date', value: '2026-10-28' },
+  ];
 
-  const depositSetting = await prisma.settings.findUnique({ where: { key: 'price_reservation' } });
-  if (depositSetting) {
-    await prisma.settings.update({
-      where: { key: 'price_reservation' },
-      data: { value: '1000' },
+  for (const s of settingsToUpdate) {
+    await prisma.settings.upsert({
+      where: { key: s.key },
+      update: { value: s.value },
+      create: { key: s.key, value: s.value, category: 'PRICING' },
     });
-    console.log('✓ Updated Settings price_reservation to 1000');
-  } else {
-    await prisma.settings.create({
-      data: { key: 'price_reservation', value: '1000', description: 'Advance Reservation Deposit' },
-    });
-    console.log('✓ Created Settings price_reservation as 1000');
   }
+  console.log('Legacy settings keys updated.');
+
+  // 4. Update globalSettings
+  await prisma.globalSettings.upsert({
+    where: { id: 'global_default' },
+    update: { tripCapacity: 75 },
+    create: { id: 'global_default', tripCapacity: 75 },
+  });
+  console.log('GlobalSettings capacity updated to 75.');
+
+  console.log('Pricing sync complete!');
 }
 
-main().catch(console.error).finally(() => prisma.$disconnect());
+syncAllPricing().catch(console.error).finally(() => prisma.$disconnect());

@@ -313,7 +313,7 @@ export default function AdminLayout({
       {/* ======================================================== */}
       {/* SECTION 2: STICKY TOP BAR (ALPINE MOUNTAIN AESTHETIC)   */}
       {/* ======================================================== */}
-      <header className="sticky top-0 z-50 backdrop-blur-md bg-stone-950/85 border-b border-white/10 shadow-lg">
+      <header data-admin-header="true" className="sticky top-0 z-50 backdrop-blur-md bg-stone-950/85 border-b border-white/10 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between gap-4">
           {/* Left: Himalayan Escape Logo Badge + Title */}
           <div className="flex items-center gap-3">

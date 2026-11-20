@@ -607,8 +607,8 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
             <h2 className="text-2xl sm:text-3xl font-black text-[#171918]">
               How many are travelling?
             </h2>
-            <p className="text-xs text-[#646864]">
-              Select the number of seats to reserve together. Pricing updates instantly below.
+            <p className="text-xs text-[#646864] font-medium">
+              Select the number of seats to reserve together. Student pricing updates instantly below.
             </p>
           </div>
 
