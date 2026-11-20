@@ -3,20 +3,22 @@
 export const TRIP_METADATA = {
   name: 'Himalayan Escape — Student Mountain Expedition',
   title: 'HIMALAYAN ESCAPE (MANALI × KASOL)',
-  duration: '6 DAYS • 5 NIGHTS',
+  duration: '5 DAYS • 4 NIGHTS',
   tagline: 'Mountains. Friends. Adventure. Memories.',
   origin: 'Pickup & Reporting: Near Main Gate (NH-2), Mathura',
   destination: 'Manali & Kasol, Himachal Pradesh',
   capacity: 75,
-  dates: 'October 24 - October 29, 2026',
+  dates: 'October 24 - October 28, 2026',
   reportingLocation: 'Pickup & Reporting: Near Main Gate (NH-2), Mathura',
   disclaimer: 'Independent student-organized expedition. Not an officially sponsored university event. Trip itinerary may change due to weather, road conditions, traffic, permits, government restrictions, local conditions, or safety requirements. Weather-dependent and road-dependent activities (such as Atal Tunnel / Sissu snow trails and river rafting) are subject to official clearances and cannot be guaranteed.',
 };
 
 export const PRICING_DEFAULTS = {
   pricePerTraveller: 6200, // ₹6,200 flat student rate
-  groupPricePerTraveller: 6200, // ₹6,200 rate
-  groupThreshold: 1,
+  duoPricePerTraveller: 5999, // ₹5,999 Duo Explorer rate
+  squadPricePerTraveller: 5800, // ₹5,800 Squad Cabin rate (3+ travellers)
+  groupPricePerTraveller: 5800, // ₹5,800 group rate
+  groupThreshold: 3,
   singlePrice: 6200,
   reservationAmountPerTraveller: 1000, // ₹1,000 reservation deposit per traveller
   reservationAmount: 1000,
@@ -150,62 +152,46 @@ export const ITINERARY_DAYS = [
   },
   {
     dayNumber: 4,
-    title: 'DAY 4 — MANALI TO KASOL',
-    subtitle: 'Rafting at Kullu & Parvati Valley Vibe',
+    title: 'DAY 4 — MANALI TO KASOL & MANIKARAN',
+    subtitle: 'Rafting at Kullu, Sacred Hot Springs & Riverside Campfire',
     stayLocation: 'Kasol Riverside Camp / Resort',
     mealsConfig: 'Breakfast & Dinner Included',
-    description: 'Descend along the Beas River to Kullu with an optional white-water rafting stop, then branch into the enchanting Parvati Valley toward Kasol.',
+    description: 'Check out of Manali, halt at Kullu for exhilarating river rafting, then drive into the mystique Parvati Valley. Visit Manikaran Sahib hot springs and gather for an evening campfire.',
     items: [
       { time: '08:00 AM', location: 'Resort', activity: 'Breakfast & Hotel Checkout', description: 'Check-out from Manali and board coaches toward Kullu.', isOptional: false },
       { time: '10:30 AM', location: 'Kullu (Babeli/Pirdi)', activity: 'Optional Beas River Rafting & Shawl Factory', description: 'Exciting river rafting with certified guides (optional) and authentic Kullu weavers visit.', isOptional: true },
       { time: '01:30 PM', location: 'Bhuntar to Jari', activity: 'Drive into Parvati Valley', description: 'Scenic mountain canyon drive following the turquoise Parvati River.', isOptional: false },
-      { time: '03:30 PM', location: 'Kasol', activity: 'Kasol Hotel / Riverside Check-in', description: 'Check-in and soak in the tranquil pine and cedar environment.', isOptional: false },
-      { time: '05:00 PM', location: 'Kasol Village', activity: 'Kasol Market & Riverside Cafes', description: 'Explore German bakeries, Israeli cuisine, hippie craft shops, and Parvati riverbanks.', isOptional: false },
-      { time: '08:30 PM', location: 'Kasol Camp/Hotel', activity: 'Group Dinner & Overnight Kasol', description: 'Dinner and peaceful alpine stay in Kasol.', isOptional: false },
+      { time: '03:30 PM', location: 'Manikaran Sahib', activity: 'Manikaran Sahib Gurudwara & Hot Springs', description: 'Visit the revered Sikh shrine, natural boiling sulphur springs, and Shiva temple.', isOptional: false },
+      { time: '06:00 PM', location: 'Kasol Riverside', activity: 'Kasol Check-in & Market Exploration', description: 'Check-in to riverside resort/camp, stroll along the riverbanks, and explore cafes.', isOptional: false },
+      { time: '08:00 PM', location: 'Kasol Grounds', activity: 'Campfire, Music & Gala Dinner', description: 'Evening mountain campfire, acoustic music session, group dinner and overnight stay.', isOptional: false },
     ],
   },
   {
     dayNumber: 5,
-    title: 'DAY 5 — KASOL + MANIKARAN SAHIB',
-    subtitle: 'Sacred Hot Springs, Chalal Pine Trails & Campfire',
-    stayLocation: 'Kasol Riverside Camp / Resort',
-    mealsConfig: 'Breakfast & Dinner Included',
-    description: 'Immerse in spirituality at the historic Manikaran Sahib Gurudwara and Shiva Temple natural hot springs, followed by a hike along the Parvati trail to Chalal and an evening campfire.',
-    items: [
-      { time: '08:00 AM', location: 'Kasol', activity: 'Breakfast with Valley Views', description: 'Fresh morning mountain breakfast.', isOptional: false },
-      { time: '09:30 AM', location: 'Manikaran Sahib', activity: 'Manikaran Sahib Gurudwara & Hot Springs', description: 'Visit the revered Sikh shrine, Shiva temple, natural boiling sulphur springs, and Langar.', isOptional: false },
-      { time: '01:00 PM', location: 'Manikaran Market', activity: 'Local Market & Handicrafts', description: 'Local bazaar exploration and traditional stone work.', isOptional: false },
-      { time: '03:30 PM', location: 'Kasol to Chalal', activity: 'Optional Chalal Trail Walk', description: 'Gentle 1.5 km pine forest suspension bridge walk across Parvati river subject to weather.', isOptional: true },
-      { time: '07:00 PM', location: 'Kasol Grounds', activity: 'Campfire, Group Games & Music', description: 'Fun interactive games, photography session, stories, and shared memories.', isOptional: false },
-      { time: '08:45 PM', location: 'Kasol Resort', activity: 'Farewell Gala Dinner', description: 'Special mountain feast dinner and overnight stay.', isOptional: false },
-    ],
-  },
-  {
-    dayNumber: 6,
-    title: 'DAY 6 — KASOL TO MATHURA',
-    subtitle: 'Return Journey & Fond Memories',
+    title: 'DAY 5 — KASOL TO MATHURA',
+    subtitle: 'Morning Parvati Walk, Return Journey & Safe Arrival',
     stayLocation: 'Home / Mathura',
     mealsConfig: 'Breakfast Included',
-    description: 'After breakfast and group photos, embark on the scenic return journey through Himachal toward Mathura, concluding an unforgettable college expedition.',
+    description: 'Enjoy a peaceful morning riverside walk in Kasol, have breakfast, and embark on the scenic return highway drive to Mathura, completing an unforgettable expedition.',
     items: [
-      { time: '07:30 AM', location: 'Kasol', activity: 'Breakfast & Hotel Checkout', description: 'Farewell breakfast and coach boarding.', isOptional: false },
-      { time: '08:30 AM', location: 'Parvati Valley', activity: 'Return Journey toward Mathura', description: 'Scenic drive descending through Mandi and Chandigarh highway.', isOptional: false },
-      { time: '02:00 PM', location: 'Highway Restaurant', activity: 'Lunch & Freshen-up Halt', description: 'Group lunch break en route.', isOptional: false },
-      { time: '06:00 PM', location: 'En route Delhi-Mathura', activity: 'Trip Feedback & Digital Ticket Archive', description: 'Share photos, submit trip feedback, and swap social handles.', isOptional: false },
-      { time: '11:00 PM', location: 'Mathura Departure Bay', activity: 'Arrival at Mathura & Trip Completion', description: 'Safe arrival back in Mathura. End of the Himalayan Escape!', isOptional: false },
+      { time: '07:30 AM', location: 'Kasol Riverbank', activity: 'Morning Pine Walk & Breakfast', description: 'Crisp morning walk, farewell breakfast and baggage loading.', isOptional: false },
+      { time: '08:45 AM', location: 'Parvati Valley', activity: 'Return Journey toward Mathura', description: 'Scenic descent through Mandi, Bilaspur, and Chandigarh expressway.', isOptional: false },
+      { time: '02:00 PM', location: 'Highway Food Plaza', activity: 'Lunch & Refreshment Halt', description: 'Sanitized group lunch break en route.', isOptional: false },
+      { time: '06:30 PM', location: 'Delhi-NCR Expressway', activity: 'Trip Recap & Photo Sharing', description: 'Share captured reels, exchange memories, and feedback.', isOptional: false },
+      { time: '11:00 PM', location: 'Mathura Departure Bay', activity: 'Arrival at Mathura & Trip Completion', description: 'Safe arrival back at GLA / Mathura. End of the 5-day Himalayan Escape!', isOptional: false },
     ],
   },
 ];
 
 export const INCLUSIONS_LIST = [
   'Round-trip air-conditioned coach transport from Mathura to Manali, Kasol & back',
-  '2 Nights accommodation in 3-star resort in Manali',
-  '2 Nights accommodation in premium riverside resort/camp in Kasol',
+  '2 Nights accommodation in 3-star mountain resort in Manali',
+  '1 Night accommodation in premium riverside resort/camp in Kasol',
   'Configured meals: Daily Breakfast & Dinner at hotels as specified in itinerary',
   'Complete Manali sightseeing: Hidimba Devi, Manu Temple, Van Vihar, Old Manali, Mall Road',
   'Solang Valley & Atal Tunnel excursion (subject to road & weather clearance)',
   'Kasol & Manikaran Sahib Gurudwara with natural hot spring visit',
-  'Evening campfire & group bonding session in Kasol',
+  'Evening campfire & musical bonding session in Kasol',
   'Dedicated 24/7 Student Trip Organizers / Lead Coordinators & experienced mountain chauffeurs',
   'Interactive seat booking with guaranteed reserved bus seat',
   'Digital QR ticket & live verification pass for hassle-free boarding',

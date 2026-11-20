@@ -131,7 +131,7 @@ export default function DestinationCarousel() {
             Curated Himalayan Destinations
           </h2>
           <p className="text-sm text-[#646864] max-w-xl mt-1">
-            Explore the handpicked destinations across Manali, Parvati Valley, and Kasol included in your 6D/5N journey.
+            Explore the handpicked destinations across Manali, Parvati Valley, and Kasol included in your 5D/4N journey.
           </p>
         </div>
 

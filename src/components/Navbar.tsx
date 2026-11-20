@@ -171,7 +171,7 @@ export default function Navbar() {
                 HIMALAYAN ESCAPE
               </span>
               <p className="mt-0.5 text-[8px] font-bold uppercase tracking-[0.1em] text-[#D87945] min-[380px]:text-[9px] sm:text-[10px] sm:tracking-widest max-[359px]:hidden">
-                6D / 5N • MANALI × KASOL EXPEDITION
+                5D / 4N • MANALI × KASOL EXPEDITION
               </p>
             </div>
           </Link>

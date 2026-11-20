@@ -268,7 +268,7 @@ export default function TripPricingConfigTab() {
             {/* Standard Individual Price */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-stone-200 block">
-                Solo Rate (1–4 pax) (₹)
+                Solo Single Rate (₹)
               </label>
               <input
                 type="number"
@@ -279,13 +279,13 @@ export default function TripPricingConfigTab() {
                 onChange={(e) => setConfig({ ...config, packagePrice: Number(e.target.value) })}
                 className="w-full px-4 py-3 rounded-xl bg-stone-950 border border-white/20 text-white font-mono font-bold text-sm focus:border-amber-400 focus:outline-none"
               />
-              <span className="text-[10px] text-stone-500 block">Standard individual rate (₹6,500)</span>
+              <span className="text-[10px] text-stone-500 block">Single traveller rate (₹6,200)</span>
             </div>
 
             {/* Group Discounted Price */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-emerald-400 block">
-                Squad Rate (5+ pax) (₹)
+                Squad Cabin Rate (₹)
               </label>
               <input
                 type="number"
@@ -296,7 +296,7 @@ export default function TripPricingConfigTab() {
                 onChange={(e) => setConfig({ ...config, groupPackagePrice: Number(e.target.value) })}
                 className="w-full px-4 py-3 rounded-xl bg-stone-950 border border-emerald-500/40 text-emerald-400 font-mono font-bold text-sm focus:border-emerald-400 focus:outline-none"
               />
-              <span className="text-[10px] text-emerald-500/80 block">Squad rate (₹6,200)</span>
+              <span className="text-[10px] text-emerald-500/80 block">Squad rate per person (₹5,800)</span>
             </div>
 
             {/* Group Size Threshold */}
@@ -314,7 +314,7 @@ export default function TripPricingConfigTab() {
                 onChange={(e) => setConfig({ ...config, groupSizeThreshold: Number(e.target.value) })}
                 className="w-full px-4 py-3 rounded-xl bg-stone-950 border border-white/20 text-white font-mono font-bold text-sm focus:border-amber-400 focus:outline-none"
               />
-              <span className="text-[10px] text-stone-500 block">Min travelers for group rate (5)</span>
+              <span className="text-[10px] text-stone-500 block">Min travellers for squad offer (3)</span>
             </div>
 
             {/* Advance Reservation Deposit */}

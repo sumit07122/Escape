@@ -2,43 +2,57 @@ import { db } from './db';
 import { cookies } from 'next/headers';
 import { verifySessionToken } from './auth';
 
+// In-memory throttling for cleanExpiredHolds to prevent database locking under rapid polling
+let lastCleanExpiredHoldsTime = 0;
+const CLEAN_HOLDS_THROTTLE_MS = 20000; // 20 seconds
+
 /**
  * Automatically clean expired seat holds in the database
- * Any active hold with expiresAt < now is set to 'EXPIRED'
- * and the corresponding BusSeat.status is reset to 'AVAILABLE' if not confirmed.
+ * Throttled to execute at most once every 20 seconds, or immediately if force=true.
  */
-export async function cleanExpiredHolds(): Promise<number> {
+export async function cleanExpiredHolds(force: boolean = false): Promise<number> {
+  const nowMs = Date.now();
+  if (!force && nowMs - lastCleanExpiredHoldsTime < CLEAN_HOLDS_THROTTLE_MS) {
+    return 0;
+  }
+  lastCleanExpiredHoldsTime = nowMs;
+
   const now = new Date();
 
-  // Find expired active holds
-  const expiredHolds = await db.seatHold.findMany({
-    where: {
-      expiresAt: { lt: now },
-    },
-    select: { id: true, busSeatId: true },
-  });
-
-  if (expiredHolds.length === 0) return 0;
-
-  const holdIds = expiredHolds.map((h) => h.id);
-  const seatIds = expiredHolds.map((h) => h.busSeatId);
-
-  await db.$transaction([
-    // Eagerly delete expired holds
-    db.seatHold.deleteMany({
-      where: { id: { in: holdIds } },
-    }),
-    // Reset seats to AVAILABLE if currently HELD and not booked
-    db.busSeat.updateMany({
+  try {
+    // Find expired active holds
+    const expiredHolds = await db.seatHold.findMany({
       where: {
-        id: { in: seatIds },
-        status: 'HELD',
+        expiresAt: { lt: now },
       },
-      data: { status: 'AVAILABLE', isAvailable: true },
-    }),
-  ]);
+      select: { id: true, busSeatId: true },
+    });
 
-  return expiredHolds.length;
+    if (expiredHolds.length === 0) return 0;
+
+    const holdIds = expiredHolds.map((h) => h.id);
+    const seatIds = expiredHolds.map((h) => h.busSeatId);
+
+    await db.$transaction([
+      // Eagerly delete expired holds
+      db.seatHold.deleteMany({
+        where: { id: { in: holdIds } },
+      }),
+      // Reset seats to AVAILABLE if currently HELD and not booked
+      db.busSeat.updateMany({
+        where: {
+          id: { in: seatIds },
+          status: 'HELD',
+        },
+        data: { status: 'AVAILABLE', isAvailable: true },
+      }),
+    ]);
+
+    return expiredHolds.length;
+  } catch (err) {
+    console.warn('[CLEAN_HOLDS_WARNING]:', err);
+    return 0;
+  }
 }
 
 /**

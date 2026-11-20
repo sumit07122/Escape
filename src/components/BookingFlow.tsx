@@ -191,11 +191,32 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
     checkAuth();
   }, []);
 
-  // Instant Client Pricing calculation (Canonical: ₹6,200 flat per traveller, ₹1,000 deposit, ₹5,200 balance)
+  // Instant Client Pricing calculation with Student Offers:
+  // Solo: ₹6,200 (Deposit ₹1,000, Gate Balance ₹5,200)
+  // Duo Explorer (2): ₹5,999/head (Save ₹402 per duo, Deposit ₹1,000/head)
+  // Squad Cabin (3+): ₹5,800/head (Save ₹400/head, Deposit ₹1,000/head)
   const updatePricing = useCallback((count: number, couponDiscount = 0, couponCode: string | null = null) => {
-    const rate = 6200;
+    const singleRate = Number(config.packagePrice) || 6200;
+    const duoRate = Number(config.duoPackagePrice) || 5999;
+    const squadRate = Number(config.groupPackagePrice) || 5800;
+    const depositPerHead = Number(config.depositPrice) || 1000;
+
+    let rate = singleRate;
+    let isGroupOffer = false;
+    let savingsPerHead = 0;
+
+    if (count === 2) {
+      rate = duoRate;
+      isGroupOffer = true;
+      savingsPerHead = Math.max(0, singleRate - duoRate);
+    } else if (count >= 3) {
+      rate = squadRate;
+      isGroupOffer = true;
+      savingsPerHead = Math.max(0, singleRate - squadRate);
+    }
+
     const rawTotal = count * rate;
-    const depositTotal = count * 1000;
+    const depositTotal = count * depositPerHead;
     const finalTotal = Math.max(0, rawTotal - couponDiscount);
     const balanceDue = Math.max(0, finalTotal - depositTotal);
 
@@ -204,20 +225,20 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
       baseAmount: rawTotal,
       totalAmount: finalTotal,
       pricePerTraveller: rate,
-      reservationAmountPerTraveller: 1000,
+      reservationAmountPerTraveller: depositPerHead,
       reservationAmount: depositTotal,
       remainingBalance: balanceDue,
       finalAmount: finalTotal,
-      discountAmount: couponDiscount,
-      isGroupRate: false,
-      groupThreshold: 1,
-      groupPackagePrice: 6200,
-      standardPackagePrice: 6200,
-      savingsPerTraveller: 0,
+      discountAmount: couponDiscount + (count * savingsPerHead),
+      isGroupRate: isGroupOffer,
+      groupThreshold: 3,
+      groupPackagePrice: squadRate,
+      standardPackagePrice: singleRate,
+      savingsPerTraveller: savingsPerHead,
       couponCode: couponCode || undefined,
       couponDiscount,
     });
-  }, []);
+  }, [config]);
 
   // Adjust travellers array instantly when count changes
   useEffect(() => {
@@ -591,9 +612,55 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
             </p>
           </div>
 
-          {/* Stepper */}
-          <div className="max-w-xs mx-auto p-4 rounded-2xl bg-[#F7F5EF] border border-[#D8D2C4] space-y-3">
-            <div className="flex items-center justify-between">
+          {/* Stepper & Offer Selection */}
+          <div className="max-w-md mx-auto p-4 sm:p-5 rounded-2xl bg-[#F7F5EF] border border-[#D8D2C4] space-y-4">
+            {/* Quick Group Presets */}
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => setTravellersCount(1)}
+                className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border ${
+                  travellersCount === 1
+                    ? 'bg-[#163C32] text-white border-[#163C32] shadow-sm'
+                    : 'bg-white text-[#171918] border-[#D8D2C4] hover:bg-stone-100'
+                }`}
+              >
+                <span className="block text-[11px] uppercase tracking-wider">Solo</span>
+                <span className="font-mono text-xs">₹6,200</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setTravellersCount(2)}
+                className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border relative ${
+                  travellersCount === 2
+                    ? 'bg-[#163C32] text-white border-[#163C32] shadow-sm'
+                    : 'bg-white text-[#171918] border-[#D8D2C4] hover:bg-stone-100'
+                }`}
+              >
+                <span className="absolute -top-1.5 right-1 px-1 py-0.2 rounded-full bg-[#D87945] text-white text-[8px] font-black uppercase">
+                  Save ₹402
+                </span>
+                <span className="block text-[11px] uppercase tracking-wider">Duo (2)</span>
+                <span className="font-mono text-xs">₹5,999/head</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setTravellersCount(3)}
+                className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border relative ${
+                  travellersCount >= 3
+                    ? 'bg-[#163C32] text-white border-[#163C32] shadow-sm'
+                    : 'bg-white text-[#171918] border-[#D8D2C4] hover:bg-stone-100'
+                }`}
+              >
+                <span className="absolute -top-1.5 right-1 px-1 py-0.2 rounded-full bg-emerald-600 text-white text-[8px] font-black uppercase">
+                  Best Value
+                </span>
+                <span className="block text-[11px] uppercase tracking-wider">Squad (3+)</span>
+                <span className="font-mono text-xs">₹5,800/head</span>
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
               <button
                 type="button"
                 disabled={travellersCount <= 1}
@@ -622,31 +689,39 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
               </button>
             </div>
 
-            {/* Flat Rate Badge */}
+            {/* Flat Rate / Offer Badge */}
             <div className="pt-2">
-              <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-0.5">
+              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-1">
                 <div className="text-xs font-bold text-emerald-950 font-mono">
-                  Flat ₹6,200 / person · All-Inclusive Mountain Expedition
+                  {pricing.isGroupRate ? (
+                    <span>
+                      🎉 Student Offer Applied: ₹{pricing.pricePerTraveller.toLocaleString('en-IN')} / traveller (Saving ₹{(pricing.savingsPerTraveller || 0).toLocaleString('en-IN')} each!)
+                    </span>
+                  ) : (
+                    <span>
+                      Single Person: ₹6,200 All-Inclusive (5 Days / 4 Nights)
+                    </span>
+                  )}
                 </div>
-                <div className="text-[11px] text-emerald-800 font-medium">
-                  Lock your seat today with only <strong className="text-emerald-950 font-mono">₹1,000 reservation deposit</strong>
+                <div className="text-xs text-emerald-800 font-medium">
+                  Lock your seat today with only <strong className="text-emerald-950 font-bold font-mono">₹1,000 reservation deposit</strong> per person
                 </div>
               </div>
             </div>
 
             {/* Transparent Instant Math Table */}
-            <div className="pt-3 border-t border-[#D8D2C4] text-xs space-y-1.5">
+            <div className="pt-3 border-t border-[#D8D2C4] text-xs space-y-2">
               <div className="flex justify-between text-[#171918] font-bold">
-                <span>Total Trip Cost:</span>
+                <span>Total Expedition Price ({travellersCount} {travellersCount === 1 ? 'seat' : 'seats'}):</span>
                 <span className="font-mono">₹{pricing.totalAmount.toLocaleString('en-IN')}</span>
               </div>
-              <div className="flex justify-between text-[#D87945] font-bold">
-                <span>Reservation Deposit (Today):</span>
+              <div className="flex justify-between text-emerald-700 font-black text-sm p-2 rounded-lg bg-emerald-50 border border-emerald-200">
+                <span>Pay Today to Reserve:</span>
                 <span className="font-mono">₹{pricing.reservationAmount.toLocaleString('en-IN')}</span>
               </div>
-              <div className="flex justify-between text-[#646864] text-[11px]">
-                <span>Remaining before boarding:</span>
-                <span className="font-mono">₹{pricing.remainingBalance.toLocaleString('en-IN')}</span>
+              <div className="flex justify-between text-[#646864] text-xs px-1">
+                <span>Remaining balance at departure gate:</span>
+                <span className="font-mono font-bold text-[#171918]">₹{pricing.remainingBalance.toLocaleString('en-IN')}</span>
               </div>
             </div>
           </div>
@@ -1149,7 +1224,7 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
             <div className="border-b border-[#D8D2C4] pb-2.5">
               <span className="text-[10px] font-bold text-[#646864] uppercase tracking-wider block">EXPEDITION</span>
               <p className="text-sm font-black text-[#171918]">Mathura → Manali → Kasol → Mathura</p>
-              <p className="text-[11px] text-[#646864]">6 Days / 5 Nights • Luxury AC Tourist Coach</p>
+              <p className="text-[11px] text-[#646864]">5 Days / 4 Nights • Luxury AC Tourist Coach</p>
             </div>
 
             <div className="grid grid-cols-2 gap-2 border-b border-[#D8D2C4] pb-2.5">

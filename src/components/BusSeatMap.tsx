@@ -126,11 +126,11 @@ export default function BusSeatMap({
     }
   }, [activeBusId, selectedBusId]);
 
-  // 2. Fetch seats for active bus
-  const loadSeats = useCallback(async (busId: string) => {
+  // 2. Fetch seats for active bus with silent background option
+  const loadSeats = useCallback(async (busId: string, silent: boolean = false) => {
     if (!busId) return;
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       setErrorMessage(null);
       const res = await fetch(`/api/buses/${busId}/seats?bookingSessionId=${encodeURIComponent(bookingSessionId)}&t=${Date.now()}`, {
         cache: 'no-store',
@@ -150,9 +150,9 @@ export default function BusSeatMap({
       }
     } catch (err) {
       console.error('Error loading seats:', err);
-      setErrorMessage('Failed to refresh seat map.');
+      if (!silent) setErrorMessage('Failed to refresh seat map.');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [bookingSessionId, selectedSeats.length]);
 
@@ -162,11 +162,11 @@ export default function BusSeatMap({
 
   useEffect(() => {
     if (activeBusId) {
-      loadSeats(activeBusId);
+      loadSeats(activeBusId, false);
     }
   }, [activeBusId, loadSeats]);
 
-  // Real-time polling every 4000ms to synchronize live seat map occupancy
+  // Real-time polling every 4000ms to synchronize live seat map occupancy silently
   useEffect(() => {
     if (!activeBusId) return;
 
@@ -180,7 +180,6 @@ export default function BusSeatMap({
           const data = await res.json();
           if (Array.isArray(data.seats)) {
             setSeats(data.seats);
-
 
             // Sync remaining hold seconds
             const myHeld = data.seats.filter((s: SeatData) => s.isMyHold && s.heldSecondsRemaining > 0);
@@ -221,7 +220,7 @@ export default function BusSeatMap({
                 seatNumbers: selectedSeats,
                 bookingSessionId,
               }),
-            }).finally(() => loadSeats(activeBusId));
+            }).finally(() => loadSeats(activeBusId, true));
           }
           onSeatSelect(activeBusId, []);
           setErrorMessage('Your 10-minute reservation hold has expired. Please pick your seat again.');
@@ -234,7 +233,7 @@ export default function BusSeatMap({
     return () => clearInterval(interval);
   }, [holdTimerSeconds, activeBusId, bookingSessionId, loadSeats, onSeatSelect, selectedSeats]);
 
-  // Handle seat click
+  // Handle seat click with instant optimistic touch/click response (<10ms)
   const handleSeatClick = async (seat: SeatData) => {
     if (readOnly) return;
 
@@ -267,6 +266,22 @@ export default function BusSeatMap({
       }
     }
 
+    // 1. INSTANT OPTIMISTIC FEEDBACK (<10ms)
+    // Instantly reflect in parent and local component state
+    onSeatSelect(activeBusId, newSelected);
+    setSeats((prev) =>
+      prev.map((s) => {
+        if (newSelected.includes(s.seatNumber)) {
+          return { ...s, status: 'SELECTED' as SeatStatus, isMyHold: true };
+        }
+        if (s.seatNumber === seat.seatNumber && isCurrentlySelected) {
+          return { ...s, status: 'AVAILABLE' as SeatStatus, isMyHold: false };
+        }
+        return s;
+      })
+    );
+
+    // 2. DISPATCH ASYNC SERVER SYNC (Non-blocking)
     if (newSelected.length > 0) {
       try {
         const res = await fetch('/api/seats/hold', {
@@ -281,20 +296,22 @@ export default function BusSeatMap({
 
         const data = await res.json();
         if (!res.ok) {
+          // Graceful rollback if seat was taken
           setErrorMessage(data.error || 'Seat currently held by another student');
-          loadSeats(activeBusId);
+          onSeatSelect(activeBusId, selectedSeats);
+          loadSeats(activeBusId, true);
           return;
         }
 
         setHoldTimerSeconds(data.heldSecondsRemaining || 600);
-        onSeatSelect(activeBusId, newSelected);
-        await loadSeats(activeBusId);
       } catch {
         setErrorMessage('Failed to connect to seat server. Please try again.');
+        onSeatSelect(activeBusId, selectedSeats);
+        loadSeats(activeBusId, true);
       }
     } else {
       try {
-        await fetch('/api/seats/release', {
+        void fetch('/api/seats/release', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -303,11 +320,9 @@ export default function BusSeatMap({
             bookingSessionId,
           }),
         });
-        onSeatSelect(activeBusId, []);
         setHoldTimerSeconds(0);
-        await loadSeats(activeBusId);
       } catch {
-        // Fallback
+        // Silently continue
       }
     }
   };
@@ -387,7 +402,7 @@ export default function BusSeatMap({
         disabled={isDisabled && !isAdmin}
         onClick={() => handleSeatClick(seat)}
         aria-label={`Seat ${seat.seatNumber}, ${seat.position}, status: ${seat.status}`}
-        className={`relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl border flex flex-col items-center justify-center transition-all seat-shadow ${bgColor} ${ringClasses}`}
+        className={`relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl border flex flex-col items-center justify-center transition-transform active:scale-90 duration-100 ease-out touch-manipulation select-none cursor-pointer seat-shadow ${bgColor} ${ringClasses}`}
         title={`${seat.seatNumber} (${seat.position} • Row ${seat.rowNumber}) - ${seat.status}`}
       >
         {isRecommended && seat.status === 'AVAILABLE' && !isSelected && (

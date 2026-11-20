@@ -49,21 +49,23 @@ export default async function HomePage() {
   return (
     <div className="w-full flex flex-col bg-[#F7F5EF] text-[#171918]">
       {/* ======================================================== */}
-      <section className="relative isolate min-h-[82vh] overflow-hidden bg-[#091a17] px-5 pb-24 pt-28 text-center text-white sm:min-h-[88vh] sm:px-8 sm:pb-28 sm:pt-32">
+      <section className="relative isolate min-h-[82vh] overflow-hidden bg-[#061412] px-5 pb-24 pt-28 text-center text-white sm:min-h-[88vh] sm:px-8 sm:pb-28 sm:pt-32">
         <div className="absolute inset-0 -z-20">
-          <img src="/hero-mountain.jpg" alt="A forested Himalayan valley and river" className="h-full w-full object-cover object-[center_42%]" />
+          <img src="/hero-mountain.jpg" alt="A forested Himalayan valley and snow mountains" className="h-full w-full object-cover object-[center_38%] scale-105 transition-transform duration-1000 ease-out" />
         </div>
-        <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(7,19,17,0.48)_0%,rgba(7,19,17,0.22)_30%,rgba(7,19,17,0.48)_60%,#091a17_100%)]" />
-        <div className="absolute inset-x-0 top-0 -z-10 h-40 bg-gradient-to-b from-black/30 to-transparent" />
+        {/* Multi-layer Glacial Ambient Atmosphere */}
+        <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(5,17,14,0.55)_0%,rgba(6,20,18,0.25)_35%,rgba(5,17,14,0.65)_70%,#061412_100%)]" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[750px] h-[380px] bg-gradient-radial from-cyan-400/12 via-emerald-500/6 to-transparent blur-3xl pointer-events-none -z-10" />
+        <div className="absolute inset-x-0 top-0 -z-10 h-36 bg-gradient-to-b from-black/40 to-transparent" />
         <SnowEffect />
 
         <div className="relative z-10 mx-auto flex max-w-6xl flex-col items-center gap-8">
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:gap-4">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/25 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-stone-100 shadow-lg backdrop-blur-md sm:text-xs">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/30 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-stone-100 shadow-xl backdrop-blur-md sm:text-xs">
               <Mountain className="h-4 w-4 text-[#f0b588]" />
               Independent student expedition
             </span>
-            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200/20 bg-emerald-950/35 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-50 backdrop-blur-md sm:text-xs">
+            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/25 bg-emerald-950/45 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-100 shadow-xl backdrop-blur-md sm:text-xs">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-300 opacity-70" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-300" />
@@ -90,8 +92,8 @@ export default async function HomePage() {
               {tripConfig.subtitle}
             </p>
             <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] font-medium uppercase tracking-[0.12em] text-white/75 sm:text-xs">
-              <span>6 days</span><span className="h-1 w-1 rounded-full bg-[#f0b588]" />
-              <span>5 nights</span><span className="h-1 w-1 rounded-full bg-[#f0b588]" />
+              <span>5 days</span><span className="h-1 w-1 rounded-full bg-[#f0b588]" />
+              <span>4 nights</span><span className="h-1 w-1 rounded-full bg-[#f0b588]" />
               <span>Manali to Kasol</span>
             </div>
           </div>
@@ -118,59 +120,46 @@ export default async function HomePage() {
             )}
           </div>
 
-          {/* Front-Vision Direct Contact & Helpline Card */}
-          <div className="w-full max-w-2xl mx-auto rounded-3xl border border-white/20 bg-black/45 p-4 sm:p-5 shadow-2xl backdrop-blur-md text-left transition-all hover:border-[#f1c39e]/40">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="space-y-1 text-center md:text-left">
-                <div className="flex items-center justify-center md:justify-start gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#f1c39e]">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                  </span>
-                  Direct Student Coordinators Available
+          {/* Seamless Floating Alpine Coordinator Dock */}
+          <div className="w-full max-w-2xl mx-auto rounded-3xl sm:rounded-full border border-white/15 bg-white/[0.05] p-3 sm:py-2.5 sm:pl-6 sm:pr-3 shadow-[0_20px_50px_rgba(0,0,0,0.45),inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-2xl transition-all duration-300 hover:border-emerald-400/40 hover:bg-white/[0.08] animate-alpine-float">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+              <div className="flex items-center gap-3">
+                <span className="relative flex h-2.5 w-2.5 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                </span>
+                <div>
+                  <div className="flex items-center justify-center sm:justify-start gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#f1c39e]">
+                    <span>Campus Coordinators Live</span>
+                    <span className="text-white/40">·</span>
+                    <span className="text-emerald-300 font-semibold lowercase tracking-normal">instant help</span>
+                  </div>
+                  <p className="text-xs text-stone-200/90 font-medium">
+                    Questions or group booking? Talk directly to student leads.
+                  </p>
                 </div>
-                <h3 className="text-base sm:text-lg font-bold !text-white text-white tracking-tight">
-                  Have questions or want group booking help?
-                </h3>
-                <p className="text-xs text-stone-200/90 leading-relaxed">
-                  Call or WhatsApp our trip coordinators directly for instant assistance.
-                </p>
               </div>
 
-              <div className="flex flex-wrap items-center justify-center gap-2.5 shrink-0 font-mono">
+              <div className="flex items-center gap-2 shrink-0 font-mono">
                 <a
                   href={`tel:${tripConfig.emergencyHelplines[0] || CONTACT_INFO.coordinatorPhone1}`}
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#f1c39e] px-4 py-2.5 text-xs font-bold text-[#17231f] shadow-lg transition-all hover:bg-white hover:scale-105 active:scale-95"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-[#f1c39e] px-4 py-2 text-xs font-bold text-[#17231f] shadow-md transition-all hover:bg-white hover:scale-105 active:scale-95"
                   title="Direct Phone Call"
                 >
-                  <Phone className="h-4 w-4 text-[#163C32]" />
+                  <Phone className="h-3.5 w-3.5 text-[#163C32]" />
                   <span>Call +91 {tripConfig.emergencyHelplines[0] || CONTACT_INFO.coordinatorPhone1}</span>
                 </a>
                 <a
                   href={`https://wa.me/91${tripConfig.emergencyHelplines[1] || CONTACT_INFO.coordinatorPhone2}?text=Hi%20Coordinator,%20I'm%20interested%20in%20the%20Himalayan%20Escape%20trip.`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-xl border border-emerald-400/40 bg-emerald-950/70 px-4 py-2.5 text-xs font-bold text-emerald-200 shadow-lg backdrop-blur-sm transition-all hover:bg-emerald-800 hover:text-white hover:scale-105 active:scale-95"
-                  title="WhatsApp Chat"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-950/70 px-4 py-2 text-xs font-bold text-emerald-200 shadow-md backdrop-blur-md transition-all hover:bg-emerald-900/90 hover:text-white hover:scale-105 active:scale-95"
+                  title="WhatsApp Coordinator"
                 >
-                  <MessageCircle className="h-4 w-4 text-emerald-400" />
-                  <span>WhatsApp +91 {tripConfig.emergencyHelplines[1] || CONTACT_INFO.coordinatorPhone2}</span>
+                  <MessageCircle className="h-3.5 w-3.5 text-emerald-400" />
+                  <span>WhatsApp</span>
                 </a>
               </div>
-            </div>
-            <div className="mt-3 pt-2.5 border-t border-white/10 flex flex-wrap items-center justify-center md:justify-between text-[11px] text-white/70 gap-2">
-              <span className="flex items-center gap-1.5">
-                <span>Coordinator 1:</span>
-                <a href={`tel:${tripConfig.emergencyHelplines[0] || CONTACT_INFO.coordinatorPhone1}`} className="font-semibold text-white hover:text-[#f1c39e] underline">
-                  +91 {tripConfig.emergencyHelplines[0] || CONTACT_INFO.coordinatorPhone1}
-                </a>
-                <span className="text-white/40">·</span>
-                <span>Coordinator 2:</span>
-                <a href={`tel:${tripConfig.emergencyHelplines[1] || CONTACT_INFO.coordinatorPhone2}`} className="font-semibold text-white hover:text-[#f1c39e] underline">
-                  +91 {tripConfig.emergencyHelplines[1] || CONTACT_INFO.coordinatorPhone2}
-                </a>
-              </span>
-              <span className="text-[#f1c39e]/90 font-medium">Instant student-to-student coordination</span>
             </div>
           </div>
 
@@ -185,8 +174,8 @@ export default async function HomePage() {
 
       <div className="relative z-20 mx-auto -mt-10 grid w-full max-w-5xl grid-cols-1 gap-3 px-4 sm:grid-cols-3 sm:px-6">
         {[
-          { value: '06', label: 'Days on the road', icon: Calendar },
-          { value: '05', label: 'Nights in the mountains', icon: Mountain },
+          { value: '05', label: 'Days on the road', icon: Calendar },
+          { value: '04', label: 'Nights in the mountains', icon: Mountain },
           { value: String(availableSeats).padStart(2, '0'), label: 'Seats currently available', icon: Bus },
         ].map(({ value, label, icon: Icon }) => (
           <div key={label} className="flex items-center gap-4 rounded-2xl border border-[#e7e1d7] bg-white/95 px-5 py-4 shadow-[0_15px_40px_rgba(18,42,34,0.10)] backdrop-blur">
@@ -265,7 +254,7 @@ export default async function HomePage() {
                   </li>
                   <li className="flex items-center gap-2.5">
                     <Check className="h-4 w-4 shrink-0 text-[#245b4a]" />
-                    <span>5 nights stay (Manali resort + Kasol camp)</span>
+                    <span>4 nights stay (Manali resort + Kasol camp)</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <Check className="h-4 w-4 shrink-0 text-[#245b4a]" />

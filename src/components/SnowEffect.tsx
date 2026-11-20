@@ -7,10 +7,13 @@ interface Snowflake {
   y: number;
   radius: number;
   opacity: number;
+  baseOpacity: number;
+  twinkleSpeed: number;
   speedY: number;
   swaySpeed: number;
   swayWidth: number;
   swayPhase: number;
+  isGlitter?: boolean;
 }
 
 interface SnowEffectProps {
@@ -20,7 +23,7 @@ interface SnowEffectProps {
 
 export default function SnowEffect({
   className = 'absolute inset-0 pointer-events-none z-10 overflow-hidden',
-  particleCount = 45,
+  particleCount = 65,
 }: SnowEffectProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -49,20 +52,25 @@ export default function SnowEffect({
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    // Initialize 40-50 snowflakes with organic radii and speeds
+    // Initialize alpine snow & micro-ice powder
     const snowflakes: Snowflake[] = [];
-    const count = Math.min(Math.max(particleCount, 30), 60);
+    const count = Math.min(Math.max(particleCount, 50), 90);
 
     for (let i = 0; i < count; i++) {
+      const isGlitter = i % 3 === 0;
+      const baseOpacity = isGlitter ? 0.3 + Math.random() * 0.5 : 0.15 + Math.random() * 0.45;
       snowflakes.push({
         x: Math.random() * (canvas.width || window.innerWidth),
         y: Math.random() * (canvas.height || window.innerHeight),
-        radius: 1 + Math.random() * 2, // 1px to 3px
-        opacity: 0.2 + Math.random() * 0.5, // 0.2 to 0.7
-        speedY: 0.4 + Math.random() * 0.8, // Slow gentle fall
-        swaySpeed: 0.01 + Math.random() * 0.02,
-        swayWidth: 0.5 + Math.random() * 1.2,
+        radius: isGlitter ? 0.8 + Math.random() * 1.2 : 1.5 + Math.random() * 2.2, // fine ice dust vs soft flakes
+        opacity: baseOpacity,
+        baseOpacity,
+        twinkleSpeed: 0.02 + Math.random() * 0.04,
+        speedY: isGlitter ? 0.25 + Math.random() * 0.5 : 0.45 + Math.random() * 0.85,
+        swaySpeed: 0.008 + Math.random() * 0.018,
+        swayWidth: isGlitter ? 0.3 + Math.random() * 0.8 : 0.8 + Math.random() * 1.5,
         swayPhase: Math.random() * Math.PI * 2,
+        isGlitter,
       });
     }
 
@@ -81,6 +89,9 @@ export default function SnowEffect({
         flake.y += flake.speedY;
         flake.x += Math.sin(frame * flake.swaySpeed + flake.swayPhase) * flake.swayWidth;
 
+        // Twinkle subtle glittering on high-altitude powder
+        flake.opacity = flake.baseOpacity + Math.sin(frame * flake.twinkleSpeed + flake.swayPhase) * 0.2;
+
         // Wrap around boundaries
         if (flake.y > canvas.height + flake.radius) {
           flake.y = -flake.radius;
@@ -95,9 +106,14 @@ export default function SnowEffect({
         // Draw soft circular snow particle
         ctx.beginPath();
         ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 255, 255, ${flake.opacity})`;
-        ctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
-        ctx.shadowBlur = 2;
+        ctx.fillStyle = `rgba(255, 255, 255, ${Math.max(0.08, flake.opacity)})`;
+        if (flake.isGlitter) {
+          ctx.shadowColor = 'rgba(210, 245, 255, 0.7)';
+          ctx.shadowBlur = 4;
+        } else {
+          ctx.shadowColor = 'rgba(255, 255, 255, 0.3)';
+          ctx.shadowBlur = 2;
+        }
         ctx.fill();
       }
 

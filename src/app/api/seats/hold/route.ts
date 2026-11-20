@@ -19,9 +19,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Booking session ID is required' }, { status: 400 });
     }
 
-    // 1. Auto-purge expired holds before checking availability
-    await db.seatHold.deleteMany({ where: { expiresAt: { lt: new Date() } } });
-    await cleanExpiredHolds();
+    // 1. Auto-purge expired holds before checking availability (force clean)
+    await cleanExpiredHolds(true);
 
     const now = new Date();
     // Enforce an atomic 10-minute hold
