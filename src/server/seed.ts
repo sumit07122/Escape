@@ -119,8 +119,8 @@ async function main() {
           busNumber: busDef.busNumber,
           vehicleName: busDef.vehicleName,
           vehicleNumber: busDef.vehicleNumber,
-          physicalCapacity: 25,
-          passengerCapacity: 23,
+          physicalCapacity: 27,
+          passengerCapacity: 25,
           driverSeats: 1,
           conductorSeats: 1,
           driverName: busDef.driverName,
@@ -131,7 +131,7 @@ async function main() {
       });
     }
 
-    // Seed 25 seats for this bus
+    // Seed 25 passenger + 2 crew seats for this bus
     for (const seatDef of BUS_25_SEATS_LAYOUT) {
       await prisma.busSeat.upsert({
         where: {

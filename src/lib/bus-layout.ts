@@ -11,7 +11,7 @@ export function generateBusSeatLayout(rows: number, rearSeats: number): SeatTemp
   let rightNumber = 0;
 
   for (let rowNumber = 1; rowNumber <= rowCount; rowNumber += 1) {
-    const seatsPerSide = rowNumber === rowCount ? 1 : 2;
+    const seatsPerSide = 2;
     for (let positionIndex = 0; positionIndex < seatsPerSide; positionIndex += 1) {
       leftNumber += 1;
       seats.push({
@@ -54,11 +54,11 @@ export function getBusLayoutSettings(seats: Array<{ seatType: string; side: stri
     .filter((seat) => seat.seatType === 'PASSENGER' && (seat.side === 'LEFT' || seat.side === 'RIGHT'))
     .map((seat) => seat.rowNumber);
   return {
-    rows: Math.max(1, ...sideRows),
+    rows: sideRows.length > 0 ? Math.max(1, ...sideRows) : 5,
     rearSeats: seats.filter((seat) => seat.seatType === 'PASSENGER' && seat.side === 'REAR').length,
   };
 }
 
 export function getPassengerCapacity(rows: number, rearSeats: number) {
-  return Math.max(0, (Math.max(1, Math.floor(rows)) - 1) * 4 + 2 + Math.floor(rearSeats));
+  return Math.max(0, Math.max(1, Math.floor(rows)) * 4 + Math.floor(rearSeats));
 }

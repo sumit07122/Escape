@@ -65,10 +65,12 @@ const PAIR_MAP: Record<string, string[]> = {
   L3: ['L4'], L4: ['L3'],
   L5: ['L6'], L6: ['L5'],
   L7: ['L8'], L8: ['L7'],
+  L9: ['L10'], L10: ['L9'],
   R1: ['R2'], R2: ['R1'],
   R3: ['R4'], R4: ['R3'],
   R5: ['R6'], R6: ['R5'],
   R7: ['R8'], R8: ['R7'],
+  R9: ['R10'], R10: ['R9'],
   B1: ['B2'], B2: ['B1', 'B3'], B3: ['B2', 'B4'], B4: ['B3', 'B5'], B5: ['B4'],
 };
 
@@ -558,8 +560,8 @@ export default function BusSeatMap({
             <span>RIGHT (AISLE / WINDOW)</span>
           </div>
 
-          {/* Rows 1 through 4 (2+2) */}
-          {[0, 1, 2, 3].map((rowIdx) => {
+          {/* Rows 1 through 5 (2+2) */}
+          {[0, 1, 2, 3, 4].map((rowIdx) => {
             const leftPair = leftPairs[rowIdx] || [];
             const rightPair = rightPairs[rowIdx] || [];
 
@@ -581,23 +583,6 @@ export default function BusSeatMap({
               </div>
             );
           })}
-
-          {/* Row 5: L9 & R9 single seats */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {leftPairs[4]?.[0] && renderSeatButton(leftPairs[4][0])}
-              <div className="w-11 h-11 sm:w-12 sm:h-12" />
-            </div>
-
-            <div className="flex-1 flex justify-center items-center">
-              <span className="text-[9px] text-[#8FA69F] font-mono uppercase">AISLE WALKWAY</span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <div className="w-11 h-11 sm:w-12 sm:h-12" />
-              {rightPairs[4]?.[0] && renderSeatButton(rightPairs[4][0])}
-            </div>
-          </div>
 
           {/* Rear 5-Seat Bench: B1, B2, B3, B4, B5 */}
           <div className="pt-3 border-t-2 border-dashed border-[#D8D2C4]">

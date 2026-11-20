@@ -115,21 +115,19 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      for (const seatDef of seatLayout) {
-        await tx.busSeat.create({
-          data: {
-            busId: bus.id,
-            seatNumber: seatDef.seatNumber,
-            seatType: seatDef.seatType,
-            rowNumber: seatDef.rowNumber,
-            side: seatDef.side,
-            position: seatDef.position,
-            isBookable: seatDef.isBookable,
-            isAvailable: seatDef.isBookable,
-            status: seatDef.isBookable ? 'AVAILABLE' : (seatDef.seatType === 'DRIVER' ? 'DRIVER' : 'CONDUCTOR'),
-          },
-        });
-      }
+      await tx.busSeat.createMany({
+        data: seatLayout.map((seatDef) => ({
+          busId: bus.id,
+          seatNumber: seatDef.seatNumber,
+          seatType: seatDef.seatType,
+          rowNumber: seatDef.rowNumber,
+          side: seatDef.side,
+          position: seatDef.position,
+          isBookable: seatDef.isBookable,
+          isAvailable: seatDef.isBookable,
+          status: seatDef.isBookable ? 'AVAILABLE' : (seatDef.seatType === 'DRIVER' ? 'DRIVER' : 'CONDUCTOR'),
+        })),
+      });
 
       await createAuditLog({
         action: 'ADMIN_BUS_CREATED',
@@ -256,34 +254,70 @@ export async function PATCH(request: NextRequest) {
       updateData.passengerCapacity = generatedCapacity;
       updateData.physicalCapacity = generatedCapacity + 2;
 
-      updated = await db.$transaction(async (tx) => {
-        for (const seatDef of desiredSeats) {
-          const current = existingBus.seats.find((seat) => seat.seatNumber === seatDef.seatNumber);
-          if (current) {
-            await tx.busSeat.update({ where: { id: current.id }, data: {
-              seatType: seatDef.seatType,
-              rowNumber: seatDef.rowNumber,
-              side: seatDef.side,
-              position: seatDef.position,
-            } });
-          } else {
-            await tx.busSeat.create({ data: {
-              busId,
-              seatNumber: seatDef.seatNumber,
-              seatType: seatDef.seatType,
-              rowNumber: seatDef.rowNumber,
-              side: seatDef.side,
-              position: seatDef.position,
-              isBookable: seatDef.isBookable,
-              isAvailable: seatDef.isBookable,
-              status: seatDef.isBookable ? 'AVAILABLE' : seatDef.seatType,
-            } });
-          }
+      // Update existing seats and create missing seats resiliently
+      const existingMap = new Map(existingBus.seats.map((s) => [s.seatNumber, s]));
+      const seatsToUpdate: Array<{ id: string; seatType: string; rowNumber: number; side: string; position: string }> = [];
+      const seatsToCreate: any[] = [];
+
+      for (const seatDef of desiredSeats) {
+        const current = existingMap.get(seatDef.seatNumber);
+        if (current) {
+          seatsToUpdate.push({
+            id: current.id,
+            seatType: seatDef.seatType,
+            rowNumber: seatDef.rowNumber,
+            side: seatDef.side,
+            position: seatDef.position,
+          });
+        } else {
+          seatsToCreate.push({
+            busId,
+            seatNumber: seatDef.seatNumber,
+            seatType: seatDef.seatType,
+            rowNumber: seatDef.rowNumber,
+            side: seatDef.side,
+            position: seatDef.position,
+            isBookable: seatDef.isBookable,
+            isAvailable: seatDef.isBookable,
+            status: seatDef.isBookable ? 'AVAILABLE' : seatDef.seatType,
+          });
         }
-        const keepNumbers = desiredSeats.map((seat) => seat.seatNumber);
-        await tx.busSeat.deleteMany({ where: { busId, seatNumber: { notIn: keepNumbers } } });
-        return tx.bus.update({ where: { id: busId }, data: updateData });
+      }
+
+      // Batch update existing
+      await Promise.all(
+        seatsToUpdate.map((s) =>
+          db.busSeat.update({
+            where: { id: s.id },
+            data: {
+              seatType: s.seatType as any,
+              rowNumber: s.rowNumber,
+              side: s.side as any,
+              position: s.position as any,
+            },
+          })
+        )
+      );
+
+      // Create new seats
+      if (seatsToCreate.length > 0) {
+        await db.busSeat.createMany({
+          data: seatsToCreate,
+          skipDuplicates: true,
+        });
+      }
+
+      // Clean unneeded seats that have no bookings
+      const keepNumbers = desiredSeats.map((seat) => seat.seatNumber);
+      await db.busSeat.deleteMany({
+        where: {
+          busId,
+          seatNumber: { notIn: keepNumbers },
+          seatBooking: null,
+        },
       });
+
+      updated = await db.bus.update({ where: { id: busId }, data: updateData });
     } else {
       updated = await db.bus.update({ where: { id: busId }, data: updateData });
     }
@@ -299,9 +333,9 @@ export async function PATCH(request: NextRequest) {
     await syncPublicCapacity();
 
     return NextResponse.json({ success: true, bus: updated });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating bus:', error);
-    return NextResponse.json({ error: 'Failed to update bus' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Failed to update bus' }, { status: 500 });
   }
 }
 

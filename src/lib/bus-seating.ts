@@ -19,21 +19,21 @@ export function isSeatRecommended(
   switch (preference) {
     case 'WINDOW':
       // Left window: L1, L3, L5, L7, L9
-      // Right window: R2, R4, R6, R8, R9
+      // Right window: R2, R4, R6, R8, R10
       // Rear window: B1, B5
-      return ['L1', 'L3', 'L5', 'L7', 'L9', 'R2', 'R4', 'R6', 'R8', 'R9', 'B1', 'B5'].includes(num);
+      return ['L1', 'L3', 'L5', 'L7', 'L9', 'R2', 'R4', 'R6', 'R8', 'R10', 'B1', 'B5'].includes(num);
 
     case 'AISLE':
-      // Left aisle: L2, L4, L6, L8
-      // Right aisle: R1, R3, R5, R7
-      return ['L2', 'L4', 'L6', 'L8', 'R1', 'R3', 'R5', 'R7'].includes(num);
+      // Left aisle: L2, L4, L6, L8, L10
+      // Right aisle: R1, R3, R5, R7, R9
+      return ['L2', 'L4', 'L6', 'L8', 'L10', 'R1', 'R3', 'R5', 'R7', 'R9'].includes(num);
 
     case 'FRONT':
       // Rows 1 and 2
       return seat.rowNumber === 1 || seat.rowNumber === 2;
 
     case 'BACK':
-      // Rows 5 (L9, R9) and 6 (B1-B5)
+      // Rows 5 (L9, L10, R9, R10) and 6 (B1-B5)
       return seat.rowNumber === 5 || seat.rowNumber === 6;
 
     default:
@@ -54,6 +54,8 @@ export function findAdjacentSeatPairs(availableSeatNumbers: string[]): Array<[st
     ['R5', 'R6'],
     ['L7', 'L8'],
     ['R7', 'R8'],
+    ['L9', 'L10'],
+    ['R9', 'R10'],
     ['B1', 'B2'],
     ['B2', 'B3'],
     ['B3', 'B4'],
@@ -81,11 +83,11 @@ export function findBestAdjacentSeats(
   // 1 traveller: pick based on preference, defaulting to front window
   if (targetCount === 1) {
     if (preference === 'WINDOW') {
-      const windows = ['L1', 'R2', 'L3', 'R4', 'L5', 'R6', 'L7', 'R8', 'B1', 'B5'];
+      const windows = ['L1', 'R2', 'L3', 'R4', 'L5', 'R6', 'L7', 'R8', 'L9', 'R10', 'B1', 'B5'];
       const pick = windows.find((s) => availableSet.has(s));
       if (pick) return [pick];
     } else if (preference === 'AISLE') {
-      const aisles = ['L2', 'R1', 'L4', 'R3', 'L6', 'R5', 'L8', 'R7'];
+      const aisles = ['L2', 'R1', 'L4', 'R3', 'L6', 'R5', 'L8', 'R7', 'L10', 'R9'];
       const pick = aisles.find((s) => availableSet.has(s));
       if (pick) return [pick];
     } else if (preference === 'FRONT') {
@@ -93,7 +95,7 @@ export function findBestAdjacentSeats(
       const pick = front.find((s) => availableSet.has(s));
       if (pick) return [pick];
     } else if (preference === 'BACK') {
-      const back = ['B1', 'B2', 'B3', 'B4', 'B5', 'L9', 'R9'];
+      const back = ['B1', 'B2', 'B3', 'B4', 'B5', 'L9', 'L10', 'R9', 'R10'];
       const pick = back.find((s) => availableSet.has(s));
       if (pick) return [pick];
     }
@@ -104,6 +106,7 @@ export function findBestAdjacentSeats(
       'L3', 'R4', 'L4', 'R3',
       'L5', 'R6', 'L6', 'R5',
       'L7', 'R8', 'L8', 'R7',
+      'L9', 'R10', 'L10', 'R9',
       'B1', 'B2', 'B3', 'B4', 'B5'
     ];
     const pick = generalPriority.find((s) => availableSet.has(s));
@@ -118,6 +121,7 @@ export function findBestAdjacentSeats(
       ['L3', 'L4'], ['R3', 'R4'],
       ['L5', 'L6'], ['R5', 'R6'],
       ['L7', 'L8'], ['R7', 'R8'],
+      ['L9', 'L10'], ['R9', 'R10'],
       ['B1', 'B2'], ['B2', 'B3'], ['B3', 'B4'], ['B4', 'B5'],
     ];
     for (const [s1, s2] of pairs) {
@@ -159,6 +163,7 @@ export function findBestAdjacentSeats(
       ['L3', 'L4', 'R3', 'R4'],
       ['L5', 'L6', 'R5', 'R6'],
       ['L7', 'L8', 'R7', 'R8'],
+      ['L9', 'L10', 'R9', 'R10'],
       ['L1', 'L2', 'L3', 'L4'],
       ['R1', 'R2', 'R3', 'R4'],
       ['B1', 'B2', 'B3', 'B4'],

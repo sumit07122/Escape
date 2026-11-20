@@ -40,9 +40,9 @@ export const CONTACT_INFO = {
 };
 
 // 25-seat Bus Configuration
-// 1 Driver + 1 Conductor + 23 passenger seats
-// Pairs: L1/L2, L3/L4, L5/L6, L7/L8, L9 (Left)
-// Pairs: R1/R2, R3/R4, R5/R6, R7/R8, R9 (Right)
+// 1 Driver + 1 Conductor + 25 passenger seats
+// Pairs: L1/L2, L3/L4, L5/L6, L7/L8, L9/L10 (Left)
+// Pairs: R1/R2, R3/R4, R5/R6, R7/R8, R9/R10 (Right)
 // Rear row: B1, B2, B3, B4, B5
 export interface SeatTemplate {
   seatNumber: string;
@@ -82,9 +82,11 @@ export const BUS_25_SEATS_LAYOUT: SeatTemplate[] = [
   { seatNumber: 'R7', seatType: 'PASSENGER', rowNumber: 4, side: 'RIGHT', position: 'AISLE', isBookable: true },
   { seatNumber: 'R8', seatType: 'PASSENGER', rowNumber: 4, side: 'RIGHT', position: 'WINDOW', isBookable: true },
 
-  // Row 5: Single side seats L9 (Left Window) | R9 (Right Window)
+  // Row 5: Pair L9 (Window), L10 (Aisle) | Pair R9 (Aisle), R10 (Window)
   { seatNumber: 'L9', seatType: 'PASSENGER', rowNumber: 5, side: 'LEFT', position: 'WINDOW', isBookable: true },
-  { seatNumber: 'R9', seatType: 'PASSENGER', rowNumber: 5, side: 'RIGHT', position: 'WINDOW', isBookable: true },
+  { seatNumber: 'L10', seatType: 'PASSENGER', rowNumber: 5, side: 'LEFT', position: 'AISLE', isBookable: true },
+  { seatNumber: 'R9', seatType: 'PASSENGER', rowNumber: 5, side: 'RIGHT', position: 'AISLE', isBookable: true },
+  { seatNumber: 'R10', seatType: 'PASSENGER', rowNumber: 5, side: 'RIGHT', position: 'WINDOW', isBookable: true },
 
   // Row 6: Rear 5 Seats B1-B5
   { seatNumber: 'B1', seatType: 'PASSENGER', rowNumber: 6, side: 'REAR', position: 'WINDOW', isBookable: true },

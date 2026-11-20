@@ -174,7 +174,7 @@ export default function AdminBusesPage() {
     setLayoutFeedback(null);
   }, [currentBus?.id, currentBus?.passengerCapacity]);
 
-  const capacityForLayout = (rows: string, rearSeats: string) => Math.max(0, (Math.max(1, Number(rows)) - 1) * 4 + 2 + Math.max(0, Number(rearSeats)));
+  const capacityForLayout = (rows: string, rearSeats: string) => Math.max(0, Math.max(1, Number(rows)) * 4 + Math.max(0, Number(rearSeats)));
 
   // When seat is clicked, open slide-over drawer
   const handleSeatClick = (seat: BusSeatData) => {
@@ -419,10 +419,16 @@ export default function AdminBusesPage() {
     return { label: 'Available', color: 'bg-sky-950/80 text-sky-300 border-sky-600/40' };
   };
 
-  // Separate seats by pairs for standard 25-seater layout (L1-L9, R1-R9, B1-B5)
-  const leftSeats = currentBus?.seats?.filter((s) => s.side === 'LEFT' && s.seatType === 'PASSENGER') || [];
-  const rightSeats = currentBus?.seats?.filter((s) => s.side === 'RIGHT' && s.seatType === 'PASSENGER') || [];
-  const rearSeats = currentBus?.seats?.filter((s) => s.side === 'REAR' && s.seatType === 'PASSENGER') || [];
+  // Separate seats by pairs for standard 25-seater layout (L1-L10, R1-R10, B1-B5)
+  const leftSeats = (currentBus?.seats?.filter((s) => s.side === 'LEFT' && s.seatType === 'PASSENGER') || [])
+    .slice()
+    .sort((a, b) => a.rowNumber !== b.rowNumber ? a.rowNumber - b.rowNumber : (a.position === 'WINDOW' ? -1 : 1));
+  const rightSeats = (currentBus?.seats?.filter((s) => s.side === 'RIGHT' && s.seatType === 'PASSENGER') || [])
+    .slice()
+    .sort((a, b) => a.rowNumber !== b.rowNumber ? a.rowNumber - b.rowNumber : (a.position === 'AISLE' ? -1 : 1));
+  const rearSeats = (currentBus?.seats?.filter((s) => s.side === 'REAR' && s.seatType === 'PASSENGER') || [])
+    .slice()
+    .sort((a, b) => a.seatNumber.localeCompare(b.seatNumber, undefined, { numeric: true }));
   const cabinSeats = currentBus?.seats?.filter((s) => s.seatType !== 'PASSENGER') || [];
 
   return (
@@ -550,7 +556,7 @@ export default function AdminBusesPage() {
             <div>
               <label htmlFor="fleet-side-rows" className="mb-1.5 block text-[10px] font-bold uppercase tracking-wide text-zinc-400">Side rows</label>
               <input id="fleet-side-rows" type="number" min={1} max={20} value={layoutRows} onChange={(event) => setLayoutRows(event.target.value)} className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white" />
-              <p className="mt-1 text-[10px] text-zinc-500">Four seats per full row; the last row has two.</p>
+              <p className="mt-1 text-[10px] text-zinc-500">Four seats per full row across the cabin.</p>
             </div>
             <div>
               <label htmlFor="fleet-rear-seats" className="mb-1.5 block text-[10px] font-bold uppercase tracking-wide text-zinc-400">Rear bench seats</label>
