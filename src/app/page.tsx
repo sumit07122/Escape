@@ -140,7 +140,7 @@ export default async function HomePage() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 shrink-0 font-mono">
+              <div className="flex items-center gap-2 shrink-0 font-semibold tabular-nums">
                 <a
                   href={`tel:${tripConfig.emergencyHelplines[0] || CONTACT_INFO.coordinatorPhone1}`}
                   className="inline-flex items-center gap-1.5 rounded-full bg-[#f1c39e] px-4 py-2 text-xs font-bold text-[#17231f] shadow-md transition-all hover:bg-white hover:scale-105 active:scale-95"
@@ -416,7 +416,7 @@ export default async function HomePage() {
         {/* ======================================================== */}
         <section id="trip-overview" className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 scroll-mt-24">
           <div className="space-y-4 max-w-3xl">
-            <span className="text-xs font-bold text-[#163C32] uppercase tracking-widest font-mono">
+            <span className="text-xs font-semibold text-[#163C32] uppercase tracking-widest">
               THE EXPEDITION
             </span>
             <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-[#171918]">
@@ -451,7 +451,7 @@ export default async function HomePage() {
         {/* ======================================================== */}
         <section id="itinerary" className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 scroll-mt-24">
           <div className="space-y-2">
-            <span className="text-xs font-bold text-[#163C32] uppercase tracking-widest font-mono">
+            <span className="text-xs font-semibold text-[#163C32] uppercase tracking-widest">
               DAY-BY-DAY SCHEDULE
             </span>
             <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-[#171918]">
@@ -471,7 +471,7 @@ export default async function HomePage() {
                 <div className="p-6 rounded-2xl bg-white border border-[#D8D2C4] space-y-3 shadow-sm hover:border-[#B4AA96] transition-all">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2.5">
-                      <span className="text-xs font-black px-2.5 py-1 rounded-md bg-[#163C32] text-white font-mono">
+                      <span className="text-xs font-bold px-2.5 py-1 rounded-md bg-[#163C32] text-white tracking-wide">
                         DAY 0{day.dayNumber}
                       </span>
                       <h3 className="text-lg sm:text-xl font-black text-[#171918]">
@@ -514,7 +514,7 @@ export default async function HomePage() {
         {/* ======================================================== */}
         <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
           <div className="space-y-2">
-            <span className="text-xs font-bold text-[#163C32] uppercase tracking-widest font-mono">
+            <span className="text-xs font-semibold text-[#163C32] uppercase tracking-widest">
               INCLUSIONS
             </span>
             <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-[#171918]">
@@ -575,7 +575,7 @@ export default async function HomePage() {
           <div className="p-8 sm:p-10 rounded-3xl bg-white border border-[#D8D2C4] space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
-                <span className="text-xs font-bold text-[#163C32] uppercase tracking-widest font-mono">
+                <span className="text-xs font-semibold text-[#163C32] uppercase tracking-widest">
                   COMFORT ON THE ROAD
                 </span>
                 <h3 className="text-2xl font-black text-[#171918]">

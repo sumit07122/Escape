@@ -26,7 +26,7 @@ export default async function BookPage() {
               <Megaphone className="w-5 h-5" />
             </div>
             <div className="flex-1 text-xs sm:text-sm">
-              <span className="font-mono font-black uppercase tracking-wider block text-[10px] text-amber-800">
+              <span className="font-semibold uppercase tracking-wider block text-[10px] text-amber-900">
                 Official Expedition Notice
               </span>
               <p className="font-semibold text-stone-900 mt-0.5">
@@ -37,14 +37,14 @@ export default async function BookPage() {
         </div>
       )}
 
-      <div className="max-w-4xl mx-auto px-4 mb-4 text-center space-y-1">
-        <span className="text-xs font-bold text-[#D87945] uppercase tracking-widest font-mono">
-          STUDENT RESERVATION PORTAL
+      <div className="max-w-4xl mx-auto px-4 mb-4 text-center space-y-1.5">
+        <span className="inline-block text-[11px] font-semibold text-[#D87945] uppercase tracking-widest px-3 py-1 rounded-full bg-[#D87945]/10 border border-[#D87945]/20">
+          Student Reservation Portal
         </span>
         <h1 className="text-3xl sm:text-4xl font-black text-[#171918]">
           {tripConfig.tripTitle || 'HIMALAYAN ESCAPE'}
         </h1>
-        <p className="text-xs sm:text-sm text-[#646864] uppercase font-medium">
+        <p className="text-xs sm:text-sm text-[#646864] uppercase font-medium tracking-wide">
           {tripConfig.subtitle || 'MANALI × KASOL • STUDENT EXPEDITION'} • PICKUP: {tripConfig.pickupLocation || 'NEAR MAIN GATE (NH-2), MATHURA'} • REPORTING: {tripConfig.reportingTime || '07:00 PM'}
         </p>
       </div>

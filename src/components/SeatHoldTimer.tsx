@@ -47,7 +47,7 @@ export default function SeatHoldTimer({
         <Clock className={`w-4 h-4 shrink-0 ${isUrgent ? 'text-rose-600' : 'text-amber-600'}`} />
         <span>
           Seat{selectedSeats.length > 1 ? 's' : ''}{' '}
-          <span className="font-mono font-black text-[#163C32]">
+          <span className="font-semibold text-[#163C32] tabular-nums">
             [{selectedSeats.join(', ')}]
           </span>{' '}
           {busNumber ? `on ${busNumber} ` : ''}is locked for you.
@@ -55,11 +55,11 @@ export default function SeatHoldTimer({
       </div>
 
       <div className="flex items-center gap-2">
-        <span className="text-[10px] uppercase font-bold tracking-wider opacity-80">
+        <span className="text-[10px] uppercase font-semibold tracking-wider opacity-80">
           RESERVATION EXPIRES IN:
         </span>
         <span
-          className={`font-mono text-sm sm:text-base font-black px-2.5 py-0.5 rounded-lg border ${
+          className={`tabular-nums text-sm sm:text-base font-bold tracking-wider px-2.5 py-0.5 rounded-lg border ${
             isUrgent
               ? 'bg-rose-600 text-white border-rose-700 animate-pulse'
               : 'bg-stone-900 text-amber-400 border-white/10'

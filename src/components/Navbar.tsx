@@ -115,7 +115,7 @@ export default function Navbar() {
             <span className="font-semibold text-stone-200">
               Trip Coordinators Hotline:
             </span>
-            <div className="flex items-center gap-2 font-mono">
+            <div className="flex items-center gap-2 font-semibold tabular-nums">
               <a
                 href="tel:6398412828"
                 className="font-bold text-[#f1c39e] hover:text-white transition-colors inline-flex items-center gap-1"

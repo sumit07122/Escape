@@ -619,44 +619,44 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
               <button
                 type="button"
                 onClick={() => setTravellersCount(1)}
-                className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border ${
+                className={`py-2 px-2.5 rounded-xl text-xs font-semibold transition-all border ${
                   travellersCount === 1
                     ? 'bg-[#163C32] text-white border-[#163C32] shadow-sm'
-                    : 'bg-white text-[#171918] border-[#D8D2C4] hover:bg-stone-100'
+                    : 'bg-white text-[#171918] border-[#D8D2C4] hover:bg-stone-50'
                 }`}
               >
-                <span className="block text-[11px] uppercase tracking-wider">Solo</span>
-                <span className="font-mono text-xs">₹6,200</span>
+                <span className="block text-[11px] font-medium uppercase tracking-wider text-inherit/80">Solo</span>
+                <span className="text-xs font-bold tabular-nums">₹6,200</span>
               </button>
               <button
                 type="button"
                 onClick={() => setTravellersCount(2)}
-                className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border relative ${
+                className={`py-2 px-2.5 rounded-xl text-xs font-semibold transition-all border relative ${
                   travellersCount === 2
                     ? 'bg-[#163C32] text-white border-[#163C32] shadow-sm'
-                    : 'bg-white text-[#171918] border-[#D8D2C4] hover:bg-stone-100'
+                    : 'bg-white text-[#171918] border-[#D8D2C4] hover:bg-stone-50'
                 }`}
               >
-                <span className="absolute -top-1.5 right-1 px-1 py-0.2 rounded-full bg-[#D87945] text-white text-[8px] font-black uppercase">
+                <span className="absolute -top-2 right-1.5 px-1.5 py-0.5 rounded-full bg-[#D87945] text-white text-[8px] font-bold uppercase tracking-wider shadow-xs">
                   Save ₹402
                 </span>
-                <span className="block text-[11px] uppercase tracking-wider">Duo (2)</span>
-                <span className="font-mono text-xs">₹5,999/head</span>
+                <span className="block text-[11px] font-medium uppercase tracking-wider text-inherit/80">Duo (2)</span>
+                <span className="text-xs font-bold tabular-nums">₹5,999<span className="text-[10px] font-normal opacity-80">/head</span></span>
               </button>
               <button
                 type="button"
                 onClick={() => setTravellersCount(3)}
-                className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border relative ${
+                className={`py-2 px-2.5 rounded-xl text-xs font-semibold transition-all border relative ${
                   travellersCount >= 3
                     ? 'bg-[#163C32] text-white border-[#163C32] shadow-sm'
-                    : 'bg-white text-[#171918] border-[#D8D2C4] hover:bg-stone-100'
+                    : 'bg-white text-[#171918] border-[#D8D2C4] hover:bg-stone-50'
                 }`}
               >
-                <span className="absolute -top-1.5 right-1 px-1 py-0.2 rounded-full bg-emerald-600 text-white text-[8px] font-black uppercase">
+                <span className="absolute -top-2 right-1.5 px-1.5 py-0.5 rounded-full bg-emerald-600 text-white text-[8px] font-bold uppercase tracking-wider shadow-xs">
                   Best Value
                 </span>
-                <span className="block text-[11px] uppercase tracking-wider">Squad (3+)</span>
-                <span className="font-mono text-xs">₹5,800/head</span>
+                <span className="block text-[11px] font-medium uppercase tracking-wider text-inherit/80">Squad (3+)</span>
+                <span className="text-xs font-bold tabular-nums">₹5,800<span className="text-[10px] font-normal opacity-80">/head</span></span>
               </button>
             </div>
 
@@ -689,39 +689,52 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
               </button>
             </div>
 
-            {/* Flat Rate / Offer Badge */}
+            {/* Flat Rate / Offer Badge - Premium Alpine Highlight */}
             <div className="pt-2">
-              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-1">
-                <div className="text-xs font-bold text-emerald-950 font-mono">
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-950/[0.04] via-emerald-900/[0.02] to-amber-900/[0.03] border border-emerald-900/15 p-4 text-center space-y-2 backdrop-blur-xs shadow-xs">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-900/8 text-[#163C32] text-[10px] font-semibold uppercase tracking-widest border border-emerald-900/10">
+                  <Sparkles className="w-3 h-3 text-[#D87945]" />
+                  <span>5 Days / 4 Nights • All-Inclusive Expedition</span>
+                </div>
+                <div className="text-sm sm:text-base font-semibold tracking-tight text-[#163C32]">
                   {pricing.isGroupRate ? (
-                    <span>
-                      🎉 Student Offer Applied: ₹{pricing.pricePerTraveller.toLocaleString('en-IN')} / traveller (Saving ₹{(pricing.savingsPerTraveller || 0).toLocaleString('en-IN')} each!)
+                    <span className="flex flex-col sm:flex-row items-center justify-center gap-1">
+                      <span>🎉 Student Offer Applied:</span>
+                      <strong className="text-emerald-950 font-bold tabular-nums">
+                        ₹{pricing.pricePerTraveller.toLocaleString('en-IN')} / traveller
+                      </strong>
+                      <span className="text-xs font-medium text-emerald-700">
+                        (Saving ₹{(pricing.savingsPerTraveller || 0).toLocaleString('en-IN')} each!)
+                      </span>
                     </span>
                   ) : (
                     <span>
-                      Single Person: ₹6,200 All-Inclusive (5 Days / 4 Nights)
+                      Single Person: <strong className="text-emerald-950 font-bold tabular-nums">₹6,200</strong> All-Inclusive
                     </span>
                   )}
                 </div>
-                <div className="text-xs text-emerald-800 font-medium">
-                  Lock your seat today with only <strong className="text-emerald-950 font-bold font-mono">₹1,000 reservation deposit</strong> per person
-                </div>
+                <p className="text-xs text-[#3a5247] font-normal leading-relaxed">
+                  Lock your seat today with only <span className="font-semibold text-[#163C32] bg-[#163C32]/8 px-2 py-0.5 rounded-md border border-[#163C32]/10 tabular-nums">₹1,000 reservation deposit</span> per person
+                </p>
               </div>
             </div>
 
             {/* Transparent Instant Math Table */}
-            <div className="pt-3 border-t border-[#D8D2C4] text-xs space-y-2">
-              <div className="flex justify-between text-[#171918] font-bold">
-                <span>Total Expedition Price ({travellersCount} {travellersCount === 1 ? 'seat' : 'seats'}):</span>
-                <span className="font-mono">₹{pricing.totalAmount.toLocaleString('en-IN')}</span>
+            <div className="pt-3 border-t border-[#D8D2C4] text-xs space-y-2.5">
+              <div className="flex justify-between items-center text-[#171918] font-medium">
+                <span className="text-[#4b5563]">Total Expedition Price ({travellersCount} {travellersCount === 1 ? 'seat' : 'seats'}):</span>
+                <span className="font-bold text-[#171918] text-sm tabular-nums">₹{pricing.totalAmount.toLocaleString('en-IN')}</span>
               </div>
-              <div className="flex justify-between text-emerald-700 font-black text-sm p-2 rounded-lg bg-emerald-50 border border-emerald-200">
-                <span>Pay Today to Reserve:</span>
-                <span className="font-mono">₹{pricing.reservationAmount.toLocaleString('en-IN')}</span>
+              <div className="flex justify-between items-center text-[#163C32] font-semibold text-sm p-3 rounded-xl bg-emerald-950/[0.04] border border-emerald-900/15">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+                  <span>Pay Today to Reserve:</span>
+                </div>
+                <span className="font-bold text-base text-[#163C32] tabular-nums">₹{pricing.reservationAmount.toLocaleString('en-IN')}</span>
               </div>
-              <div className="flex justify-between text-[#646864] text-xs px-1">
+              <div className="flex justify-between items-center text-[#646864] text-xs px-1">
                 <span>Remaining balance at departure gate:</span>
-                <span className="font-mono font-bold text-[#171918]">₹{pricing.remainingBalance.toLocaleString('en-IN')}</span>
+                <span className="font-semibold text-[#171918] tabular-nums">₹{pricing.remainingBalance.toLocaleString('en-IN')}</span>
               </div>
             </div>
           </div>
@@ -1172,7 +1185,7 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
                   Assigned Seats: {isAutoAssigningSeats ? (
                     <span className="text-amber-800 font-normal">Allocating best adjacent seats...</span>
                   ) : selectedSeats.length > 0 ? (
-                    <span className="text-emerald-800 font-mono text-sm">{selectedSeats.join(', ')}</span>
+                    <span className="text-[#163C32] font-semibold text-sm tabular-nums tracking-wide">{selectedSeats.join(', ')}</span>
                   ) : (
                     <span className="text-stone-500 font-normal">None selected</span>
                   )}
@@ -1246,7 +1259,7 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
                   value={couponInput}
                   onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
                   placeholder="Promo Code (e.g. SQUAD5)"
-                  className="flex-1 px-3 py-2 rounded-xl bg-white border border-[#D8D2C4] text-xs font-mono font-bold text-[#171918] uppercase placeholder:normal-case placeholder:font-normal focus:border-[#D87945] focus:outline-none"
+                  className="flex-1 px-3 py-2 rounded-xl bg-white border border-[#D8D2C4] text-xs font-semibold text-[#171918] uppercase tracking-wider placeholder:normal-case placeholder:font-normal focus:border-[#D87945] focus:outline-none"
                 />
                 <button
                   type="button"
@@ -1269,23 +1282,23 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
             <div className="space-y-1.5 pt-1">
               <div className="flex justify-between text-[#646864]">
                 <span>Total Package Price:</span>
-                <span className="font-bold text-[#171918] font-mono">₹{pricing.baseAmount.toLocaleString('en-IN')}</span>
+                <span className="font-bold text-[#171918] tabular-nums">₹{pricing.baseAmount.toLocaleString('en-IN')}</span>
               </div>
 
               {pricing.discountAmount > 0 && (
                 <div className="flex justify-between text-emerald-700 font-bold">
                   <span>Promo Discount ({pricing.couponCode}):</span>
-                  <span className="font-mono">−₹{pricing.discountAmount.toLocaleString('en-IN')}</span>
+                  <span className="tabular-nums font-semibold">−₹{pricing.discountAmount.toLocaleString('en-IN')}</span>
                 </div>
               )}
 
               <div className="flex justify-between text-[#D87945] font-bold text-sm pt-1 border-t border-[#D8D2C4]">
                 <span>Reservation Deposit Due Today:</span>
-                <span className="text-base font-mono">₹{pricing.reservationAmount.toLocaleString('en-IN')}</span>
+                <span className="text-base font-bold tabular-nums">₹{pricing.reservationAmount.toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between text-[#646864] text-[11px]">
                 <span>Remaining Balance Before Boarding:</span>
-                <span className="text-[#171918] font-mono">₹{pricing.remainingBalance.toLocaleString('en-IN')}</span>
+                <span className="text-[#171918] font-semibold tabular-nums">₹{pricing.remainingBalance.toLocaleString('en-IN')}</span>
               </div>
             </div>
 
@@ -1345,7 +1358,7 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
               You're going to the mountains!
             </h2>
             <p className="text-xs text-[#646864]">
-              Booking ID: <strong className="font-mono text-[#171918]">#{confirmedBooking.bookingId}</strong>
+              Booking ID: <strong className="font-semibold text-[#171918] tracking-wider">#{confirmedBooking.bookingId}</strong>
             </p>
           </div>
 
@@ -1414,7 +1427,7 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
             <span className="text-[10px] font-bold uppercase tracking-wider text-[#646864] block">
               {currentStep === 1 ? 'RESERVATION DEPOSIT' : currentStep === 2 ? 'DEPOSIT DUE' : 'TOTAL DUE TODAY'}
             </span>
-            <span className="text-base font-black text-[#D87945] font-mono leading-none">
+            <span className="text-base font-bold text-[#D87945] tabular-nums leading-none">
               ₹{pricing.reservationAmount.toLocaleString('en-IN')}
             </span>
             <span className="text-[10px] text-[#646864] block font-medium">

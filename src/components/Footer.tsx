@@ -68,13 +68,13 @@ export default function Footer() {
             <div className="space-y-2 text-[11px]">
               <div className="flex items-center gap-2">
                 <Phone className="w-3.5 h-3.5 text-[#163C32] shrink-0" />
-                <a href={`tel:${CONTACT_INFO.coordinatorPhone1}`} className="hover:text-[#163C32] font-mono font-semibold">
+                <a href={`tel:${CONTACT_INFO.coordinatorPhone1}`} className="hover:text-[#163C32] font-semibold tabular-nums">
                   {CONTACT_INFO.coordinatorPhone1}
                 </a>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-3.5 h-3.5 text-[#163C32] shrink-0" />
-                <a href={`tel:${CONTACT_INFO.coordinatorPhone2}`} className="hover:text-[#163C32] font-mono font-semibold">
+                <a href={`tel:${CONTACT_INFO.coordinatorPhone2}`} className="hover:text-[#163C32] font-semibold tabular-nums">
                   {CONTACT_INFO.coordinatorPhone2}
                 </a>
               </div>

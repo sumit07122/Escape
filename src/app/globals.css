@@ -1,6 +1,11 @@
 @import "tailwindcss";
 
 @theme {
+  /* Font Family Stacks */
+  --font-sans: var(--font-manrope), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-serif: var(--font-playfair), Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-mono: "SF Mono", "JetBrains Mono", Menlo, Consolas, Monaco, monospace;
+
   /* Alpine Editorial Design Palette */
   --color-pine-deep: #0E2620;
   --color-pine-forest: #163C32;
@@ -111,6 +116,24 @@ html {
     letter-spacing: -0.025em;
     line-height: 1.25;
   }
+}
+
+/* Premium Alpine Typography & Badge Utilities */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.badge-alpine-light {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
 }
 
 /* Admin Portal Dark Theme Typography & Contrast Rules */
