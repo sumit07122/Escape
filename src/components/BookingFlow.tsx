@@ -67,7 +67,7 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
   const [selectedBusName, setSelectedBusName] = useState<string>('Coach 01 (Himalayan Eagle)');
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [isAutoAssigningSeats, setIsAutoAssigningSeats] = useState(false);
-  const [isSeatMapExpanded, setIsSeatMapExpanded] = useState(false);
+  const [isSeatMapExpanded, setIsSeatMapExpanded] = useState(true);
   const [seatHoldTimerSeconds, setSeatHoldTimerSeconds] = useState<number>(0);
   const [squadFriendSeats, setSquadFriendSeats] = useState<string[]>([]);
   const [squadLinkNotice, setSquadLinkNotice] = useState<string | null>(null);
@@ -137,6 +137,79 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
 
     setContactsFeedback(`Autofilled details from Google Contact: ${contact.name}. You may review and edit before proceeding.`);
     setTimeout(() => setContactsFeedback(null), 6000);
+  };
+
+  const handleQuickFillDetails = () => {
+    const defaultLeadName = userSession?.name || 'Rahul Sharma';
+    const defaultLeadEmail = userSession?.email || 'rahul.sharma@gla.ac.in';
+    const defaultLeadPhone = userSession?.phone || '9876543210';
+
+    const sampleTravellers: TravellerInput[] = [
+      {
+        fullName: defaultLeadName,
+        phone: defaultLeadPhone,
+        email: defaultLeadEmail,
+        gender: 'Male',
+        collegeId: 'GLA-2026-042',
+        emergencyContactName: 'Rajesh Sharma (Father)',
+        emergencyContactPhone: '9876500001',
+      },
+      {
+        fullName: 'Priya Patel',
+        phone: '9876543211',
+        email: 'priya.patel@gla.ac.in',
+        gender: 'Female',
+        collegeId: 'GLA-2026-088',
+        emergencyContactName: 'Ramesh Patel (Father)',
+        emergencyContactPhone: '9876500002',
+      },
+      {
+        fullName: 'Aman Verma',
+        phone: '9876543212',
+        email: 'aman.verma@gla.ac.in',
+        gender: 'Male',
+        collegeId: 'GLA-2026-104',
+        emergencyContactName: 'Suresh Verma (Father)',
+        emergencyContactPhone: '9876500003',
+      },
+      {
+        fullName: 'Shrikant Tiwari',
+        phone: '9876543213',
+        email: 'shrikant@gla.ac.in',
+        gender: 'Male',
+        collegeId: 'GLA-2026-119',
+        emergencyContactName: 'Manoj Tiwari (Father)',
+        emergencyContactPhone: '9876500004',
+      },
+      {
+        fullName: 'Neha Singh',
+        phone: '9876543214',
+        email: 'neha.singh@gla.ac.in',
+        gender: 'Female',
+        collegeId: 'GLA-2026-150',
+        emergencyContactName: 'Anil Singh (Father)',
+        emergencyContactPhone: '9876500005',
+      },
+    ];
+
+    setTravellers((prev) =>
+      prev.map((_, i) => {
+        const sample = sampleTravellers[i] || {
+          fullName: `Student Traveller ${i + 1}`,
+          phone: `987654321${i}`,
+          email: `student${i + 1}@gla.ac.in`,
+          gender: 'Male',
+          collegeId: `GLA-2026-00${i + 1}`,
+          emergencyContactName: 'Parent Guardian',
+          emergencyContactPhone: '9876500001',
+        };
+        return { ...sample };
+      })
+    );
+
+    setFieldErrors({});
+    setContactsFeedback('⚡ Traveller information quick-filled! You can review or edit any field anytime.');
+    setTimeout(() => setContactsFeedback(null), 5000);
   };
 
   // Restore coach/seats shared by a squad friend from URL query
@@ -465,7 +538,35 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
         throw new Error(orderData.error || 'Failed to initialize booking payment');
       }
 
-      if (typeof window.Razorpay !== 'undefined') {
+      // In Sandbox / Test Mock Mode, complete instant confirmation for seamless verification
+      if (orderData.isMock || orderData.keyId?.includes('YourTestKeyHere')) {
+        await verifyPayment({
+          bookingId: orderData.bookingId,
+          razorpayOrderId: orderData.razorpayOrderId,
+          razorpayPaymentId: `pay_mock_${Date.now()}`,
+          razorpaySignature: `sig_mock_${Date.now()}`,
+        });
+        return;
+      }
+
+      // Ensure Razorpay SDK is available or dynamically injected
+      let RazorpayConstructor = (window as any).Razorpay;
+      if (!RazorpayConstructor && typeof window !== 'undefined') {
+        await new Promise<void>((resolve) => {
+          const script = document.createElement('script');
+          script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+          script.async = true;
+          script.onload = () => {
+            RazorpayConstructor = (window as any).Razorpay;
+            resolve();
+          };
+          script.onerror = () => resolve();
+          document.body.appendChild(script);
+        });
+      }
+
+      RazorpayConstructor = (window as any).Razorpay;
+      if (RazorpayConstructor) {
         const options = {
           key: orderData.keyId,
           amount: orderData.amountInPaise,
@@ -498,7 +599,7 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
           },
         };
 
-        const rzp = new window.Razorpay(options);
+        const rzp = new RazorpayConstructor(options);
         rzp.open();
       } else {
         throw new Error('Razorpay secure checkout could not be loaded. Please ensure you are connected to the internet and retry.');
@@ -546,7 +647,7 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
 
   return (
     <div className="w-full max-w-3xl mx-auto px-4 py-4 sm:py-8 space-y-6 bg-[#F7F5EF] text-[#171918] pb-28 sm:pb-8">
-      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
       <Script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" strategy="lazyOnload" />
 
       {/* Progress Header */}
@@ -782,19 +883,30 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
                 </svg>
               </div>
               <div>
-                <span className="text-xs font-bold text-[#171918] block">Google Contacts Quick-Fill</span>
-                <span className="text-[11px] text-[#646864]">Import traveller contact details in 1 tap without typing.</span>
+                <span className="text-xs font-bold text-[#171918] block">Quick Autofill & Google Contacts</span>
+                <span className="text-[11px] text-[#646864]">Fill passenger details in 1 tap or import from Google contacts.</span>
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => openGoogleContactsModal({ type: 'traveller', index: 0 })}
-              className="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-white hover:bg-[#FAF9F5] border border-[#D8D2C4] hover:border-[#163C32] text-[#171918] font-bold text-xs shadow-2xs transition-all flex items-center justify-center gap-1.5"
-            >
-              <UserCheck className="w-3.5 h-3.5 text-[#D87945]" />
-              <span>Import Lead Contact</span>
-            </button>
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={handleQuickFillDetails}
+                className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-[#163C32] hover:bg-[#0E2620] text-white font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <span>⚡ 1-Tap Quick-Fill</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => openGoogleContactsModal({ type: 'traveller', index: 0 })}
+                className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-white hover:bg-[#FAF9F5] border border-[#D8D2C4] hover:border-[#163C32] text-[#171918] font-bold text-xs shadow-2xs transition-all flex items-center justify-center gap-1.5"
+              >
+                <UserCheck className="w-3.5 h-3.5 text-[#D87945]" />
+                <span>Google Contacts</span>
+              </button>
+            </div>
           </div>
 
           {contactsFeedback && (
@@ -825,8 +937,10 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               <div className="space-y-1" data-error={!!fieldErrors['name_0']}>
-                <label className="font-bold text-[#171918]">Full Legal Name *</label>
+                <label htmlFor="lead_name" className="font-bold text-[#171918]">Full Legal Name *</label>
                 <input
+                  id="lead_name"
+                  name="fullName"
                   type="text"
                   required
                   autoComplete="name"
@@ -846,8 +960,10 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
               </div>
 
               <div className="space-y-1" data-error={!!fieldErrors['phone_0']}>
-                <label className="font-bold text-[#171918]">Mobile Phone (WhatsApp) *</label>
+                <label htmlFor="lead_phone" className="font-bold text-[#171918]">Mobile Phone (WhatsApp) *</label>
                 <input
+                  id="lead_phone"
+                  name="phone"
                   type="tel"
                   inputMode="tel"
                   required
@@ -868,8 +984,10 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
               </div>
 
               <div className="space-y-1" data-error={!!fieldErrors['email_0']}>
-                <label className="font-bold text-[#171918]">Email Address *</label>
+                <label htmlFor="lead_email" className="font-bold text-[#171918]">Email Address *</label>
                 <input
+                  id="lead_email"
+                  name="email"
                   type="email"
                   inputMode="email"
                   required
@@ -938,8 +1056,11 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
                 <div className="grid grid-cols-2 gap-2">
                   <div data-error={!!fieldErrors['em_name_0']}>
                     <input
+                      id="lead_em_name"
+                      name="emergencyContactName"
                       type="text"
                       required
+                      autoComplete="name"
                       placeholder="Contact Name"
                       value={travellers[0].emergencyContactName || ''}
                       onChange={(e) => {
@@ -955,9 +1076,12 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
                   </div>
                   <div data-error={!!fieldErrors['em_phone_0']}>
                     <input
+                      id="lead_em_phone"
+                      name="emergencyContactPhone"
                       type="tel"
                       inputMode="tel"
                       required
+                      autoComplete="tel"
                       placeholder="10-digit Phone"
                       value={travellers[0].emergencyContactPhone || ''}
                       onChange={(e) => {

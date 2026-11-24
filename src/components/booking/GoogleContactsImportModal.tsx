@@ -269,6 +269,18 @@ export default function GoogleContactsImportModal({
 
                 <button
                   type="button"
+                  onClick={() => {
+                    onTokenChange('demo_google_contacts_access_token');
+                    loadContactsWithToken('demo_google_contacts_access_token');
+                  }}
+                  className="w-full sm:w-auto px-4 py-3 rounded-xl bg-amber-50 hover:bg-amber-100 text-[#163C32] text-xs font-bold border border-amber-200 transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-[#D87945]" />
+                  <span>Use Sample Contacts</span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={onClose}
                   className="w-full sm:w-auto px-5 py-3 rounded-xl bg-[#F7F5EF] hover:bg-[#E7E2D8] text-[#171918] text-xs font-bold border border-[#D8D2C4] transition-colors"
                 >

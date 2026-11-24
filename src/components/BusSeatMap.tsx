@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Bus, Check, Sparkles, AlertCircle, RefreshCw } from 'lucide-react';
+import { Bus, Check, Sparkles, AlertCircle, RefreshCw, Loader2 } from 'lucide-react';
 import { SittingPreference, SeatStatus } from '@/types';
 import { isSeatRecommended } from '@/lib/bus-seating';
 import SeatHoldTimer from './SeatHoldTimer';
@@ -560,8 +560,25 @@ export default function BusSeatMap({
         </div>
 
         {/* Passenger Seating Layout (2x2 Geometry) */}
-        <div className="space-y-3.5">
-          <div className="flex items-center justify-between px-2 text-[10px] font-bold text-[#646864] uppercase tracking-wider">
+        {loading && seats.length === 0 ? (
+          <div className="py-16 px-4 flex flex-col items-center justify-center gap-3 text-center animate-in fade-in duration-200">
+            <div className="w-12 h-12 rounded-2xl bg-[#163C32]/10 border border-[#163C32]/20 flex items-center justify-center">
+              <Loader2 className="w-6 h-6 animate-spin text-[#163C32]" />
+            </div>
+            <div>
+              <p className="text-sm font-black text-[#163C32]">Loading coach seats, please wait...</p>
+              <p className="text-xs text-[#646864] mt-1">Retrieving 25 student passenger seats and live availability.</p>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3.5">
+            {loading && seats.length > 0 && (
+              <div className="flex items-center justify-center gap-2 py-1.5 px-3 mb-2 rounded-xl bg-[#F7F5EF] border border-[#D8D2C4] text-[#163C32] text-xs font-semibold animate-pulse">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-[#D87945]" />
+                <span>Updating coach seats, please wait...</span>
+              </div>
+            )}
+            <div className="flex items-center justify-between px-2 text-[10px] font-bold text-[#646864] uppercase tracking-wider">
             <span>LEFT (WINDOW / AISLE)</span>
             <span className="tracking-widest text-[#8FA69F]">AISLE</span>
             <span>RIGHT (AISLE / WINDOW)</span>
@@ -603,6 +620,7 @@ export default function BusSeatMap({
             </div>
           </div>
         </div>
+        )}
 
         <div className="mt-6 pt-3 text-center border-t border-[#D8D2C4]">
           <span className="text-[10px] font-bold uppercase tracking-widest text-[#8FA69F]">

@@ -33,6 +33,79 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Demo Mode or Sandbox fallback when OAuth secrets are in test mode
+    if (accessToken.startsWith('demo_')) {
+      const demoContacts = [
+        {
+          resourceName: 'people/demo_rahul',
+          displayName: 'Rahul Sharma',
+          givenName: 'Rahul',
+          familyName: 'Sharma',
+          primaryPhone: '9876543210',
+          primaryEmail: 'rahul.sharma@gla.ac.in',
+          phoneNumbers: [{ value: '9876543210', type: 'mobile', formattedValue: '+91 98765 43210' }],
+          emailAddresses: [{ value: 'rahul.sharma@gla.ac.in', type: 'student' }],
+        },
+        {
+          resourceName: 'people/demo_priya',
+          displayName: 'Priya Patel',
+          givenName: 'Priya',
+          familyName: 'Patel',
+          primaryPhone: '9876543211',
+          primaryEmail: 'priya.patel@gla.ac.in',
+          phoneNumbers: [{ value: '9876543211', type: 'mobile', formattedValue: '+91 98765 43211' }],
+          emailAddresses: [{ value: 'priya.patel@gla.ac.in', type: 'student' }],
+        },
+        {
+          resourceName: 'people/demo_aman',
+          displayName: 'Aman Verma',
+          givenName: 'Aman',
+          familyName: 'Verma',
+          primaryPhone: '9876543212',
+          primaryEmail: 'aman.verma@gla.ac.in',
+          phoneNumbers: [{ value: '9876543212', type: 'mobile', formattedValue: '+91 98765 43212' }],
+          emailAddresses: [{ value: 'aman.verma@gla.ac.in', type: 'student' }],
+        },
+        {
+          resourceName: 'people/demo_shrikant',
+          displayName: 'Shrikant Tiwari',
+          givenName: 'Shrikant',
+          familyName: 'Tiwari',
+          primaryPhone: '9876543213',
+          primaryEmail: 'shrikant@gla.ac.in',
+          phoneNumbers: [{ value: '9876543213', type: 'mobile', formattedValue: '+91 98765 43213' }],
+          emailAddresses: [{ value: 'shrikant@gla.ac.in', type: 'student' }],
+        },
+        {
+          resourceName: 'people/demo_neha',
+          displayName: 'Neha Singh',
+          givenName: 'Neha',
+          familyName: 'Singh',
+          primaryPhone: '9876543214',
+          primaryEmail: 'neha.singh@gla.ac.in',
+          phoneNumbers: [{ value: '9876543214', type: 'mobile', formattedValue: '+91 98765 43214' }],
+          emailAddresses: [{ value: 'neha.singh@gla.ac.in', type: 'student' }],
+        },
+        {
+          resourceName: 'people/demo_parent',
+          displayName: 'Rajesh Sharma (Father)',
+          givenName: 'Rajesh',
+          familyName: 'Sharma',
+          primaryPhone: '9876500001',
+          primaryEmail: 'parent.sharma@gmail.com',
+          phoneNumbers: [{ value: '9876500001', type: 'home', formattedValue: '+91 98765 00001' }],
+          emailAddresses: [{ value: 'parent.sharma@gmail.com', type: 'personal' }],
+        },
+      ];
+
+      return NextResponse.json({
+        success: true,
+        contacts: demoContacts,
+        totalCount: demoContacts.length,
+        nextPageToken: null,
+      });
+    }
+
     const pageSize = typeof body.pageSize === 'number' ? body.pageSize : 1000;
     const pageToken = typeof body.pageToken === 'string' ? body.pageToken : undefined;
 

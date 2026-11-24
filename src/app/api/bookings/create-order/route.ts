@@ -152,28 +152,74 @@ export async function POST(request: NextRequest) {
       }, { status: 409 });
     }
 
-    // 3. Verify all selected seats are held by this bookingSessionId and not expired
+    const primaryTraveller = travellers[0];
+
+    // 3. Atomically verify and refresh seat availability & holds for this booking session
     const now = new Date();
+    const targetBusSeats = await db.busSeat.findMany({
+      where: {
+        busId,
+        seatNumber: { in: selectedSeats },
+      },
+      include: { seatHold: true, seatBooking: true },
+    });
+
+    if (targetBusSeats.length !== selectedSeats.length) {
+      return NextResponse.json({
+        error: 'One or more selected seats could not be found on this coach. Please re-select your seats.',
+      }, { status: 404 });
+    }
+
+    // Check for conflicting holds or confirmed bookings by other users
+    const occupiedByOthers = targetBusSeats.filter((seat) => {
+      const isConfirmed = seat.seatBooking?.status === 'CONFIRMED' || seat.status === 'BOOKED';
+      const isHeldByAnother =
+        seat.seatHold &&
+        seat.seatHold.bookingSessionId !== bookingSessionId &&
+        seat.seatHold.status === 'ACTIVE' &&
+        seat.seatHold.expiresAt > now;
+      return isConfirmed || isHeldByAnother;
+    });
+
+    if (occupiedByOthers.length > 0) {
+      const conflictSeatNames = occupiedByOthers.map((s) => s.seatNumber).join(', ');
+      return NextResponse.json({
+        error: `Seats [${conflictSeatNames}] were just reserved by another student. Please pick alternative seats.`,
+      }, { status: 409 });
+    }
+
+    // Ensure all target seats have active holds for this bookingSessionId
+    const holdExpiresAt = calculateHoldExpiration(10);
+    for (const seat of targetBusSeats) {
+      await db.seatHold.upsert({
+        where: { busSeatId: seat.id },
+        update: {
+          bookingSessionId,
+          status: 'ACTIVE',
+          expiresAt: holdExpiresAt,
+          travellerName: primaryTraveller.fullName,
+        },
+        create: {
+          busSeatId: seat.id,
+          bookingSessionId,
+          status: 'ACTIVE',
+          expiresAt: holdExpiresAt,
+          travellerName: primaryTraveller.fullName,
+        },
+      });
+      await db.busSeat.update({
+        where: { id: seat.id },
+        data: { status: 'HELD', isAvailable: false },
+      });
+    }
+
     const heldSeats = await db.busSeat.findMany({
       where: {
         busId,
         seatNumber: { in: selectedSeats },
-        seatHold: {
-          bookingSessionId,
-          status: 'ACTIVE',
-          expiresAt: { gt: now },
-        },
       },
       include: { seatHold: true },
     });
-
-    if (heldSeats.length !== selectedSeats.length) {
-      return NextResponse.json({
-        error: 'Your seat hold has expired or is invalid. Please select your seats again.',
-      }, { status: 409 });
-    }
-
-    const primaryTraveller = travellers[0];
 
     // 4. Strict Server-Side Tiered Squad Calculation
     const travellersCount = travellers.length;
