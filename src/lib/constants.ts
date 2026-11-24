@@ -8,7 +8,7 @@ export const TRIP_METADATA = {
   origin: 'Pickup & Reporting: Near Main Gate (NH-2), Mathura',
   destination: 'Manali & Kasol, Himachal Pradesh',
   capacity: 75,
-  dates: 'October 24 - October 28, 2026',
+  dates: 'December 24 - December 29, 2026',
   reportingLocation: 'Pickup & Reporting: Near Main Gate (NH-2), Mathura',
   disclaimer: 'Independent student-organized expedition. Not an officially sponsored university event. Trip itinerary may change due to weather, road conditions, traffic, permits, government restrictions, local conditions, or safety requirements. Weather-dependent and road-dependent activities (such as Atal Tunnel / Sissu snow trails and river rafting) are subject to official clearances and cannot be guaranteed.',
 };

@@ -600,7 +600,7 @@ export default function AdminBusesPage() {
               </span>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 rounded-xl bg-zinc-900/90 border border-zinc-800 flex items-center justify-between text-xs font-mono">
+              <div className="p-3 rounded-xl bg-zinc-900/90 border border-zinc-800 flex items-center justify-between text-xs font-sans">
                 <span className="font-bold text-zinc-300 flex items-center gap-1.5">
                   🚗 Driver
                 </span>
@@ -608,7 +608,7 @@ export default function AdminBusesPage() {
                   Reserved Staff
                 </span>
               </div>
-              <div className="p-3 rounded-xl bg-zinc-900/90 border border-zinc-800 flex items-center justify-between text-xs font-mono">
+              <div className="p-3 rounded-xl bg-zinc-900/90 border border-zinc-800 flex items-center justify-between text-xs font-sans">
                 <span className="font-bold text-zinc-300 flex items-center gap-1.5">
                   📋 Conductor
                 </span>

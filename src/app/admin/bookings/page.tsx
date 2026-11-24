@@ -299,7 +299,7 @@ export default function AdminBookingsPage() {
                           .map((s: string) => (
                             <span
                               key={s}
-                              className="px-1.5 py-0.5 rounded bg-sky-950 text-sky-400 border border-sky-800 font-mono font-bold text-[10px]"
+                              className="px-1.5 py-0.5 rounded bg-sky-950 text-sky-400 border border-sky-800 font-sans font-black text-[10px] tracking-wider"
                             >
                               {s}
                             </span>
@@ -370,7 +370,7 @@ export default function AdminBookingsPage() {
                 <h2 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
                   #{selectedBooking.bookingId}
                   <span
-                    className={`text-[10px] font-mono px-2 py-0.5 rounded-full uppercase ${
+                    className={`text-[10px] font-sans font-bold tracking-wider px-2.5 py-0.5 rounded-full uppercase ${
                       selectedBooking.bookingStatus === 'CONFIRMED'
                         ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
                         : selectedBooking.bookingStatus === 'CANCELLED'
@@ -450,7 +450,7 @@ export default function AdminBookingsPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded bg-sky-950 text-sky-400 border border-sky-800 font-mono font-bold text-xs">
+                      <span className="px-2 py-0.5 rounded bg-sky-950 text-sky-400 border border-sky-800 font-sans font-bold text-xs tracking-wide">
                         Seat {t.assignedSeatNumber || 'Pending'}
                       </span>
 

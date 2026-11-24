@@ -341,10 +341,10 @@ export default function AdminHotelsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-mono font-bold text-amber-400 uppercase tracking-widest">
+            <span className="text-[11px] font-sans font-bold text-amber-400 uppercase tracking-widest">
               HOSPITALITY MANAGEMENT
             </span>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-300 font-mono font-semibold">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-300 font-sans font-semibold tracking-wide">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Live Desks
             </span>
           </div>
@@ -421,7 +421,7 @@ export default function AdminHotelsPage() {
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-white/10 pb-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[10px] font-mono font-black px-2.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase tracking-wider">
+                    <span className="text-[10px] font-sans font-bold px-2.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase tracking-wider">
                       {hotel.location}
                     </span>
                     <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
@@ -527,7 +527,7 @@ export default function AdminHotelsPage() {
                             </button>
                           </div>
                           <span
-                            className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${
+                            className={`text-[10px] font-sans tabular-nums font-bold px-2 py-0.5 rounded border ${
                               isFull
                                 ? 'bg-rose-950/60 text-rose-300 border-rose-500/30'
                                 : 'bg-emerald-950/60 text-emerald-300 border-emerald-500/30'

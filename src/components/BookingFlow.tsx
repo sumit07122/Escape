@@ -538,17 +538,6 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
         throw new Error(orderData.error || 'Failed to initialize booking payment');
       }
 
-      // In Sandbox / Test Mock Mode, complete instant confirmation for seamless verification
-      if (orderData.isMock || orderData.keyId?.includes('YourTestKeyHere')) {
-        await verifyPayment({
-          bookingId: orderData.bookingId,
-          razorpayOrderId: orderData.razorpayOrderId,
-          razorpayPaymentId: `pay_mock_${Date.now()}`,
-          razorpaySignature: `sig_mock_${Date.now()}`,
-        });
-        return;
-      }
-
       // Ensure Razorpay SDK is available or dynamically injected
       let RazorpayConstructor = (window as any).Razorpay;
       if (!RazorpayConstructor && typeof window !== 'undefined') {
@@ -572,7 +561,7 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
           amount: orderData.amountInPaise,
           currency: 'INR',
           name: 'HIMALAYAN ESCAPE',
-          description: `Seat Reservation (${travellers.length} Travellers) - ${orderData.bookingId}`,
+          description: `Expedition Seat Reservation (${travellers.length} ${travellers.length === 1 ? 'Traveller' : 'Travellers'}) • ${orderData.bookingId}`,
           image: '/logo.png',
           order_id: orderData.razorpayOrderId,
           prefill: {
@@ -580,8 +569,20 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
             email: primary.email,
             contact: primary.phone,
           },
+          notes: {
+            bookingId: orderData.bookingId,
+            seats: (selectedSeats || []).join(', '),
+            busId: selectedBusId || '',
+          },
           theme: {
             color: '#163C32',
+          },
+          modal: {
+            confirm_close: true,
+            ondismiss: function () {
+              setIsProcessingPayment(false);
+              setPaymentError('Payment window was closed. Your seats remain reserved for 10 minutes.');
+            },
           },
           handler: async function (response: any) {
             await verifyPayment({
@@ -591,18 +592,16 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
               razorpaySignature: response.razorpay_signature,
             });
           },
-          modal: {
-            ondismiss: async function () {
-              setIsProcessingPayment(false);
-              setPaymentError('Payment window was closed. Your seats remain reserved for 10 minutes.');
-            },
-          },
         };
 
         const rzp = new RazorpayConstructor(options);
+        rzp.on('payment.failed', function (resp: any) {
+          setIsProcessingPayment(false);
+          setPaymentError(resp.error?.description || 'Payment failed or was cancelled. Please try again.');
+        });
         rzp.open();
       } else {
-        throw new Error('Razorpay secure checkout could not be loaded. Please ensure you are connected to the internet and retry.');
+        throw new Error('Razorpay secure checkout could not be loaded. Please ensure you have an active internet connection.');
       }
     } catch (err: unknown) {
       console.error(err);

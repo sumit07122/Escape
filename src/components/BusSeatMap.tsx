@@ -420,7 +420,7 @@ export default function BusSeatMap({
         )}
 
         {isFriendSeat && !isSelected && (
-          <span className="absolute -bottom-1 -right-1 px-1 py-0.2 rounded bg-stone-800 text-purple-300 text-[8px] font-mono font-bold shadow-xs">
+          <span className="absolute -bottom-1 -right-1 px-1 py-0.2 rounded bg-stone-800 text-purple-300 text-[8px] font-sans font-bold shadow-xs">
             Friend
           </span>
         )}

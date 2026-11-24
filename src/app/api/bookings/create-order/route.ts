@@ -339,7 +339,7 @@ export async function POST(request: NextRequest) {
       amount: depositAmount,
       amountInPaise: Math.round(depositAmount * 100),
       currency: orderResult.currency,
-      keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_YourTestKeyHere',
+      keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID || 'rzp_test_Tr494eQqFSnaGC',
       isMock: orderResult.isMock,
       pricing: {
         travellersCount,

@@ -101,9 +101,12 @@ async function resetProductionData() {
           capacity: 75,
           packagePricePerTraveller: 6200,
           reservationAmountPerTraveller: 1000,
+          duration: '5 DAYS • 4 NIGHTS',
+          startDate: new Date('2026-12-24T16:30:00.000Z'),
+          endDate: new Date('2026-12-29T10:00:00.000Z'),
         },
       });
-      console.log(`  ✓ Master Trip preserved: "${trip.name}" (Capacity: 75, Deposit: ₹1,000, Total: ₹6,200)`);
+      console.log(`  ✓ Master Trip preserved: "${trip.name}" (Capacity: 75, Dates: Dec 24 - Dec 29, 2026, Deposit: ₹1,000, Total: ₹6,200)`);
     } else {
       console.warn('  ⚠️ Master Trip "manali-kasol" not found; creating...');
       await prisma.trip.create({
@@ -111,12 +114,12 @@ async function resetProductionData() {
           slug: 'manali-kasol',
           name: 'Himalayan Escape — Student Mountain Expedition',
           title: 'HIMALAYAN ESCAPE (MANALI × KASOL)',
-          duration: '6 DAYS / 5 NIGHTS',
+          duration: '5 DAYS • 4 NIGHTS',
           capacity: 75,
           packagePricePerTraveller: 6200,
           reservationAmountPerTraveller: 1000,
-          startDate: new Date('2026-11-15T16:30:00.000Z'),
-          endDate: new Date('2026-11-20T22:00:00.000Z'),
+          startDate: new Date('2026-12-24T16:30:00.000Z'),
+          endDate: new Date('2026-12-29T10:00:00.000Z'),
         },
       });
       console.log('  ✓ Master Trip created successfully.');

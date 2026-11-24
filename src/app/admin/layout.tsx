@@ -336,11 +336,11 @@ export default function AdminLayout({
                   <span className="font-serif font-black text-sm sm:text-base text-stone-100 tracking-tight">
                     {currentPage?.label || 'Site manager'}
                   </span>
-                  <span className="hidden sm:inline-block px-1.5 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/30 text-[9px] font-mono font-bold text-emerald-400 uppercase">
+                  <span className="hidden sm:inline-block px-1.5 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/30 text-[9px] font-sans font-bold text-emerald-400 uppercase tracking-wider">
                     Live
                   </span>
                 </div>
-                <span className="text-[10px] text-amber-400 font-mono">
+                <span className="text-[10px] text-amber-300 font-sans font-medium tracking-tight">
                   Himalayan Escape 2026 • Real-Time Dispatch
                 </span>
               </div>
@@ -351,21 +351,21 @@ export default function AdminLayout({
           <div className="hidden lg:flex items-center gap-3 px-4 py-2 rounded-full backdrop-blur-md bg-stone-900/80 border border-white/10 text-xs shadow-inner">
             <div className="flex items-center gap-1.5">
               <span className="text-stone-400">Active Capacity:</span>
-              <span className="font-mono tabular-nums font-bold text-emerald-400">
+              <span className="font-sans tabular-nums font-bold text-emerald-400">
                 {activeCap}/{totalCap}
               </span>
             </div>
             <span className="text-white/20">|</span>
             <div className="flex items-center gap-1.5">
               <span className="text-stone-400">Revenue Collected:</span>
-              <span className="font-mono tabular-nums font-bold text-amber-400">
+              <span className="font-sans tabular-nums font-bold text-amber-400">
                 ₹{revCollected.toLocaleString('en-IN')}
               </span>
             </div>
             <span className="text-white/20">|</span>
             <div className="flex items-center gap-1.5">
               <span className="text-stone-400">Gate Balance Pending:</span>
-              <span className="font-mono tabular-nums font-bold text-stone-300">
+              <span className="font-sans tabular-nums font-bold text-stone-200">
                 ₹{gatePending.toLocaleString('en-IN')}
               </span>
             </div>
