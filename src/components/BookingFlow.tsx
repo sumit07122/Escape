@@ -466,10 +466,10 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
           idx === 0
             ? t
             : {
-                ...t,
-                emergencyContactName: primary.emergencyContactName,
-                emergencyContactPhone: primary.emergencyContactPhone,
-              }
+              ...t,
+              emergencyContactName: primary.emergencyContactName,
+              emergencyContactPhone: primary.emergencyContactPhone,
+            }
         )
       );
     }
@@ -679,13 +679,12 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
               return (
                 <div
                   key={s.num}
-                  className={`flex-1 py-1.5 px-2 rounded-lg text-center font-bold transition-all text-[11px] sm:text-xs ${
-                    isActive
-                      ? 'bg-[#163C32] text-white shadow-xs'
-                      : isPast
+                  className={`flex-1 py-1.5 px-2 rounded-lg text-center font-bold transition-all text-[11px] sm:text-xs ${isActive
+                    ? 'bg-[#163C32] text-white shadow-xs'
+                    : isPast
                       ? 'bg-[#E7E2D8] text-[#163C32]'
                       : 'bg-[#F7F5EF] text-[#B4AA96]'
-                  }`}
+                    }`}
                 >
                   <span>{s.label}</span>
                 </div>
@@ -719,11 +718,10 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
               <button
                 type="button"
                 onClick={() => setTravellersCount(1)}
-                className={`py-2 px-2.5 rounded-xl text-xs font-semibold transition-all border ${
-                  travellersCount === 1
-                    ? 'bg-[#163C32] text-white border-[#163C32] shadow-sm'
-                    : 'bg-white text-[#171918] border-[#D8D2C4] hover:bg-stone-50'
-                }`}
+                className={`py-2 px-2.5 rounded-xl text-xs font-semibold transition-all border ${travellersCount === 1
+                  ? 'bg-[#163C32] text-white border-[#163C32] shadow-sm'
+                  : 'bg-white text-[#171918] border-[#D8D2C4] hover:bg-stone-50'
+                  }`}
               >
                 <span className="block text-[11px] font-medium uppercase tracking-wider text-inherit/80">Solo</span>
                 <span className="text-xs font-bold tabular-nums">₹6,200</span>
@@ -731,11 +729,10 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
               <button
                 type="button"
                 onClick={() => setTravellersCount(2)}
-                className={`py-2 px-2.5 rounded-xl text-xs font-semibold transition-all border relative ${
-                  travellersCount === 2
-                    ? 'bg-[#163C32] text-white border-[#163C32] shadow-sm'
-                    : 'bg-white text-[#171918] border-[#D8D2C4] hover:bg-stone-50'
-                }`}
+                className={`py-2 px-2.5 rounded-xl text-xs font-semibold transition-all border relative ${travellersCount === 2
+                  ? 'bg-[#163C32] text-white border-[#163C32] shadow-sm'
+                  : 'bg-white text-[#171918] border-[#D8D2C4] hover:bg-stone-50'
+                  }`}
               >
                 <span className="absolute -top-2 right-1.5 px-1.5 py-0.5 rounded-full bg-[#D87945] text-white text-[8px] font-bold uppercase tracking-wider shadow-xs">
                   Save ₹402
@@ -746,11 +743,10 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
               <button
                 type="button"
                 onClick={() => setTravellersCount(3)}
-                className={`py-2 px-2.5 rounded-xl text-xs font-semibold transition-all border relative ${
-                  travellersCount >= 3
-                    ? 'bg-[#163C32] text-white border-[#163C32] shadow-sm'
-                    : 'bg-white text-[#171918] border-[#D8D2C4] hover:bg-stone-50'
-                }`}
+                className={`py-2 px-2.5 rounded-xl text-xs font-semibold transition-all border relative ${travellersCount >= 3
+                  ? 'bg-[#163C32] text-white border-[#163C32] shadow-sm'
+                  : 'bg-white text-[#171918] border-[#D8D2C4] hover:bg-stone-50'
+                  }`}
               >
                 <span className="absolute -top-2 right-1.5 px-1.5 py-0.5 rounded-full bg-emerald-600 text-white text-[8px] font-bold uppercase tracking-wider shadow-xs">
                   Best Value
@@ -875,10 +871,10 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl bg-white border border-[#D8D2C4] flex items-center justify-center shrink-0">
                 <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
                 </svg>
               </div>
               <div>
@@ -951,9 +947,8 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
                     setTravellers(updated);
                     if (fieldErrors['name_0']) setFieldErrors((prev) => ({ ...prev, name_0: '' }));
                   }}
-                  className={`w-full px-3 py-2.5 rounded-xl bg-white border ${
-                    fieldErrors['name_0'] ? 'border-red-500' : 'border-[#D8D2C4]'
-                  } text-xs text-[#171918] focus:border-[#163C32] focus:outline-none`}
+                  className={`w-full px-3 py-2.5 rounded-xl bg-white border ${fieldErrors['name_0'] ? 'border-red-500' : 'border-[#D8D2C4]'
+                    } text-xs text-[#171918] focus:border-[#163C32] focus:outline-none`}
                 />
                 {fieldErrors['name_0'] && <p className="text-[10px] text-red-600 font-medium">{fieldErrors['name_0']}</p>}
               </div>
@@ -975,9 +970,8 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
                     setTravellers(updated);
                     if (fieldErrors['phone_0']) setFieldErrors((prev) => ({ ...prev, phone_0: '' }));
                   }}
-                  className={`w-full px-3 py-2.5 rounded-xl bg-white border ${
-                    fieldErrors['phone_0'] ? 'border-red-500' : 'border-[#D8D2C4]'
-                  } text-xs text-[#171918] focus:border-[#163C32] focus:outline-none`}
+                  className={`w-full px-3 py-2.5 rounded-xl bg-white border ${fieldErrors['phone_0'] ? 'border-red-500' : 'border-[#D8D2C4]'
+                    } text-xs text-[#171918] focus:border-[#163C32] focus:outline-none`}
                 />
                 {fieldErrors['phone_0'] && <p className="text-[10px] text-red-600 font-medium">{fieldErrors['phone_0']}</p>}
               </div>
@@ -999,9 +993,8 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
                     setTravellers(updated);
                     if (fieldErrors['email_0']) setFieldErrors((prev) => ({ ...prev, email_0: '' }));
                   }}
-                  className={`w-full px-3 py-2.5 rounded-xl bg-white border ${
-                    fieldErrors['email_0'] ? 'border-red-500' : 'border-[#D8D2C4]'
-                  } text-xs text-[#171918] focus:border-[#163C32] focus:outline-none`}
+                  className={`w-full px-3 py-2.5 rounded-xl bg-white border ${fieldErrors['email_0'] ? 'border-red-500' : 'border-[#D8D2C4]'
+                    } text-xs text-[#171918] focus:border-[#163C32] focus:outline-none`}
                 />
                 {fieldErrors['email_0'] && <p className="text-[10px] text-red-600 font-medium">{fieldErrors['email_0']}</p>}
               </div>
@@ -1068,9 +1061,8 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
                         setTravellers(updated);
                         if (fieldErrors['em_name_0']) setFieldErrors((prev) => ({ ...prev, em_name_0: '' }));
                       }}
-                      className={`w-full px-3 py-2 rounded-xl bg-white border ${
-                        fieldErrors['em_name_0'] ? 'border-red-500' : 'border-[#D8D2C4]'
-                      } text-xs text-[#171918] focus:border-[#163C32] focus:outline-none`}
+                      className={`w-full px-3 py-2 rounded-xl bg-white border ${fieldErrors['em_name_0'] ? 'border-red-500' : 'border-[#D8D2C4]'
+                        } text-xs text-[#171918] focus:border-[#163C32] focus:outline-none`}
                     />
                   </div>
                   <div data-error={!!fieldErrors['em_phone_0']}>
@@ -1089,9 +1081,8 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
                         setTravellers(updated);
                         if (fieldErrors['em_phone_0']) setFieldErrors((prev) => ({ ...prev, em_phone_0: '' }));
                       }}
-                      className={`w-full px-3 py-2 rounded-xl bg-white border ${
-                        fieldErrors['em_phone_0'] ? 'border-red-500' : 'border-[#D8D2C4]'
-                      } text-xs text-[#171918] focus:border-[#163C32] focus:outline-none`}
+                      className={`w-full px-3 py-2 rounded-xl bg-white border ${fieldErrors['em_phone_0'] ? 'border-red-500' : 'border-[#D8D2C4]'
+                        } text-xs text-[#171918] focus:border-[#163C32] focus:outline-none`}
                     />
                   </div>
                 </div>
@@ -1154,9 +1145,8 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
                             setTravellers(updated);
                             if (fieldErrors[`name_${idx}`]) setFieldErrors((prev) => ({ ...prev, [`name_${idx}`]: '' }));
                           }}
-                          className={`w-full px-3 py-2 rounded-xl bg-white border ${
-                            fieldErrors[`name_${idx}`] ? 'border-red-500' : 'border-[#D8D2C4]'
-                          } text-xs text-[#171918] focus:border-[#163C32] focus:outline-none`}
+                          className={`w-full px-3 py-2 rounded-xl bg-white border ${fieldErrors[`name_${idx}`] ? 'border-red-500' : 'border-[#D8D2C4]'
+                            } text-xs text-[#171918] focus:border-[#163C32] focus:outline-none`}
                         />
                       </div>
 
@@ -1174,9 +1164,8 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
                             setTravellers(updated);
                             if (fieldErrors[`phone_${idx}`]) setFieldErrors((prev) => ({ ...prev, [`phone_${idx}`]: '' }));
                           }}
-                          className={`w-full px-3 py-2 rounded-xl bg-white border ${
-                            fieldErrors[`phone_${idx}`] ? 'border-red-500' : 'border-[#D8D2C4]'
-                          } text-xs text-[#171918] focus:border-[#163C32] focus:outline-none`}
+                          className={`w-full px-3 py-2 rounded-xl bg-white border ${fieldErrors[`phone_${idx}`] ? 'border-red-500' : 'border-[#D8D2C4]'
+                            } text-xs text-[#171918] focus:border-[#163C32] focus:outline-none`}
                         />
                       </div>
 
@@ -1544,13 +1533,13 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
       {currentStep !== 4 && (
         <aside
           aria-label="Mobile booking action bar"
-          className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-[#D8D2C4] p-3 px-4 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] z-40 sm:hidden flex items-center justify-between gap-3"
+          className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-[#D8D2C4] p-3 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_30px_rgba(0,0,0,0.12)] z-40 sm:hidden flex items-center justify-between gap-3"
         >
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#646864] block">
-              {currentStep === 1 ? 'RESERVATION DEPOSIT' : currentStep === 2 ? 'DEPOSIT DUE' : 'TOTAL DUE TODAY'}
+            <span className="text-[9px] font-bold uppercase tracking-wider text-[#646864] block">
+              {currentStep === 1 ? 'RESERVATION DEPOSIT' : currentStep === 2 ? 'DEPOSIT DUE' : 'DUE TODAY (ADVANCE)'}
             </span>
-            <span className="text-base font-bold text-[#D87945] tabular-nums leading-none">
+            <span className="text-base font-extrabold text-[#163C32] tabular-nums leading-none">
               ₹{pricing.reservationAmount.toLocaleString('en-IN')}
             </span>
             <span className="text-[10px] text-[#646864] block font-medium">
@@ -1565,7 +1554,7 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
                 setCurrentStep(2);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="px-5 py-2.5 rounded-xl bg-[#D87945] active:bg-[#C26735] text-white font-bold text-xs shadow-sm flex items-center gap-1.5"
+              className="px-5 py-2.5 rounded-xl bg-[#D87945] active:bg-[#C26735] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer"
             >
               <span>Continue</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -1576,7 +1565,7 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
             <button
               type="button"
               onClick={handleProceedToStep3}
-              className="px-5 py-2.5 rounded-xl bg-[#D87945] active:bg-[#C26735] text-white font-bold text-xs shadow-sm flex items-center gap-1.5"
+              className="px-5 py-2.5 rounded-xl bg-[#163C32] active:bg-[#0E2620] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer"
             >
               <span>Review & Pay</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -1588,12 +1577,15 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
               type="button"
               disabled={isProcessingPayment || (selectedSeats.length > 0 && selectedSeats.length !== travellersCount)}
               onClick={handleProceedToPayment}
-              className="px-5 py-2.5 rounded-xl bg-[#D87945] active:bg-[#C26735] disabled:opacity-50 text-white font-bold text-xs shadow-sm flex items-center gap-1.5"
+              className="px-5 py-2.5 rounded-xl bg-[#D87945] hover:bg-[#C26735] disabled:opacity-50 text-white font-black text-xs shadow-md flex items-center gap-1.5 cursor-pointer"
             >
               {isProcessingPayment ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+                  <span>Securing...</span>
+                </>
               ) : (
-                <span>Pay ₹{pricing.reservationAmount.toLocaleString('en-IN')}</span>
+                <span>PAY WITH UPI / QR</span>
               )}
             </button>
           )}

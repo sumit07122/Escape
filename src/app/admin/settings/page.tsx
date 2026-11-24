@@ -176,6 +176,48 @@ export default function AdminSettingsPage() {
           </button>
         </div>
       </form>
+
+      {/* Production Launch & Clean Fleet Reset */}
+      <div className="rounded-2xl border border-rose-900/40 bg-gradient-to-br from-rose-950/20 via-zinc-950/40 to-stone-950/30 p-6 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-700/50 text-[10px] font-bold uppercase tracking-wider">
+                Production Launch Zone
+              </span>
+              <span className="text-xs text-zinc-400">Pristine State Reset</span>
+            </div>
+            <h3 className="text-lg font-bold text-white mt-1">
+              Reset Fleet to 100% Live Availability
+            </h3>
+            <p className="text-xs text-zinc-400 max-w-xl mt-0.5">
+              Purges all test bookings, payments, and seat holds. Restores all 75 passenger seats across Bus 01, 02, and 03 to Available, locks Driver &amp; Conductor in front cabin, and sets dates to Dec 24 – Dec 29, 2026.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={async () => {
+              if (!window.confirm('⚠️ PRODUCTION RESET: This will purge all existing test bookings and reset all 75 bus seats to AVAILABLE for live student bookings. Proceed?')) return;
+              try {
+                const res = await fetch('/api/admin/reset-data', { method: 'POST' });
+                const data = await res.json();
+                if (res.ok) {
+                  alert(`✅ SUCCESS: ${data.message}\nReset ${data.stats.resetPassengerSeats} seats to Available. Capacity: ${data.stats.totalFleetCapacity}.`);
+                  fetchSettings();
+                } else {
+                  alert('❌ Error: ' + (data.error || 'Failed to reset database'));
+                }
+              } catch {
+                alert('Network error connecting to reset service');
+              }
+            }}
+            className="shrink-0 px-5 py-3 rounded-xl bg-rose-700 hover:bg-rose-600 text-white font-bold text-xs shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <span>🚀 Reset to Live Stage</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

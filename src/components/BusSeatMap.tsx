@@ -404,7 +404,7 @@ export default function BusSeatMap({
         disabled={isDisabled && !isAdmin}
         onClick={() => handleSeatClick(seat)}
         aria-label={`Seat ${seat.seatNumber}, ${seat.position}, status: ${seat.status}`}
-        className={`relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl border flex flex-col items-center justify-center transition-transform active:scale-90 duration-100 ease-out touch-manipulation select-none cursor-pointer seat-shadow ${bgColor} ${ringClasses}`}
+        className={`relative w-10 h-10 min-[370px]:w-11 min-[370px]:h-11 sm:w-12 sm:h-12 rounded-xl border flex flex-col items-center justify-center transition-transform active:scale-90 duration-100 ease-out touch-manipulation select-none cursor-pointer seat-shadow ${bgColor} ${ringClasses}`}
         title={`${seat.seatNumber} (${seat.position} • Row ${seat.rowNumber}) - ${seat.status}`}
       >
         {isRecommended && seat.status === 'AVAILABLE' && !isSelected && (
@@ -526,17 +526,17 @@ export default function BusSeatMap({
       />
 
       {/* Bus Visual Chassis Container with Topographic Grid */}
-      <div className="w-full max-w-md bg-white coach-grid rounded-3xl p-5 sm:p-7 border border-[#D8D2C4] shadow-sm relative">
+      <div className="w-full max-w-md bg-white coach-grid rounded-3xl p-3.5 min-[380px]:p-5 sm:p-7 border border-[#D8D2C4] shadow-sm relative">
         {/* Front Bus Cabin / Windshield */}
-        <div className="mb-6 pt-1 pb-4 border-b-2 border-dashed border-[#D8D2C4] text-center">
-          <div className="w-full h-8 rounded-t-2xl bg-[#F7F5EF] border-t-2 border-[#163C32] flex items-center justify-center mb-4">
+        <div className="mb-5 pt-1 pb-3 sm:pb-4 border-b-2 border-dashed border-[#D8D2C4] text-center">
+          <div className="w-full h-8 rounded-t-2xl bg-[#F7F5EF] border-t-2 border-[#163C32] flex items-center justify-center mb-3">
             <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#163C32] flex items-center gap-1.5">
               <Bus className="w-3.5 h-3.5" /> FRONT OF COACH
             </span>
           </div>
 
           {/* Reserved Cabin Positions: Driver & Conductor */}
-          <div className="grid grid-cols-2 gap-3 px-2">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 px-1 sm:px-2">
             <div className="p-2.5 rounded-xl bg-[#F7F5EF] border border-[#D8D2C4] flex items-center justify-between">
               <span className="text-xs font-bold text-[#646864] flex items-center gap-1.5">
                 <span>🚗</span> DRIVER
