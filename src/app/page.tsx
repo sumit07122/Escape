@@ -186,6 +186,55 @@ export default async function HomePage() {
       </div>
 
       {/* ======================================================== */}
+      {/* QUICK STUDENT COORDINATOR CONTACT BAR (IN BODY)          */}
+      {/* ======================================================== */}
+      <div className="mx-auto mt-6 w-full max-w-5xl px-4 sm:px-6">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3.5 rounded-2xl border border-[#163C32]/15 bg-[#edf3ef]/85 p-4 sm:px-6 sm:py-3.5 shadow-sm backdrop-blur">
+          <div className="flex items-center gap-3 text-center sm:text-left">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#163C32] text-white shadow-sm">
+              <Phone className="h-5 w-5 text-[#f1c39e]" />
+            </div>
+            <div>
+              <div className="flex items-center justify-center sm:justify-start gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#D87945]">Lead Student Organizer</span>
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10px] font-semibold text-emerald-700 uppercase tracking-wide">Instant Help</span>
+              </div>
+              <p className="text-xs text-[#171918]/80 font-medium">
+                Got questions or booking seats with friends? Call or WhatsApp <strong>Saurabh Pandey: +91 8126854850</strong> or Helpline: <strong>+91 6398412828</strong>
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-2 shrink-0 font-semibold tabular-nums">
+            <a
+              href="tel:8126854850"
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#163C32] px-3.5 py-1.5 text-xs font-bold text-white shadow transition-all hover:bg-[#1f5245] hover:scale-105 active:scale-95"
+            >
+              <Phone className="h-3.5 w-3.5 text-[#f1c39e]" />
+              <span>Call 8126854850</span>
+            </a>
+            <a
+              href="https://wa.me/918126854850?text=Hi%20Saurabh,%20I'm%20interested%20in%20the%20Himalayan%20Escape%20trip."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-full border border-emerald-600/30 bg-emerald-700 px-3.5 py-1.5 text-xs font-bold text-white shadow transition-all hover:bg-emerald-600 hover:scale-105 active:scale-95"
+            >
+              <MessageCircle className="h-3.5 w-3.5 text-emerald-200" />
+              <span>WhatsApp</span>
+            </a>
+            <a
+              href="tel:6398412828"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#163C32]/20 bg-white px-3 py-1.5 text-xs font-bold text-[#163C32] shadow-sm transition-all hover:bg-stone-50 hover:scale-105 active:scale-95"
+              title="Alternative Helpline"
+            >
+              <span>6398412828</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* ======================================================== */}
       {/* EXPEDITION PRICING SECTION - LITTLE UNDER HERO           */}
       {/* ======================================================== */}
       <section id="pricing" className="mx-auto mt-12 w-full max-w-5xl px-4 sm:px-6 scroll-mt-24">

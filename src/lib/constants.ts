@@ -28,12 +28,12 @@ export const PRICING_DEFAULTS = {
 
 export const CONTACT_INFO = {
   organizerName: 'Saurabh Pandey',
-  organizerPhone: '8273352419',
-  coordinatorPhone1: '8273352419',
+  organizerPhone: '8126854850',
+  coordinatorPhone1: '8126854850',
   coordinatorPhone2: '6398412828',
-  whatsapp1: '918273352419',
+  whatsapp1: '918126854850',
   whatsapp2: '916398412828',
-  emergencyCoordinator: '8273352419',
+  emergencyCoordinator: '8126854850',
   emergencySupport: '6398412828',
   police: '100',
   ambulance: '108',

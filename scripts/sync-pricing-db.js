@@ -13,30 +13,31 @@ async function syncAllPricing() {
       groupPackagePrice: 5800,
       groupSizeThreshold: 3,
       depositPrice: 1000,
-      totalCapacity: 75,
+      totalCapacity: 50,
       departureDate: '2026-12-24',
       returnDate: '2026-12-29',
       reportingTime: '07:00 PM',
       pickupLocation: 'Near Main Gate (NH-2), Mathura',
+      emergencyHelplines: ['8126854850', '6398412828'],
     },
     create: {
       id: 'global',
       tripTitle: 'Himalayan Escape 2026',
-      subtitle: 'Five days from the plains to the peaks. Find snow trails in Manali, pine-scented evenings in Kasol, and a new crew for the journey.',
+      subtitle: 'Six days from the plains to the peaks. Find snow trails in Manali, pine-scented evenings in Kasol, and a new crew for the journey.',
       packagePrice: 6200,
       groupPackagePrice: 5800,
       groupSizeThreshold: 3,
       depositPrice: 1000,
-      totalCapacity: 75,
+      totalCapacity: 50,
       departureDate: '2026-12-24',
       returnDate: '2026-12-29',
       reportingTime: '07:00 PM',
       pickupLocation: 'Near Main Gate (NH-2), Mathura',
-      emergencyHelplines: ['6398412828', '8126854850'],
+      emergencyHelplines: ['8126854850', '6398412828'],
       announcementActive: false,
     },
   });
-  console.log('TripConfig updated to 6200 / 5800 / 1000 / 75.');
+  console.log('TripConfig updated to 6200 / 5800 / 1000 / 50.');
 
   // 2. Update master Trip
   const trip = await prisma.trip.findFirst();
@@ -61,9 +62,9 @@ async function syncAllPricing() {
     { key: 'price_group', value: '5800' },
     { key: 'group_size_threshold', value: '3' },
     { key: 'price_reservation', value: '1000' },
-    { key: 'trip_capacity', value: '75' },
-    { key: 'departure_date', value: '2026-10-24' },
-    { key: 'return_date', value: '2026-10-28' },
+    { key: 'trip_capacity', value: '50' },
+    { key: 'departure_date', value: '2026-12-24' },
+    { key: 'return_date', value: '2026-12-29' },
   ];
 
   for (const s of settingsToUpdate) {
@@ -78,10 +79,10 @@ async function syncAllPricing() {
   // 4. Update globalSettings
   await prisma.globalSettings.upsert({
     where: { id: 'global_default' },
-    update: { tripCapacity: 75 },
-    create: { id: 'global_default', tripCapacity: 75 },
+    update: { tripCapacity: 50 },
+    create: { id: 'global_default', tripCapacity: 50 },
   });
-  console.log('GlobalSettings capacity updated to 75.');
+  console.log('GlobalSettings capacity updated to 50.');
 
   console.log('Pricing sync complete!');
 }

@@ -34,7 +34,7 @@ export const DEFAULT_TRIP_CONFIG: TripConfigData = {
   returnDate: '2026-12-29',
   reportingTime: '01:00 PM',
   pickupLocation: 'Near Main Gate (NH-2), Mathura',
-  emergencyHelplines: ['8273352419', '6398412828', '8126854850'],
+  emergencyHelplines: ['8126854850', '6398412828'],
   announcementBanner: 'Reporting time updated: Buses will depart from NH-2 gate at 8:00 PM sharp.',
   announcementActive: false,
   customSeatsDisplayEnabled: false,
