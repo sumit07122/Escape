@@ -58,10 +58,26 @@ export async function POST(request: NextRequest) {
     }
 
     // 3. Find Bus 01
-    const bus1 = await db.bus.findFirst({
-      where: { tripId: trip.id, busNumber: 'BUS-01' },
+    let bus1 = await db.bus.findFirst({
+      where: {
+        tripId: trip.id,
+        OR: [
+          { busNumber: 'Bus 01' },
+          { busNumber: 'BUS-01' },
+          { busNumber: 'Bus 1' },
+          { busNumber: { contains: '01' } },
+        ],
+      },
       include: { seats: true },
     });
+
+    if (!bus1) {
+      bus1 = await db.bus.findFirst({
+        where: { tripId: trip.id, status: 'ACTIVE' },
+        orderBy: { orderIndex: 'asc' },
+        include: { seats: true },
+      });
+    }
 
     if (!bus1) {
       return NextResponse.json({ error: 'Bus 01 not found' }, { status: 404 });
@@ -197,7 +213,7 @@ export async function POST(request: NextRequest) {
               email: t.email,
               gender: t.gender,
               assignedSeatNumber: t.seat,
-              assignedBusNumber: 'BUS-01',
+              assignedBusNumber: bus1.busNumber,
               collegeId: t.collegeId,
               rollNumber: t.rollNumber,
             },
