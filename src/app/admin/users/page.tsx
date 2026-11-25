@@ -1,7 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { CalendarDays, Mail, Phone, RefreshCw, Search, Ticket, Users } from 'lucide-react';
+import {
+  CalendarDays, Mail, Phone, RefreshCw, Search, Ticket, Users,
+  Trash2, Edit3, UserPlus, X, Check, AlertTriangle, ShieldCheck
+} from 'lucide-react';
 
 interface RegisteredUser {
   id: string;
@@ -9,6 +12,7 @@ interface RegisteredUser {
   email: string | null;
   phone: string | null;
   image: string | null;
+  role: string;
   createdAt: string;
   updatedAt: string;
   _count: { bookings: number };
@@ -26,6 +30,24 @@ export default function AdminUsersPage() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // Modal State for Edit / Create User
+  const [editingUser, setEditingUser] = useState<RegisteredUser | null>(null);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [formName, setFormName] = useState('');
+  const [formEmail, setFormEmail] = useState('');
+  const [formPhone, setFormPhone] = useState('');
+  const [formRole, setFormRole] = useState('USER');
+  const [formSubmitting, setFormSubmitting] = useState(false);
+
+  // Bulk Purge State
+  const [isPurging, setIsPurging] = useState(false);
+
+  const showToast = (type: 'success' | 'error', message: string) => {
+    setFeedback({ type, message });
+    setTimeout(() => setFeedback(null), 4000);
+  };
 
   const loadUsers = useCallback(async (query: string, pageNumber: number, signal?: AbortSignal) => {
     setLoading(true);
@@ -57,92 +79,382 @@ export default function AdminUsersPage() {
     };
   }, [loadUsers, page, search]);
 
+  const handleOpenEdit = (user: RegisteredUser) => {
+    setEditingUser(user);
+    setFormName(user.name || '');
+    setFormEmail(user.email || '');
+    setFormPhone(user.phone || '');
+    setFormRole(user.role || 'USER');
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser) return;
+    setFormSubmitting(true);
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editingUser.id,
+          name: formName,
+          email: formEmail,
+          phone: formPhone,
+          role: formRole,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update user');
+      showToast('success', `User ${formName || formEmail} updated successfully`);
+      setEditingUser(null);
+      loadUsers(search, page);
+    } catch (err: any) {
+      showToast('error', err.message || 'Error updating user');
+    } finally {
+      setFormSubmitting(false);
+    }
+  };
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormSubmitting(true);
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formName,
+          email: formEmail,
+          phone: formPhone,
+          role: formRole,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create user');
+      showToast('success', `User ${formName || formEmail} created successfully`);
+      setIsCreateOpen(false);
+      setFormName('');
+      setFormEmail('');
+      setFormPhone('');
+      loadUsers(search, page);
+    } catch (err: any) {
+      showToast('error', err.message || 'Error creating user');
+    } finally {
+      setFormSubmitting(false);
+    }
+  };
+
+  const handleDeleteUser = async (user: RegisteredUser) => {
+    const displayName = user.name || user.email || 'this user';
+    if (!window.confirm(`Are you sure you want to delete ${displayName}? This action cannot be undone.`)) return;
+    try {
+      const res = await fetch(`/api/admin/users?id=${encodeURIComponent(user.id)}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to delete user');
+      showToast('success', `User ${displayName} deleted successfully`);
+      loadUsers(search, page);
+    } catch (err: any) {
+      showToast('error', err.message || 'Error deleting user');
+    }
+  };
+
+  const handlePurgeAllUsers = async () => {
+    if (!window.confirm(`⚠️ DANGER: Are you sure you want to delete ALL registered users (${total} total)?\n\nAll customer login profiles will be wiped clean. Proceed?`)) return;
+    setIsPurging(true);
+    try {
+      const res = await fetch('/api/admin/users?all=true', {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to purge users');
+      showToast('success', data.message || 'All registered users purged successfully');
+      loadUsers('', 1);
+    } catch (err: any) {
+      showToast('error', err.message || 'Error purging users');
+    } finally {
+      setIsPurging(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* Toast Feedback */}
+      {feedback && (
+        <div
+          className={`fixed top-20 right-6 z-50 p-4 rounded-2xl shadow-2xl border backdrop-blur-md flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-200 ${
+            feedback.type === 'success'
+              ? 'bg-emerald-950/90 border-emerald-500/50 text-emerald-200'
+              : 'bg-rose-950/90 border-rose-500/50 text-rose-200'
+          }`}
+        >
+          <span className="text-xs font-bold">{feedback.message}</span>
+        </div>
+      )}
+
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <span className="text-xs font-bold uppercase tracking-widest text-orange-400">Accounts</span>
+          <span className="text-xs font-bold uppercase tracking-widest text-amber-400">Accounts</span>
           <h1 className="mt-1 text-3xl font-black text-white">Registered users</h1>
-          <p className="mt-1 text-xs text-zinc-400">View customer profiles, contact details, and booking activity.</p>
+          <p className="mt-1 text-xs text-stone-400">View customer profiles, edit user details, and manage registrations.</p>
         </div>
-        <button
-          type="button"
-          onClick={() => loadUsers(search, page)}
-          disabled={loading}
-          className="flex min-h-10 items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-4 text-xs font-bold text-zinc-200 transition hover:bg-zinc-800 disabled:opacity-50"
-        >
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} /> Refresh
-        </button>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => {
+              setFormName('');
+              setFormEmail('');
+              setFormPhone('');
+              setFormRole('USER');
+              setIsCreateOpen(true);
+            }}
+            className="flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 px-3.5 text-xs font-bold text-stone-950 transition shadow-md cursor-pointer"
+          >
+            <UserPlus className="h-3.5 w-3.5" /> Add User
+          </button>
+          <button
+            type="button"
+            onClick={handlePurgeAllUsers}
+            disabled={isPurging || total === 0}
+            className="flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-rose-700/60 bg-rose-950/40 hover:bg-rose-900/60 px-3.5 text-xs font-bold text-rose-300 transition disabled:opacity-50 cursor-pointer"
+            title="Delete all registered customer users"
+          >
+            <Trash2 className="h-3.5 w-3.5" /> {isPurging ? 'Purging…' : 'Purge All Users'}
+          </button>
+          <button
+            type="button"
+            onClick={() => loadUsers(search, page)}
+            disabled={loading}
+            className="flex min-h-10 items-center justify-center gap-2 rounded-xl border border-white/10 bg-stone-900 px-3.5 text-xs font-bold text-stone-200 transition hover:bg-stone-800 disabled:opacity-50 cursor-pointer"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} /> Refresh
+          </button>
+        </div>
       </header>
 
-      <section className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 sm:p-5">
+      <section className="rounded-2xl border border-white/10 bg-stone-900/60 p-4 sm:p-5 shadow-xl">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <label className="relative block w-full sm:max-w-md">
-            <Search className="absolute left-3.5 top-3 h-4 w-4 text-zinc-500" />
+            <Search className="absolute left-3.5 top-3 h-4 w-4 text-stone-500" />
             <input
               type="search"
               value={search}
               onChange={(event) => { setSearch(event.target.value); setPage(1); }}
               placeholder="Search name, email, or phone"
-              className="w-full rounded-xl border border-zinc-800 bg-zinc-900 py-2.5 pl-10 pr-3 text-sm text-white outline-none placeholder:text-zinc-500 focus:border-orange-400/50"
+              className="w-full rounded-xl border border-white/15 bg-stone-950 py-2.5 pl-10 pr-3 text-sm text-white outline-none placeholder:text-stone-500 focus:border-amber-400"
             />
           </label>
-          <div className="flex items-center gap-2 text-xs text-zinc-400">
-            <Users className="h-4 w-4 text-orange-300" />
+          <div className="flex items-center gap-2 text-xs text-stone-400">
+            <Users className="h-4 w-4 text-amber-400" />
             <span><strong className="text-white">{total.toLocaleString('en-IN')}</strong> registered {total === 1 ? 'user' : 'users'}</span>
           </div>
         </div>
 
-        {error && <p role="alert" className="mt-4 rounded-xl border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-xs text-rose-200">{error}</p>}
+        {error && <p role="alert" className="mt-4 rounded-xl border border-rose-500/30 bg-rose-950/40 px-4 py-3 text-xs text-rose-200">{error}</p>}
 
-        <div className="mt-4 overflow-hidden rounded-xl border border-zinc-800">
-          <div className="hidden grid-cols-[minmax(0,1.4fr)_minmax(0,1.2fr)_minmax(0,1fr)_110px_110px] gap-4 bg-zinc-900/80 px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-zinc-500 md:grid">
-            <span>User</span><span>Contact</span><span>Registered</span><span>Bookings</span><span>Last updated</span>
+        <div className="mt-4 overflow-hidden rounded-xl border border-white/10 bg-stone-950/50">
+          <div className="hidden grid-cols-[minmax(0,1.3fr)_minmax(0,1.2fr)_minmax(0,1fr)_90px_100px_90px] gap-3 bg-stone-950 px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-stone-400 md:grid border-b border-white/10">
+            <span>User</span>
+            <span>Contact</span>
+            <span>Registered</span>
+            <span>Bookings</span>
+            <span>Role</span>
+            <span className="text-right">Actions</span>
           </div>
 
           {loading ? (
-            <div className="flex items-center justify-center gap-2 px-4 py-12 text-xs text-zinc-400"><RefreshCw className="h-4 w-4 animate-spin" />Loading registered users…</div>
+            <div className="flex items-center justify-center gap-2 px-4 py-12 text-xs text-stone-400">
+              <RefreshCw className="h-4 w-4 animate-spin text-amber-400" />Loading registered users…
+            </div>
           ) : users.length === 0 ? (
-            <div className="px-4 py-12 text-center text-sm text-zinc-400">{search ? 'No users match that search.' : 'No registered users yet.'}</div>
+            <div className="px-4 py-12 text-center text-sm text-stone-400">
+              {search ? 'No users match that search.' : 'No registered users in system (Clean state).'}
+            </div>
           ) : (
-            <div className="divide-y divide-zinc-800">
+            <div className="divide-y divide-white/5">
               {users.map((user) => (
-                <article key={user.id} className="grid gap-3 px-4 py-4 text-xs md:grid-cols-[minmax(0,1.4fr)_minmax(0,1.2fr)_minmax(0,1fr)_110px_110px] md:items-center md:gap-4">
+                <article key={user.id} className="grid gap-3 px-4 py-3.5 text-xs md:grid-cols-[minmax(0,1.3fr)_minmax(0,1.2fr)_minmax(0,1fr)_90px_100px_90px] md:items-center md:gap-3 hover:bg-white/[0.02] transition-colors">
                   <div className="flex min-w-0 items-center gap-3">
                     {user.image ? (
-                      <img src={user.image} alt="" className="h-10 w-10 shrink-0 rounded-full bg-zinc-800 object-cover" />
+                      <img src={user.image} alt="" className="h-9 w-9 shrink-0 rounded-full bg-stone-800 object-cover" />
                     ) : (
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-400/10 text-sm font-bold text-orange-200">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-xs font-bold text-amber-300">
                         {(user.name || user.email || 'U').slice(0, 1).toUpperCase()}
                       </span>
                     )}
                     <div className="min-w-0">
-                      <p className="truncate font-semibold text-white">{user.name || 'Name not provided'}</p>
-                      <p className="mt-1 truncate text-[10px] text-zinc-500">Customer account</p>
+                      <p className="truncate font-bold text-white">{user.name || 'Name not provided'}</p>
+                      <p className="truncate text-[10px] text-stone-400 font-mono">ID: {user.id.slice(0, 8)}…</p>
                     </div>
                   </div>
-                  <div className="space-y-1.5 text-zinc-300">
-                    {user.email && <p className="flex min-w-0 items-center gap-2"><Mail className="h-3.5 w-3.5 shrink-0 text-zinc-500" /><span className="truncate">{user.email}</span></p>}
-                    {user.phone && <p className="flex items-center gap-2"><Phone className="h-3.5 w-3.5 shrink-0 text-zinc-500" />{user.phone}</p>}
-                    {!user.email && !user.phone && <span className="text-zinc-500">No contact details</span>}
+
+                  <div className="space-y-1 text-stone-300">
+                    {user.email && (
+                      <p className="flex min-w-0 items-center gap-1.5 truncate">
+                        <Mail className="h-3 w-3 shrink-0 text-stone-500" />
+                        <span className="truncate">{user.email}</span>
+                      </p>
+                    )}
+                    {user.phone && (
+                      <p className="flex items-center gap-1.5 font-mono text-[11px]">
+                        <Phone className="h-3 w-3 shrink-0 text-stone-500" />
+                        {user.phone}
+                      </p>
+                    )}
+                    {!user.email && !user.phone && <span className="text-stone-500 text-[11px]">No contact details</span>}
                   </div>
-                  <p className="flex items-center gap-2 text-zinc-300"><CalendarDays className="h-3.5 w-3.5 text-zinc-500 md:hidden" />{formatDate(user.createdAt)}</p>
-                  <p className="flex items-center gap-2 font-medium text-zinc-200"><Ticket className="h-3.5 w-3.5 text-zinc-500 md:hidden" />{user._count.bookings} {user._count.bookings === 1 ? 'booking' : 'bookings'}</p>
-                  <p className="hidden text-zinc-400 md:block">{formatDate(user.updatedAt)}</p>
+
+                  <p className="flex items-center gap-2 text-stone-300">
+                    <CalendarDays className="h-3.5 w-3.5 text-stone-500 md:hidden" />
+                    {formatDate(user.createdAt)}
+                  </p>
+
+                  <p className="flex items-center gap-2 font-medium text-stone-200">
+                    <Ticket className="h-3.5 w-3.5 text-stone-500 md:hidden" />
+                    <span className="px-2 py-0.5 rounded bg-stone-800 text-[11px] font-mono font-bold">
+                      {user._count.bookings}
+                    </span>
+                  </p>
+
+                  <div>
+                    <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                      user.role === 'ADMIN' ? 'bg-amber-950 text-amber-300 border border-amber-600/40' : 'bg-stone-800 text-stone-300'
+                    }`}>
+                      {user.role}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEdit(user)}
+                      className="p-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white transition-colors cursor-pointer"
+                      title="Edit user"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteUser(user)}
+                      className="p-1.5 rounded-lg bg-rose-950/60 hover:bg-rose-900 border border-rose-800/40 text-rose-300 hover:text-white transition-colors cursor-pointer"
+                      title="Delete user"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </article>
               ))}
             </div>
           )}
         </div>
 
-        <footer className="mt-4 flex items-center justify-between gap-3">
-          <p className="text-[11px] text-zinc-500">Page {page} of {totalPages} · Contact and booking data is visible to admins only.</p>
+        <footer className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <p className="text-[11px] text-stone-400">Page {page} of {totalPages} · Showing {users.length} of {total} registered users.</p>
           <div className="flex gap-2">
-            <button type="button" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page <= 1 || loading} className="rounded-lg border border-zinc-800 px-3 py-2 text-xs font-semibold text-zinc-300 hover:bg-zinc-900 disabled:opacity-40">Previous</button>
-            <button type="button" onClick={() => setPage((current) => Math.min(totalPages, current + 1))} disabled={page >= totalPages || loading} className="rounded-lg border border-zinc-800 px-3 py-2 text-xs font-semibold text-zinc-300 hover:bg-zinc-900 disabled:opacity-40">Next</button>
+            <button
+              type="button"
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+              disabled={page <= 1 || loading}
+              className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-semibold text-stone-300 hover:bg-stone-800 disabled:opacity-40 cursor-pointer"
+            >
+              Previous
+            </button>
+            <button
+              type="button"
+              onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+              disabled={page >= totalPages || loading}
+              className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-semibold text-stone-300 hover:bg-stone-800 disabled:opacity-40 cursor-pointer"
+            >
+              Next
+            </button>
           </div>
         </footer>
       </section>
+
+      {/* Edit / Create User Modal */}
+      {(editingUser || isCreateOpen) && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-md rounded-2xl border border-white/15 bg-stone-900 p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <h3 className="text-base font-bold text-white">
+                {editingUser ? 'Edit User Profile' : 'Add New User'}
+              </h3>
+              <button
+                type="button"
+                onClick={() => { setEditingUser(null); setIsCreateOpen(false); }}
+                className="text-stone-400 hover:text-white p-1 rounded-lg hover:bg-white/10"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={editingUser ? handleSaveEdit : handleCreateUser} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-stone-300 block">Full Name</label>
+                <input
+                  type="text"
+                  value={formName}
+                  onChange={(e) => setFormName(e.target.value)}
+                  placeholder="e.g. Rahul Sharma"
+                  className="w-full px-3 py-2.5 rounded-xl bg-stone-950 border border-white/20 text-white text-xs focus:border-amber-400 focus:outline-none"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-stone-300 block">Email Address</label>
+                <input
+                  type="email"
+                  value={formEmail}
+                  onChange={(e) => setFormEmail(e.target.value)}
+                  placeholder="e.g. rahul@gla.ac.in"
+                  className="w-full px-3 py-2.5 rounded-xl bg-stone-950 border border-white/20 text-white text-xs focus:border-amber-400 focus:outline-none"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-stone-300 block">Phone Number</label>
+                <input
+                  type="tel"
+                  value={formPhone}
+                  onChange={(e) => setFormPhone(e.target.value)}
+                  placeholder="e.g. +91 98765 43210"
+                  className="w-full px-3 py-2.5 rounded-xl bg-stone-950 border border-white/20 text-white text-xs focus:border-amber-400 focus:outline-none"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-stone-300 block">User Role</label>
+                <select
+                  value={formRole}
+                  onChange={(e) => setFormRole(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl bg-stone-950 border border-white/20 text-white text-xs focus:border-amber-400 focus:outline-none"
+                >
+                  <option value="USER">Customer User (USER)</option>
+                  <option value="ADMIN">Administrator (ADMIN)</option>
+                </select>
+              </div>
+
+              <div className="pt-3 border-t border-white/10 flex justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => { setEditingUser(null); setIsCreateOpen(false); }}
+                  className="px-4 py-2 rounded-xl border border-white/10 text-stone-300 text-xs font-bold hover:bg-stone-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={formSubmitting}
+                  className="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-stone-950 text-xs font-bold shadow transition-all disabled:opacity-50 cursor-pointer"
+                >
+                  {formSubmitting ? 'Saving…' : editingUser ? 'Update User' : 'Create User'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

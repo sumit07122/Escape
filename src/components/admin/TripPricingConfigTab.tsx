@@ -367,29 +367,36 @@ export default function TripPricingConfigTab() {
             <span className="text-[10px] font-bold uppercase text-stone-400 mr-1">Quick Presets:</span>
             <button
               type="button"
+              onClick={() => setConfig({ ...config, customSeatsDisplayEnabled: true, customAvailableSeats: 50, customTotalCapacity: 50, totalCapacity: 50 })}
+              className="px-2.5 py-1 rounded-lg bg-emerald-950 hover:bg-emerald-900 border border-emerald-600/40 text-[11px] font-bold text-emerald-300 transition-colors shadow-sm cursor-pointer"
+            >
+              🎯 50 of 50 Available (Full Live)
+            </button>
+            <button
+              type="button"
               onClick={() => setConfig({ ...config, customSeatsDisplayEnabled: true, customAvailableSeats: 7, customTotalCapacity: 75 })}
-              className="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 border border-white/10 text-[11px] font-semibold text-amber-300 transition-colors"
+              className="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 border border-white/10 text-[11px] font-semibold text-amber-300 transition-colors cursor-pointer"
             >
               ⚡ High Urgency (7 of 75)
             </button>
             <button
               type="button"
               onClick={() => setConfig({ ...config, customSeatsDisplayEnabled: true, customAvailableSeats: 17, customTotalCapacity: 75 })}
-              className="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 border border-white/10 text-[11px] font-semibold text-amber-300 transition-colors"
+              className="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 border border-white/10 text-[11px] font-semibold text-amber-300 transition-colors cursor-pointer"
             >
               🔥 Coach 01 Momentum (17 of 75)
             </button>
             <button
               type="button"
               onClick={() => setConfig({ ...config, customSeatsDisplayEnabled: true, customAvailableSeats: 17, customTotalCapacity: 25 })}
-              className="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 border border-white/10 text-[11px] font-semibold text-amber-300 transition-colors"
+              className="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 border border-white/10 text-[11px] font-semibold text-amber-300 transition-colors cursor-pointer"
             >
               🚌 Single Coach Staging (17 of 25)
             </button>
             <button
               type="button"
               onClick={() => setConfig({ ...config, customSeatsDisplayEnabled: false })}
-              className="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 border border-white/10 text-[11px] font-semibold text-emerald-400 transition-colors"
+              className="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 border border-white/10 text-[11px] font-semibold text-emerald-400 transition-colors cursor-pointer"
             >
               🔄 Reset to Auto DB Sync
             </button>
@@ -524,17 +531,65 @@ export default function TripPricingConfigTab() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Total Expedition Cap */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-stone-200 block">
-                Expedition Passenger Cap
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-stone-200 block">
+                  Expedition Passenger Cap
+                </label>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setConfig({
+                        ...config,
+                        totalCapacity: 50,
+                        customTotalCapacity: 50,
+                        customAvailableSeats: 50,
+                      })
+                    }
+                    className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/30 cursor-pointer"
+                  >
+                    Set 50 Seats
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setConfig({
+                        ...config,
+                        totalCapacity: 75,
+                        customTotalCapacity: 75,
+                      })
+                    }
+                    className="px-2 py-0.5 rounded text-[10px] font-bold bg-stone-800 text-stone-300 hover:bg-stone-700 border border-white/10 cursor-pointer"
+                  >
+                    75
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setConfig({
+                        ...config,
+                        totalCapacity: 25,
+                        customTotalCapacity: 25,
+                      })
+                    }
+                    className="px-2 py-0.5 rounded text-[10px] font-bold bg-stone-800 text-stone-300 hover:bg-stone-700 border border-white/10 cursor-pointer"
+                  >
+                    25
+                  </button>
+                </div>
+              </div>
               <input
                 type="number"
-                readOnly
+                min={1}
+                max={500}
                 value={config.totalCapacity}
-                aria-describedby="capacity-derived-help"
-                className="w-full cursor-not-allowed rounded-xl border border-white/10 bg-stone-950/70 px-4 py-2.5 font-mono text-xs font-bold text-stone-300"
+                onChange={(e) => {
+                  const val = Math.max(1, parseInt(e.target.value) || 1);
+                  setConfig({ ...config, totalCapacity: val, customTotalCapacity: val });
+                }}
+                className="w-full rounded-xl border border-white/20 bg-stone-950 px-4 py-2.5 font-mono text-xs font-bold text-white focus:border-amber-400 focus:outline-none"
               />
-              <span id="capacity-derived-help" className="block text-[10px] text-stone-500">Calculated from active bus seat maps. Change it in Fleet &amp; seats.</span>
+              <span className="block text-[10px] text-stone-400">Total expedition capacity. Enter 50 or any number, or click presets above.</span>
             </div>
 
             {/* Going / Departure Date */}

@@ -234,7 +234,16 @@ export async function PATCH(request: NextRequest) {
 
     // 3. ACTION: EDIT_DETAILS
     if (action === 'EDIT_DETAILS') {
-      const { fullName, phone, email, rollNumber, emergencyContactName, emergencyContactPhone } = data || {};
+      const {
+        fullName,
+        phone,
+        email,
+        rollNumber,
+        emergencyContactName,
+        emergencyContactPhone,
+        assignedBusNumber,
+        assignedSeatNumber,
+      } = data || {};
 
       const updated = await db.traveller.update({
         where: { id: travellerId },
@@ -248,6 +257,8 @@ export async function PATCH(request: NextRequest) {
           }),
           ...(emergencyContactName !== undefined && { emergencyContactName: String(emergencyContactName).trim() }),
           ...(emergencyContactPhone !== undefined && { emergencyContactPhone: String(emergencyContactPhone).trim() }),
+          ...(assignedBusNumber !== undefined && { assignedBusNumber: String(assignedBusNumber).trim() }),
+          ...(assignedSeatNumber !== undefined && { assignedSeatNumber: String(assignedSeatNumber).trim() }),
         },
       });
 
