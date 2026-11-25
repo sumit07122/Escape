@@ -104,54 +104,6 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-[#F7F5EF]/95 backdrop-blur-md border-b border-[#E7E2D8]">
-      {/* Top Front-Vision Coordinator Contact Bar */}
-      <div className="bg-[#0E2620] text-white border-b border-white/10 px-3 py-1.5 sm:px-6 text-[10px] sm:text-xs">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-            </span>
-            <span className="font-semibold text-stone-200">
-              Trip Coordinators Hotline:
-            </span>
-            <div className="flex items-center gap-2 font-semibold tabular-nums">
-              <a
-                href="tel:6398412828"
-                className="font-bold text-[#f1c39e] hover:text-white transition-colors inline-flex items-center gap-1"
-                title="Call Coordinator"
-              >
-                <Phone className="h-3 w-3 text-[#f1c39e]" />
-                +91 63984 12828
-              </a>
-              <span className="text-white/30 hidden min-[400px]:inline">·</span>
-              <a
-                href="tel:8126854850"
-                className="font-bold text-[#f1c39e] hover:text-white transition-colors hidden min-[400px]:inline"
-                title="Call Support"
-              >
-                +91 81268 54850
-              </a>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <a
-              href="https://wa.me/916398412828?text=Hi%20Coordinator,%20I%20have%20queries%20about%20the%20Himalayan%20Escape%20trip."
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-bold text-emerald-300 hover:text-emerald-200 transition-colors"
-            >
-              <MessageCircle className="h-3 w-3" />
-              WhatsApp Help
-            </a>
-            <span className="hidden md:inline text-white/30">|</span>
-            <span className="hidden md:inline text-white/60 text-[10px]">
-              24/7 Student Coordination
-            </span>
-          </div>
-        </div>
-      </div>
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between sm:h-20">
           {/* Brand Logo */}

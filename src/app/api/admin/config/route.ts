@@ -51,6 +51,9 @@ export async function PATCH(request: NextRequest) {
       emergencyHelplines,
       announcementBanner,
       announcementActive,
+      customSeatsDisplayEnabled,
+      customAvailableSeats,
+      customTotalCapacity,
     } = body;
 
     const updated = await updateTripConfig({
@@ -68,6 +71,9 @@ export async function PATCH(request: NextRequest) {
       ...(Array.isArray(emergencyHelplines) && { emergencyHelplines }),
       ...(announcementBanner !== undefined && { announcementBanner }),
       ...(announcementActive !== undefined && { announcementActive: Boolean(announcementActive) }),
+      ...(customSeatsDisplayEnabled !== undefined && { customSeatsDisplayEnabled: Boolean(customSeatsDisplayEnabled) }),
+      ...(customAvailableSeats !== undefined && { customAvailableSeats: Number(customAvailableSeats) }),
+      ...(customTotalCapacity !== undefined && { customTotalCapacity: Number(customTotalCapacity) }),
     });
 
     // Also sync with Trip / Package models if they exist in DB

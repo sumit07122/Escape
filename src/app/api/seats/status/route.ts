@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { cleanExpiredHolds, getCurrentAdmin } from '@/lib/server-utils';
+import { getSeatAvailability } from '@/lib/trip-config';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -97,19 +98,17 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    const [confirmedCount, trip] = await Promise.all([
-      db.seatBooking.count({ where: { status: 'CONFIRMED' } }),
-      db.trip.findFirst({ select: { capacity: true } }),
-    ]);
-
-    const capacityLimit = trip?.capacity ?? 75;
+    const ssot = await getSeatAvailability();
 
     return NextResponse.json({
       success: true,
       timestamp: new Date().toISOString(),
-      capacityLimit,
-      confirmedCount,
-      remainingSeats: Math.max(0, capacityLimit - confirmedCount),
+      capacityLimit: ssot.totalCapacity,
+      confirmedCount: ssot.confirmedCount,
+      remainingSeats: ssot.availableSeats,
+      totalCapacity: ssot.totalCapacity,
+      totalAvailable: ssot.availableSeats,
+      isCustomOverride: ssot.isCustomOverride,
       seats: formattedSeats,
     });
   } catch (error: unknown) {

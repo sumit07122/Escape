@@ -15,6 +15,9 @@ export interface TripConfigData {
   emergencyHelplines: string[];
   announcementBanner?: string | null;
   announcementActive: boolean;
+  customSeatsDisplayEnabled?: boolean; // When true, overrides displayed available seat count on public site
+  customAvailableSeats?: number; // Custom available seats number to display (e.g. 17 or 23)
+  customTotalCapacity?: number; // Custom total capacity number to display (e.g. 75 or 25)
 }
 
 export const DEFAULT_TRIP_CONFIG: TripConfigData = {
@@ -34,4 +37,7 @@ export const DEFAULT_TRIP_CONFIG: TripConfigData = {
   emergencyHelplines: ['6398412828', '8126854850'],
   announcementBanner: 'Reporting time updated: Buses will depart from NH-2 gate at 8:00 PM sharp.',
   announcementActive: false,
+  customSeatsDisplayEnabled: false,
+  customAvailableSeats: 17,
+  customTotalCapacity: 75,
 };

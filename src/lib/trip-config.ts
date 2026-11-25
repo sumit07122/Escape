@@ -23,6 +23,9 @@ const LEGACY_CONFIG_KEYS = {
   emergencyHelplines: 'emergency_helplines',
   announcementBanner: 'announcement_banner',
   announcementActive: 'announcement_active',
+  customSeatsDisplayEnabled: 'custom_seats_display_enabled',
+  customAvailableSeats: 'custom_available_seats',
+  customTotalCapacity: 'custom_total_capacity',
 } as const;
 
 async function readLegacyTripConfig() {
@@ -66,6 +69,11 @@ async function readLegacyTripConfig() {
       announcementActive: values.get(LEGACY_CONFIG_KEYS.announcementActive) === undefined
         ? memoryConfigCache.announcementActive
         : values.get(LEGACY_CONFIG_KEYS.announcementActive) === 'true',
+      customSeatsDisplayEnabled: values.get(LEGACY_CONFIG_KEYS.customSeatsDisplayEnabled) === undefined
+        ? Boolean(memoryConfigCache.customSeatsDisplayEnabled)
+        : values.get(LEGACY_CONFIG_KEYS.customSeatsDisplayEnabled) === 'true',
+      customAvailableSeats: getNumber('customAvailableSeats', memoryConfigCache.customAvailableSeats ?? 17),
+      customTotalCapacity: getNumber('customTotalCapacity', memoryConfigCache.customTotalCapacity ?? 75),
     };
     if (settings.length || globalSettings) memoryConfigCache = legacyConfig;
   } catch (error) {
@@ -80,6 +88,7 @@ async function persistLegacyTripConfig(config: TripConfigData) {
     depositPrice: 'PRICING', departureDate: 'GENERAL', returnDate: 'GENERAL',
     reportingTime: 'GENERAL', pickupLocation: 'GENERAL', emergencyHelplines: 'CONTACTS',
     announcementBanner: 'GENERAL', announcementActive: 'GENERAL',
+    customSeatsDisplayEnabled: 'SEATS', customAvailableSeats: 'SEATS', customTotalCapacity: 'SEATS',
   };
   const values = Object.entries(LEGACY_CONFIG_KEYS).map(([field, key]) => {
     const typedField = field as keyof typeof LEGACY_CONFIG_KEYS;
@@ -113,6 +122,21 @@ export async function getTripConfig(): Promise<TripConfigData> {
     );
 
     if (config) {
+      let customSeatsDisplayEnabled = Boolean(DEFAULT_TRIP_CONFIG.customSeatsDisplayEnabled);
+      let customAvailableSeats = DEFAULT_TRIP_CONFIG.customAvailableSeats ?? 17;
+      let customTotalCapacity = DEFAULT_TRIP_CONFIG.customTotalCapacity ?? 75;
+
+      try {
+        const customRows = await db.settings.findMany({
+          where: { key: { in: ['custom_seats_display_enabled', 'custom_available_seats', 'custom_total_capacity'] } },
+        });
+        for (const row of customRows) {
+          if (row.key === 'custom_seats_display_enabled') customSeatsDisplayEnabled = row.value === 'true';
+          if (row.key === 'custom_available_seats' && Number.isFinite(Number(row.value))) customAvailableSeats = Number(row.value);
+          if (row.key === 'custom_total_capacity' && Number.isFinite(Number(row.value))) customTotalCapacity = Number(row.value);
+        }
+      } catch {}
+
       const merged: TripConfigData = {
         id: config.id,
         tripTitle: config.tripTitle || DEFAULT_TRIP_CONFIG.tripTitle,
@@ -131,6 +155,9 @@ export async function getTripConfig(): Promise<TripConfigData> {
           : DEFAULT_TRIP_CONFIG.emergencyHelplines,
         announcementBanner: config.announcementBanner,
         announcementActive: Boolean(config.announcementActive),
+        customSeatsDisplayEnabled,
+        customAvailableSeats,
+        customTotalCapacity,
       };
       memoryConfigCache = merged;
       return merged;
@@ -192,6 +219,28 @@ export async function updateTripConfig(data: Partial<TripConfigData>): Promise<T
       },
     });
 
+    if (merged.customSeatsDisplayEnabled !== undefined) {
+      await db.settings.upsert({
+        where: { key: 'custom_seats_display_enabled' },
+        update: { value: String(Boolean(merged.customSeatsDisplayEnabled)), category: 'SEATS' },
+        create: { key: 'custom_seats_display_enabled', value: String(Boolean(merged.customSeatsDisplayEnabled)), category: 'SEATS' },
+      });
+    }
+    if (merged.customAvailableSeats !== undefined) {
+      await db.settings.upsert({
+        where: { key: 'custom_available_seats' },
+        update: { value: String(Number(merged.customAvailableSeats)), category: 'SEATS' },
+        create: { key: 'custom_available_seats', value: String(Number(merged.customAvailableSeats)), category: 'SEATS' },
+      });
+    }
+    if (merged.customTotalCapacity !== undefined) {
+      await db.settings.upsert({
+        where: { key: 'custom_total_capacity' },
+        update: { value: String(Number(merged.customTotalCapacity)), category: 'SEATS' },
+        create: { key: 'custom_total_capacity', value: String(Number(merged.customTotalCapacity)), category: 'SEATS' },
+      });
+    }
+
     memoryConfigCache = {
       id: updated.id,
       tripTitle: updated.tripTitle,
@@ -208,6 +257,9 @@ export async function updateTripConfig(data: Partial<TripConfigData>): Promise<T
       emergencyHelplines: updated.emergencyHelplines,
       announcementBanner: updated.announcementBanner,
       announcementActive: Boolean(updated.announcementActive),
+      customSeatsDisplayEnabled: merged.customSeatsDisplayEnabled,
+      customAvailableSeats: merged.customAvailableSeats,
+      customTotalCapacity: merged.customTotalCapacity,
     };
     return memoryConfigCache;
   } catch (error) {
@@ -229,6 +281,7 @@ export interface SeatAvailabilityResult {
   blockedCount: number;
   availableSeats: number;
   tripConfig: TripConfigData;
+  isCustomOverride?: boolean;
 }
 
 /**
@@ -237,7 +290,7 @@ export interface SeatAvailabilityResult {
  */
 export async function getSeatAvailability(): Promise<SeatAvailabilityResult> {
   const tripConfig = await getTripConfig();
-  const totalCapacity = Math.max(0, Number(tripConfig.totalCapacity));
+  const rawTotalCapacity = Math.max(0, Number(tripConfig.totalCapacity) || 75);
 
   let confirmedCount = 0;
   let heldCount = 0;
@@ -280,7 +333,17 @@ export async function getSeatAvailability(): Promise<SeatAvailabilityResult> {
     }
   }
 
-  const availableSeats = Math.max(0, totalCapacity - confirmedCount - heldCount - blockedCount);
+  const liveAvailable = Math.max(0, rawTotalCapacity - confirmedCount - heldCount - blockedCount);
+
+  // If custom display override is enabled from Admin Panel:
+  const isCustom = Boolean(tripConfig.customSeatsDisplayEnabled);
+  const totalCapacity = isCustom && tripConfig.customTotalCapacity !== undefined && Number(tripConfig.customTotalCapacity) > 0
+    ? Number(tripConfig.customTotalCapacity)
+    : rawTotalCapacity;
+
+  const availableSeats = isCustom && tripConfig.customAvailableSeats !== undefined && Number.isFinite(Number(tripConfig.customAvailableSeats))
+    ? Math.max(0, Number(tripConfig.customAvailableSeats))
+    : liveAvailable;
 
   return {
     totalCapacity,
@@ -289,5 +352,6 @@ export async function getSeatAvailability(): Promise<SeatAvailabilityResult> {
     blockedCount,
     availableSeats,
     tripConfig,
+    isCustomOverride: isCustom,
   };
 }

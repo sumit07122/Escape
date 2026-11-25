@@ -238,6 +238,7 @@ export default function TripPricingConfigTab() {
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">
+        {/* Homepage content */}
         <div className="rounded-3xl border border-white/10 bg-stone-900/75 p-5 shadow-xl sm:p-8">
           <div className="mb-5 flex items-center gap-2 border-b border-white/10 pb-3 text-xs font-bold uppercase tracking-widest text-amber-400">
             <Sparkles className="h-4 w-4" />
@@ -254,6 +255,144 @@ export default function TripPricingConfigTab() {
               <textarea id="site-hero-copy" required maxLength={240} rows={3} value={config.subtitle} onChange={(e) => setConfig({ ...config, subtitle: e.target.value })} className="w-full resize-y rounded-xl border border-white/20 bg-stone-950 px-4 py-3 text-sm leading-6 text-white focus:border-amber-400 focus:outline-none" />
               <p className="text-[10px] text-stone-500">Shown beneath the title. Keep it clear and easy to scan on a phone.</p>
             </div>
+          </div>
+        </div>
+
+        {/* Live Seat Availability & Urgency Control */}
+        <div className="rounded-3xl border border-amber-500/30 bg-gradient-to-br from-amber-950/20 via-stone-900/80 to-stone-950 p-5 sm:p-8 shadow-xl space-y-5">
+          <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-3">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-amber-400">
+              <Users className="h-4 w-4" />
+              <span>Live Public Seat Availability &amp; Urgency Controls</span>
+            </div>
+            <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
+              Hero &amp; Site Sync
+            </span>
+          </div>
+
+          <p className="text-xs text-stone-300 leading-relaxed">
+            Control the exact seat availability figures shown live to students across the homepage hero badge, booking portal, and pricing tables. You can either sync directly with real database bookings, or override with custom urgency numbers to stimulate booking velocity.
+          </p>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-stone-950/90 border border-white/10">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-white">Seat Availability Display Mode</span>
+                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${config.customSeatsDisplayEnabled ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'}`}>
+                  {config.customSeatsDisplayEnabled ? 'Urgency Override Active' : 'Automatic Live DB'}
+                </span>
+              </div>
+              <p className="text-[11px] text-stone-400 mt-0.5">
+                {config.customSeatsDisplayEnabled
+                  ? 'The public website is showing your custom urgency figures below.'
+                  : 'The public website is dynamically calculating seats from real student reservations.'}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setConfig({ ...config, customSeatsDisplayEnabled: !config.customSeatsDisplayEnabled })}
+              className={`px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition-all shadow-md flex items-center gap-1.5 ${
+                config.customSeatsDisplayEnabled
+                  ? 'bg-amber-600 hover:bg-amber-500 text-stone-950'
+                  : 'bg-stone-800 hover:bg-stone-700 text-stone-200 border border-white/15'
+              }`}
+            >
+              <span>{config.customSeatsDisplayEnabled ? 'Disable Override' : 'Enable Urgency Override'}</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-stone-200 block">
+                Displayed Available Seats
+              </label>
+              <input
+                type="number"
+                min={0}
+                max={200}
+                value={config.customAvailableSeats ?? 17}
+                disabled={!config.customSeatsDisplayEnabled}
+                onChange={(e) => setConfig({ ...config, customAvailableSeats: Number(e.target.value) })}
+                className={`w-full px-4 py-3 rounded-xl border text-sm font-mono font-bold transition-all ${
+                  config.customSeatsDisplayEnabled
+                    ? 'bg-stone-950 border-amber-400 text-amber-300 focus:outline-none'
+                    : 'bg-stone-950/50 border-white/10 text-stone-500 cursor-not-allowed'
+                }`}
+              />
+              <span className="text-[10px] text-stone-500 block">Number shown in "{'{'}seats{'}'} of {'{'}total{'}'} seats available"</span>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-stone-200 block">
+                Displayed Total Capacity
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={200}
+                value={config.customTotalCapacity ?? 75}
+                disabled={!config.customSeatsDisplayEnabled}
+                onChange={(e) => setConfig({ ...config, customTotalCapacity: Number(e.target.value) })}
+                className={`w-full px-4 py-3 rounded-xl border text-sm font-mono font-bold transition-all ${
+                  config.customSeatsDisplayEnabled
+                    ? 'bg-stone-950 border-amber-400 text-amber-300 focus:outline-none'
+                    : 'bg-stone-950/50 border-white/10 text-stone-500 cursor-not-allowed'
+                }`}
+              />
+              <span className="text-[10px] text-stone-500 block">Denominator shown on badge (e.g. 75 or 25)</span>
+            </div>
+
+            <div className="space-y-1.5 sm:col-span-2 lg:col-span-1">
+              <label className="text-xs font-bold text-stone-200 block">
+                Live Public Preview
+              </label>
+              <div className="p-3 rounded-xl bg-stone-950 border border-white/10 flex flex-col justify-center min-h-[46px]">
+                <div className="flex items-center gap-2">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                  </span>
+                  <span className="text-xs font-bold text-emerald-300">
+                    {config.customSeatsDisplayEnabled ? (config.customAvailableSeats ?? 17) : 'Live DB'} of {config.customSeatsDisplayEnabled ? (config.customTotalCapacity ?? 75) : config.totalCapacity} seats available
+                  </span>
+                </div>
+              </div>
+              <span className="text-[10px] text-stone-500 block">Reflects on hero badge and site in real-time</span>
+            </div>
+          </div>
+
+          {/* Quick Presets */}
+          <div className="pt-2 border-t border-white/10 flex flex-wrap items-center gap-2">
+            <span className="text-[10px] font-bold uppercase text-stone-400 mr-1">Quick Presets:</span>
+            <button
+              type="button"
+              onClick={() => setConfig({ ...config, customSeatsDisplayEnabled: true, customAvailableSeats: 7, customTotalCapacity: 75 })}
+              className="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 border border-white/10 text-[11px] font-semibold text-amber-300 transition-colors"
+            >
+              ⚡ High Urgency (7 of 75)
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfig({ ...config, customSeatsDisplayEnabled: true, customAvailableSeats: 17, customTotalCapacity: 75 })}
+              className="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 border border-white/10 text-[11px] font-semibold text-amber-300 transition-colors"
+            >
+              🔥 Coach 01 Momentum (17 of 75)
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfig({ ...config, customSeatsDisplayEnabled: true, customAvailableSeats: 17, customTotalCapacity: 25 })}
+              className="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 border border-white/10 text-[11px] font-semibold text-amber-300 transition-colors"
+            >
+              🚌 Single Coach Staging (17 of 25)
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfig({ ...config, customSeatsDisplayEnabled: false })}
+              className="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 border border-white/10 text-[11px] font-semibold text-emerald-400 transition-colors"
+            >
+              🔄 Reset to Auto DB Sync
+            </button>
           </div>
         </div>
 
