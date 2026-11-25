@@ -177,6 +177,47 @@ export default function AdminSettingsPage() {
         </div>
       </form>
 
+      {/* Social Proof & Early Momentum Seeder */}
+      <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-950/20 via-zinc-950/40 to-stone-950/30 p-6 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-600/50 text-[10px] font-bold uppercase tracking-wider">
+                Social Proof & Campus Momentum
+              </span>
+              <span className="text-xs text-zinc-400">Conversion Booster</span>
+            </div>
+            <h3 className="text-lg font-bold text-white mt-1">
+              Seed Early-Bird Student Bookings on Coach 01
+            </h3>
+            <p className="text-xs text-zinc-400 max-w-xl mt-0.5">
+              Populates 8 verified student reservations on Bus 01 (Seats L1, L2, R3, R4, L5, R7, B1, B2). This prevents the bus map from looking completely empty, builds social validation, and encourages students to reserve remaining seats.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                const res = await fetch('/api/admin/seed-social-proof', { method: 'POST' });
+                const data = await res.json();
+                if (res.ok) {
+                  alert(`✅ SUCCESS: ${data.message}\nCoach 01 now has 8 booked seats and ${data.remainingAvailableOnBus01} seats available!`);
+                  fetchSettings();
+                } else {
+                  alert('❌ Error: ' + (data.error || 'Failed to seed social proof'));
+                }
+              } catch {
+                alert('Network error connecting to social proof service');
+              }
+            }}
+            className="shrink-0 px-5 py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold text-xs shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <span>👥 Seed Bus 01 Bookings</span>
+          </button>
+        </div>
+      </div>
+
       {/* Production Launch & Clean Fleet Reset */}
       <div className="rounded-2xl border border-rose-900/40 bg-gradient-to-br from-rose-950/20 via-zinc-950/40 to-stone-950/30 p-6 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

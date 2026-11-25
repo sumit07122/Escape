@@ -20,6 +20,7 @@ import HomeScenicCarousel from '@/components/HomeScenicCarousel';
 import DestinationCarousel from '@/components/DestinationCarousel';
 import SnowEffect from '@/components/SnowEffect';
 import MountainWeatherWidget from '@/components/MountainWeatherWidget';
+import { HeroLiveBookingTicker } from '@/components/SocialProofPopup';
 
 export default async function HomePage() {
   const availability = await getSeatAvailability();
@@ -73,6 +74,8 @@ export default async function HomePage() {
               {availableSeats} of {availability.totalCapacity} seats available
             </span>
           </div>
+
+          <HeroLiveBookingTicker />
 
           <div className="max-w-5xl space-y-5">
             {userSession ? (

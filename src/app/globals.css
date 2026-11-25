@@ -144,19 +144,8 @@ html {
   color-scheme: dark;
 }
 
-.admin-root h1,
-.admin-root h2,
-.admin-root h3,
-.admin-root h4,
-.admin-root h5,
-.admin-root h6,
-[data-admin-root="true"] h1,
-[data-admin-root="true"] h2,
-[data-admin-root="true"] h3,
-[data-admin-root="true"] h4,
-[data-admin-root="true"] h5,
-[data-admin-root="true"] h6 {
-  color: inherit;
+:where(.admin-root, [data-admin-root="true"]) :is(h1, h2, h3, h4, h5, h6) {
+  color: #ffffff;
 }
 
 .hero-title {
