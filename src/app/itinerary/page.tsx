@@ -57,10 +57,10 @@ export default function ItineraryPage() {
       {/* Header */}
       <div className="text-center space-y-3">
         <span className="text-xs font-bold text-[#163C32] uppercase tracking-widest flex items-center justify-center gap-1.5">
-          <Compass className="w-4 h-4" /> 5-DAY EXPEDITION GUIDE • DEC 24 – DEC 29, 2026
+          <Compass className="w-4 h-4" /> 6-DAY EXPEDITION GUIDE • 6 DAYS / 5 NIGHTS
         </span>
         <h1 className="text-3xl sm:text-5xl font-black text-[#171918]">
-          Complete 5-Day Itinerary
+          Complete 6-Day Itinerary
         </h1>
         <p className="text-sm text-[#646864] max-w-xl mx-auto">
           Pickup: Near Main Gate (NH-2), Mathura → Manali → Solang Valley → Atal Tunnel → Kasol → Manikaran → Mathura

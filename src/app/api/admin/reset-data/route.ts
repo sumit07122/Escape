@@ -83,10 +83,10 @@ export async function POST(request: NextRequest) {
           packagePrice: 6200,
           packagePricePerTraveller: 6200,
           reservationAmountPerTraveller: 1000,
-          capacity: 75,
-          duration: '5 DAYS • 4 NIGHTS',
-          startDate: new Date('2026-12-24T16:30:00.000Z'),
-          endDate: new Date('2026-12-29T10:00:00.000Z'),
+          capacity: 50,
+          duration: '6 DAYS • 5 NIGHTS',
+          startDate: new Date('2026-12-24T12:00:00.000Z'),
+          endDate: new Date('2026-12-29T08:00:00.000Z'),
         },
       });
     }

@@ -5,7 +5,7 @@ import { INCLUSIONS_LIST, EXCLUSIONS_LIST, TRIP_METADATA } from '@/lib/constants
 
 export const metadata = {
   title: 'Inclusions & Exclusions | Himalayan Escape',
-  description: 'Detailed list of package inclusions and exclusions for the Manali × Kasol 5D/4N expedition.',
+  description: 'Detailed list of package inclusions and exclusions for the Manali × Kasol 6D/5N expedition.',
 };
 
 export default function InclusionsPage() {
@@ -19,7 +19,7 @@ export default function InclusionsPage() {
           Inclusions & Exclusions
         </h1>
         <p className="text-sm text-zinc-400">
-          Know exactly what is provided on your 5 Days / 4 Nights journey.
+          Know exactly what is provided on your 6 Days / 5 Nights journey.
         </p>
       </div>
 

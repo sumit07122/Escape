@@ -95,8 +95,8 @@ export default async function HomePage() {
               {tripConfig.subtitle}
             </p>
             <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] font-medium uppercase tracking-[0.12em] text-white/75 sm:text-xs">
-              <span>5 days</span><span className="h-1 w-1 rounded-full bg-[#f0b588]" />
-              <span>4 nights</span><span className="h-1 w-1 rounded-full bg-[#f0b588]" />
+              <span>6 days</span><span className="h-1 w-1 rounded-full bg-[#f0b588]" />
+              <span>5 nights</span><span className="h-1 w-1 rounded-full bg-[#f0b588]" />
               <span>Manali to Kasol</span>
             </div>
           </div>
@@ -257,11 +257,11 @@ export default async function HomePage() {
                   </li>
                   <li className="flex items-center gap-2.5">
                     <Check className="h-4 w-4 shrink-0 text-[#245b4a]" />
-                    <span>4 nights stay (Manali resort + Kasol camp)</span>
+                    <span>5 nights (3-star Manali hotel + Kasol camp + overnight journeys)</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <Check className="h-4 w-4 shrink-0 text-[#245b4a]" />
-                    <span>Daily hot breakfast & dinner included</span>
+                    <span>3 Dinners (Pure Veg) & 3 Breakfasts included</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <Check className="h-4 w-4 shrink-0 text-[#245b4a]" />

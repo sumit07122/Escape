@@ -790,7 +790,7 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
               <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-950/[0.04] via-emerald-900/[0.02] to-amber-900/[0.03] border border-emerald-900/15 p-4 text-center space-y-2 backdrop-blur-xs shadow-xs">
                 <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-900/8 text-[#163C32] text-[10px] font-semibold uppercase tracking-widest border border-emerald-900/10">
                   <Sparkles className="w-3 h-3 text-[#D87945]" />
-                  <span>5 Days / 4 Nights • All-Inclusive Expedition</span>
+                  <span>6 Days / 5 Nights • All-Inclusive Expedition</span>
                 </div>
                 <div className="text-sm sm:text-base font-semibold tracking-tight text-[#163C32]">
                   {pricing.isGroupRate ? (
@@ -1349,7 +1349,7 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
             <div className="border-b border-[#D8D2C4] pb-2.5">
               <span className="text-[10px] font-bold text-[#646864] uppercase tracking-wider block">EXPEDITION</span>
               <p className="text-sm font-black text-[#171918]">Mathura → Manali → Kasol → Mathura</p>
-              <p className="text-[11px] text-[#646864]">5 Days / 4 Nights • Luxury AC Tourist Coach</p>
+              <p className="text-[11px] text-[#646864]">6 Days / 5 Nights • Luxury AC Tourist Coach</p>
             </div>
 
             <div className="grid grid-cols-2 gap-2 border-b border-[#D8D2C4] pb-2.5">

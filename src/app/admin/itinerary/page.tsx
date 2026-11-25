@@ -6,6 +6,7 @@ import { Calendar, Plus, Edit, Trash2, RefreshCw, X, Check } from 'lucide-react'
 export default function AdminItineraryPage() {
   const [days, setDays] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [editingDay, setEditingDay] = useState<any>(null);
   const [newItemDayId, setNewItemDayId] = useState<string | null>(null);
 
@@ -28,6 +29,28 @@ export default function AdminItineraryPage() {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSyncMasterItinerary = async () => {
+    if (!confirm('Sync database with the official 6 Days / 5 Nights itinerary (No food Day 1/travel, 3 Dinners, 3 Breakfasts)?')) return;
+    try {
+      setSyncing(true);
+      const res = await fetch('/api/admin/itinerary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'SYNC_DEFAULT_ITINERARY' }),
+      });
+      if (res.ok) {
+        alert('Itinerary synced with 6D/5N master schedule!');
+        await fetchItinerary();
+      } else {
+        alert('Failed to sync itinerary');
+      }
+    } catch {
+      alert('Error syncing itinerary');
+    } finally {
+      setSyncing(false);
     }
   };
 
@@ -115,14 +138,25 @@ export default function AdminItineraryPage() {
           </p>
         </div>
 
-        <button
-          onClick={fetchItinerary}
-          disabled={loading}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-xs font-bold text-zinc-300"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-          <span>Refresh</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleSyncMasterItinerary}
+            disabled={syncing}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 text-xs font-bold text-amber-300 transition cursor-pointer"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
+            <span>Sync 6D/5N Master</span>
+          </button>
+
+          <button
+            onClick={fetchItinerary}
+            disabled={loading}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-xs font-bold text-zinc-300 transition cursor-pointer"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <span>Refresh</span>
+          </button>
+        </div>
       </div>
 
       <div className="space-y-6">

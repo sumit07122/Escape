@@ -205,7 +205,7 @@ export default function DigitalTicketPage({
             </div>
             <div>
               <span className="text-[10px] text-stone-300 uppercase block font-semibold">DURATION</span>
-              <span className="font-bold text-white">5 DAYS / 4 NIGHTS</span>
+              <span className="font-bold text-white">6 DAYS / 5 NIGHTS</span>
             </div>
             <div>
               <span className="text-[10px] text-stone-300 uppercase block font-semibold">PICKUP & REPORTING</span>

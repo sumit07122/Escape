@@ -31,7 +31,7 @@ export default function TripOverviewPage() {
             <Calendar className="w-5 h-5" />
           </div>
           <h3 className="font-bold text-[#171918] text-base">Duration & Schedule</h3>
-          <p className="text-xs text-[#646864]">5 Days / 4 Nights total duration. Pickup & Reporting: Near Main Gate (NH-2), Mathura.</p>
+          <p className="text-xs text-[#646864]">6 Days / 5 Nights total duration. Pickup & Reporting: Near Main Gate (NH-2), Mathura.</p>
         </div>
 
         <div className="p-6 rounded-2xl bg-white border border-[#D8D2C4] space-y-2">
