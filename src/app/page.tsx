@@ -174,8 +174,8 @@ export default async function HomePage() {
 
       <div className="relative z-20 mx-auto -mt-10 grid w-full max-w-5xl grid-cols-1 gap-3 px-4 sm:grid-cols-3 sm:px-6">
         {[
-          { value: '05', label: 'Days on the road', icon: Calendar },
-          { value: '04', label: 'Nights in the mountains', icon: Mountain },
+          { value: '06', label: 'Days on the road', icon: Calendar },
+          { value: '05', label: 'Nights in the mountains', icon: Mountain },
           { value: String(availableSeats).padStart(2, '0'), label: 'Seats currently available', icon: Bus },
         ].map(({ value, label, icon: Icon }) => (
           <div key={label} className="flex items-center gap-4 rounded-2xl border border-[#e7e1d7] bg-white/95 px-5 py-4 shadow-[0_15px_40px_rgba(18,42,34,0.10)] backdrop-blur">
