@@ -103,7 +103,7 @@ async function main() {
       create: pkg,
     });
   }
-  console.log(`✓ Seeded ${packages.length} Packages (₹6,500 standard, ₹6,200 for groups of 5+, ₹1,000 deposit)`);
+  console.log(`✓ Seeded ${packages.length} Packages (₹6,200 solo, ₹5,999 duo, ₹5,800 squad 3+, ₹1,000 deposit)`);
 
   // 5. Seed Buses and Exact 25-Position Layouts
   for (let i = 0; i < INITIAL_BUSES.length; i++) {

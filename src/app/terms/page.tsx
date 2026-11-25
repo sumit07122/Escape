@@ -74,8 +74,9 @@ export default function TermsPage() {
               <span>3. Package Pricing & Remaining Balance Schedule</span>
             </h2>
             <ul className="list-disc pl-5 space-y-1.5 text-xs text-[#646864]">
-              <li><strong>Standard Package Price:</strong> ₹6,500 per traveller (Solo or groups of up to 4 passengers). Pay ₹1,000 advance; balance ₹5,500 per traveller due prior to departure.</li>
-              <li><strong>Squad Group Rate:</strong> ₹6,200 per traveller (Groups of 5 or more passengers booking together). Pay ₹1,000 advance; balance ₹5,200 per traveller due prior to departure.</li>
+              <li><strong>Standard Solo Price:</strong> ₹6,200 per traveller. Pay ₹1,000 advance reservation deposit; remaining balance of ₹5,200 per traveller due prior to departure according to the confirmed schedule.</li>
+              <li><strong>Duo Explorer Rate:</strong> ₹5,999 per traveller (2 passengers booking together). Pay ₹1,000 advance deposit per traveller; remaining balance of ₹4,999 per traveller.</li>
+              <li><strong>Squad Cabin Rate:</strong> ₹5,800 per traveller (Groups of 3 or more passengers booking together). Pay ₹1,000 advance deposit per traveller; remaining balance of ₹4,800 per traveller.</li>
               <li><strong>Balance Due Timing:</strong> The remaining package balance must be cleared as instructed by trip coordinators before coach boarding at the reporting desk. Failure to pay the outstanding balance may result in seat cancellation with forfeiture of the reservation deposit.</li>
             </ul>
           </section>

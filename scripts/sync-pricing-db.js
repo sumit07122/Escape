@@ -46,13 +46,13 @@ async function syncAllPricing() {
       data: {
         packagePrice: 6200,
         packagePricePerTraveller: 6200,
-        capacity: 75,
-        duration: '5 Days / 4 Nights',
+        capacity: 50,
+        duration: '6 Days / 5 Nights',
         startDate: new Date('2026-12-24T16:30:00.000Z'),
         endDate: new Date('2026-12-29T10:00:00.000Z'),
       },
     });
-    console.log('Master trip updated to 6200, 75 capacity, 5 Days / 4 Nights.');
+    console.log('Master trip updated to 6200, 50 capacity, 6 Days / 5 Nights.');
   }
 
   // 3. Update legacy settings keys

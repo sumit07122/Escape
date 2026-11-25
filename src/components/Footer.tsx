@@ -35,7 +35,7 @@ export default function Footer() {
               </div>
             </div>
             <p className="text-[#171918]/70 text-[11px] leading-relaxed">
-              Independent student mountain expedition. Pickup & Reporting: Near Main Gate (NH-2), Mathura. Tiered squad pricing: ₹6,500 solo / ₹6,200 for groups of 5+ with ₹1,000 advance reservation deposit.
+              Independent student mountain expedition. Pickup & Reporting: Near Main Gate (NH-2), Mathura. Tiered squad pricing: ₹6,200 solo / ₹5,999 duo / ₹5,800 squad (3+) with ₹1,000 advance reservation deposit.
             </p>
           </div>
 
