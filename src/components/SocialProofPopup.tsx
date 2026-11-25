@@ -267,39 +267,3 @@ export default function SocialProofPopup() {
     </div>
   );
 }
-
-// Compact Live Booking Micro-Ticker for the Hero Section
-export function HeroLiveBookingTicker() {
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setIndex((prev) => (prev + 1) % STUDENT_PROFILES.length);
-    }, 5500);
-    return () => clearInterval(timer);
-  }, []);
-
-  const profile = STUDENT_PROFILES[index];
-
-  return (
-    <Link
-      href="/book#buses"
-      className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-stone-900/85 hover:bg-stone-900 border border-amber-400/30 hover:border-amber-400/60 shadow-lg text-[11px] sm:text-xs text-stone-200 backdrop-blur-md transition-all group"
-    >
-      <span className="flex h-2 w-2 relative">
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-        <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-400" />
-      </span>
-      <span className="font-medium">
-        <strong className="text-white group-hover:text-amber-300 transition-colors">{profile.name} ({profile.dept})</strong>{' '}
-        <span className="text-stone-300">locked {profile.seat}</span>
-      </span>
-      <span className="hidden sm:inline-block text-[10px] text-amber-300/80 font-mono pl-1 border-l border-white/15">
-        Live
-      </span>
-      <span className="text-amber-400 text-[10px] font-bold group-hover:translate-x-0.5 transition-transform">
-        →
-      </span>
-    </Link>
-  );
-}
