@@ -201,7 +201,7 @@ export default async function HomePage() {
                 <span className="text-[10px] font-semibold text-emerald-700 uppercase tracking-wide">Instant Help</span>
               </div>
               <p className="text-xs text-[#171918]/80 font-medium">
-                Got questions or booking seats with friends? Call or WhatsApp <strong>Saurabh Pandey: +91 8126854850</strong> or Helpline: <strong>+91 6398412828</strong>
+                Got questions or booking seats with friends? Call or WhatsApp <strong>Lead Coordinator: +91 8126854850</strong> or Helpline: <strong>+91 6398412828</strong>
               </p>
             </div>
           </div>
@@ -215,7 +215,7 @@ export default async function HomePage() {
               <span>Call 8126854850</span>
             </a>
             <a
-              href="https://wa.me/918126854850?text=Hi%20Saurabh,%20I'm%20interested%20in%20the%20Himalayan%20Escape%20trip."
+              href="https://wa.me/918126854850?text=Hi%20Coordinator,%20I'm%20interested%20in%20the%20Himalayan%20Escape%20trip."
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 rounded-full border border-emerald-600/30 bg-emerald-700 px-3.5 py-1.5 text-xs font-bold text-white shadow transition-all hover:bg-emerald-600 hover:scale-105 active:scale-95"

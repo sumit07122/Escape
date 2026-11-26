@@ -27,7 +27,7 @@ export const PRICING_DEFAULTS = {
 };
 
 export const CONTACT_INFO = {
-  organizerName: 'Saurabh Pandey',
+  organizerName: 'Lead Trip Coordinator',
   organizerPhone: '8126854850',
   coordinatorPhone1: '8126854850',
   coordinatorPhone2: '6398412828',
