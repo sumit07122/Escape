@@ -9,35 +9,39 @@ async function syncAllPricing() {
   await prisma.tripConfig.upsert({
     where: { id: 'global' },
     update: {
-      packagePrice: 6200,
-      groupPackagePrice: 5800,
-      groupSizeThreshold: 3,
+      tripTitle: 'Himalayan Escape – Christmas Special 2026',
+      subtitle: 'Six days away from routine. A lifetime of stories. From pine-scented riverside camping in Kasol to snow peaks in Manali.',
+      packagePrice: 6199,
+      groupPackagePrice: 6199,
+      groupDiscountAmount: 600,
+      groupSizeThreshold: 5,
       depositPrice: 1000,
       totalCapacity: 50,
-      departureDate: '2026-12-24',
-      returnDate: '2026-12-29',
-      reportingTime: '07:00 PM',
-      pickupLocation: 'Near Main Gate (NH-2), Mathura',
+      departureDate: '2026-12-23',
+      returnDate: '2026-12-28',
+      reportingTime: '12:00 PM',
+      pickupLocation: 'GLA University, Mathura',
       emergencyHelplines: ['8126854850', '6398412828'],
     },
     create: {
       id: 'global',
-      tripTitle: 'Himalayan Escape 2026',
-      subtitle: 'Six days from the plains to the peaks. Find snow trails in Manali, pine-scented evenings in Kasol, and a new crew for the journey.',
-      packagePrice: 6200,
-      groupPackagePrice: 5800,
-      groupSizeThreshold: 3,
+      tripTitle: 'Himalayan Escape – Christmas Special 2026',
+      subtitle: 'Six days away from routine. A lifetime of stories. From pine-scented riverside camping in Kasol to snow peaks in Manali.',
+      packagePrice: 6199,
+      groupPackagePrice: 6199,
+      groupDiscountAmount: 600,
+      groupSizeThreshold: 5,
       depositPrice: 1000,
       totalCapacity: 50,
-      departureDate: '2026-12-24',
-      returnDate: '2026-12-29',
-      reportingTime: '07:00 PM',
-      pickupLocation: 'Near Main Gate (NH-2), Mathura',
+      departureDate: '2026-12-23',
+      returnDate: '2026-12-28',
+      reportingTime: '12:00 PM',
+      pickupLocation: 'GLA University, Mathura',
       emergencyHelplines: ['8126854850', '6398412828'],
       announcementActive: false,
     },
   });
-  console.log('TripConfig updated to 6200 / 5800 / 1000 / 50.');
+  console.log('TripConfig updated to 6199 / 600 group disc / 1000 deposit / 50 capacity.');
 
   // 2. Update master Trip
   const trip = await prisma.trip.findFirst();
@@ -45,26 +49,29 @@ async function syncAllPricing() {
     await prisma.trip.update({
       where: { id: trip.id },
       data: {
-        packagePrice: 6200,
-        packagePricePerTraveller: 6200,
+        title: 'Himalayan Escape – Christmas Special 2026',
+        packagePrice: 6199,
+        packagePricePerTraveller: 6199,
         capacity: 50,
         duration: '6 Days / 5 Nights',
-        startDate: new Date('2026-12-24T16:30:00.000Z'),
-        endDate: new Date('2026-12-29T10:00:00.000Z'),
+        startDate: new Date('2026-12-23T12:00:00.000Z'),
+        endDate: new Date('2026-12-28T10:00:00.000Z'),
       },
     });
-    console.log('Master trip updated to 6200, 50 capacity, 6 Days / 5 Nights.');
+    console.log('Master trip updated to 6199, 50 capacity, 6 Days / 5 Nights (23-28 Dec).');
   }
 
   // 3. Update legacy settings keys
   const settingsToUpdate = [
-    { key: 'price_single', value: '6200' },
-    { key: 'price_group', value: '5800' },
-    { key: 'group_size_threshold', value: '3' },
+    { key: 'price_single', value: '6199' },
+    { key: 'price_group', value: '6199' },
+    { key: 'group_discount_amount', value: '600' },
+    { key: 'group_size_threshold', value: '5' },
     { key: 'price_reservation', value: '1000' },
     { key: 'trip_capacity', value: '50' },
-    { key: 'departure_date', value: '2026-12-24' },
-    { key: 'return_date', value: '2026-12-29' },
+    { key: 'departure_date', value: '2026-12-23' },
+    { key: 'return_date', value: '2026-12-28' },
+    { key: 'pickup_location', value: 'GLA University, Mathura' },
   ];
 
   for (const s of settingsToUpdate) {

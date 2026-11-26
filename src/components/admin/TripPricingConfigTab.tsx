@@ -83,12 +83,13 @@ export default function TripPricingConfigTab() {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  const standardPrice = Number(config.packagePrice) || 6200;
-  const groupPrice = Number(config.groupPackagePrice) || 6200;
+  const standardPrice = Number(config.packagePrice) || 6199;
   const depositPrice = Number(config.depositPrice) || 1000;
+  const groupDiscountTotal = Number(config.groupDiscountAmount) || 600;
+  const groupThreshold = Number(config.groupSizeThreshold) || 5;
   const soloGateBalance = Math.max(0, standardPrice - depositPrice);
-  const squadGateBalance = Math.max(0, groupPrice - depositPrice);
-  const squadSavings = Math.max(0, standardPrice - groupPrice);
+  const fivePaxTotal = (5 * standardPrice) - groupDiscountTotal;
+  const fivePaxBalance = Math.max(0, fivePaxTotal - (5 * depositPrice));
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -407,14 +408,14 @@ export default function TripPricingConfigTab() {
         <div className="backdrop-blur-md bg-stone-900/75 rounded-3xl border border-white/10 p-6 sm:p-8 space-y-6 shadow-xl">
           <div className="flex items-center gap-2 pb-3 border-b border-white/10 text-xs font-bold text-amber-400 uppercase tracking-widest">
             <CreditCard className="w-4 h-4" />
-            <span>Tiered Squad Pricing & Deposit Structure</span>
+            <span>Christmas Special 2026 Pricing & Group Discount Architecture</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Standard Individual Price */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-stone-200 block">
-                Solo Single Rate (₹)
+                Package Price Per Head (₹)
               </label>
               <input
                 type="number"
@@ -425,31 +426,31 @@ export default function TripPricingConfigTab() {
                 onChange={(e) => setConfig({ ...config, packagePrice: Number(e.target.value) })}
                 className="w-full px-4 py-3 rounded-xl bg-stone-950 border border-white/20 text-white font-mono font-bold text-sm focus:border-amber-400 focus:outline-none"
               />
-              <span className="text-[10px] text-stone-500 block">Single traveller rate (₹6,200)</span>
+              <span className="text-[10px] text-stone-500 block">Flat package rate (₹6,199)</span>
             </div>
 
-            {/* Group Discounted Price */}
+            {/* Group Discount Total */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-emerald-400 block">
-                Squad Cabin Rate (₹)
+                Group Discount on Total (₹)
               </label>
               <input
                 type="number"
                 required
-                min={1000}
-                max={50000}
-                value={config.groupPackagePrice}
-                onChange={(e) => setConfig({ ...config, groupPackagePrice: Number(e.target.value) })}
+                min={0}
+                max={10000}
+                value={config.groupDiscountAmount ?? 600}
+                onChange={(e) => setConfig({ ...config, groupDiscountAmount: Number(e.target.value) })}
                 className="w-full px-4 py-3 rounded-xl bg-stone-950 border border-emerald-500/40 text-emerald-400 font-mono font-bold text-sm focus:border-emerald-400 focus:outline-none"
               />
-              <span className="text-[10px] text-emerald-500/80 block">Squad rate per person (₹5,800)</span>
+              <span className="text-[10px] text-emerald-500/80 block">Applied once to total booking for 5+ travellers (₹600)</span>
             </div>
 
             {/* Group Size Threshold */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-stone-200 flex items-center gap-1">
                 <Users className="w-3.5 h-3.5 text-stone-400" />
-                <span>Squad Threshold</span>
+                <span>Group Threshold (Pax)</span>
               </label>
               <input
                 type="number"
@@ -460,13 +461,13 @@ export default function TripPricingConfigTab() {
                 onChange={(e) => setConfig({ ...config, groupSizeThreshold: Number(e.target.value) })}
                 className="w-full px-4 py-3 rounded-xl bg-stone-950 border border-white/20 text-white font-mono font-bold text-sm focus:border-amber-400 focus:outline-none"
               />
-              <span className="text-[10px] text-stone-500 block">Min travellers for squad offer (3)</span>
+              <span className="text-[10px] text-stone-500 block">Min travellers for group offer (5)</span>
             </div>
 
             {/* Advance Reservation Deposit */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-amber-300 block">
-                Advance Deposit (₹)
+                Advance Deposit Per Seat (₹)
               </label>
               <input
                 type="number"
@@ -485,7 +486,7 @@ export default function TripPricingConfigTab() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
             <div className="p-3.5 rounded-2xl bg-stone-950 border border-white/10 space-y-1">
               <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">
-                Solo Gate Due (Per Pax)
+                Individual Balance Due (Per Pax)
               </span>
               <span className="text-xl font-black text-white font-mono">
                 ₹{soloGateBalance.toLocaleString('en-IN')}
@@ -497,25 +498,25 @@ export default function TripPricingConfigTab() {
 
             <div className="p-3.5 rounded-2xl bg-stone-950 border border-emerald-500/20 space-y-1">
               <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">
-                Squad Gate Due (Per Pax)
+                5 PAX Booking Total
               </span>
               <span className="text-xl font-black text-emerald-400 font-mono">
-                ₹{squadGateBalance.toLocaleString('en-IN')}
+                ₹{fivePaxTotal.toLocaleString('en-IN')}
               </span>
               <p className="text-[10px] text-stone-500">
-                ₹{groupPrice.toLocaleString('en-IN')} − ₹{depositPrice.toLocaleString('en-IN')}
+                (5 × ₹{standardPrice.toLocaleString('en-IN')}) − ₹{groupDiscountTotal.toLocaleString('en-IN')}
               </p>
             </div>
 
             <div className="p-3.5 rounded-2xl bg-stone-950 border border-amber-500/20 space-y-1">
               <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider block">
-                Squad Savings Per Head
+                5 PAX Gate Balance
               </span>
               <span className="text-xl font-black text-amber-400 font-mono">
-                ₹{squadSavings.toLocaleString('en-IN')} OFF
+                ₹{fivePaxBalance.toLocaleString('en-IN')}
               </span>
               <p className="text-[10px] text-stone-500">
-                Applied automatically for {config.groupSizeThreshold}+ seats
+                Due before boarding at GLA University
               </p>
             </div>
           </div>
