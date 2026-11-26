@@ -238,7 +238,7 @@ export const PACKING_LIST = [
   { item: 'Small daypack backpack (15-20L)', essential: true, note: 'For day trips to Solang and Kasol' },
   { item: 'Rain protection (Foldable umbrella/poncho)', essential: false, note: 'Himalayan weather can be unpredictable' },
   { item: 'Cash & Digital UPI', essential: true, note: 'Some remote Kasol cafes only accept cash' },
-  { item: 'Valid College / Govt ID & Digital QR Ticket', essential: true, note: 'Required at pickup point (Near Main Gate, NH-2 Mathura)' },
+  { item: 'Valid College / Govt ID & Digital QR Ticket', essential: true, note: 'Required at pickup point (GLA University, Mathura)' },
 ];
 
 export const FAQ_ITEMS = [

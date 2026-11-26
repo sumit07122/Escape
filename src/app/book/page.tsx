@@ -9,7 +9,7 @@ import { Megaphone, AlertTriangle, Users } from 'lucide-react';
 
 
 export const metadata = {
-  title: 'Book Your Seat | Himalayan Escape — Student Mountain Expedition',
+  title: 'Book Your Seat | Himalayan Escape – Christmas Special 2026',
   description: 'Book your luxury bus seat with real-time seat selector, advance reservation payment, and instant digital QR ticket.',
 };
 
@@ -45,7 +45,7 @@ export default async function BookPage() {
           {tripConfig.tripTitle || 'HIMALAYAN ESCAPE'}
         </h1>
         <p className="text-xs sm:text-sm text-[#646864] uppercase font-medium tracking-wide">
-          {tripConfig.subtitle || 'MANALI × KASOL • STUDENT EXPEDITION'} • PICKUP: {tripConfig.pickupLocation || 'NEAR MAIN GATE (NH-2), MATHURA'} • REPORTING: {tripConfig.reportingTime || '07:00 PM'}
+          {tripConfig.subtitle || '6 DAYS / 5 NIGHTS • KASOL & MANALI'} • PICKUP: {tripConfig.pickupLocation || 'GLA UNIVERSITY, MATHURA'} • REPORTING: {tripConfig.reportingTime || '12:00 PM'}
         </p>
       </div>
 

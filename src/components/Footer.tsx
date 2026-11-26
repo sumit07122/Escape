@@ -35,7 +35,7 @@ export default function Footer() {
               </div>
             </div>
             <p className="text-[#171918]/70 text-[11px] leading-relaxed">
-              Independent student mountain expedition. Pickup & Reporting: Near Main Gate (NH-2), Mathura. Tiered squad pricing: ₹6,200 solo / ₹5,999 duo / ₹5,800 squad (3+) with ₹1,000 advance reservation deposit.
+              Independent student mountain expedition. Pickup & Reporting: GLA University, Mathura (Departure: 12:00 PM). Package: ₹6,200 with ₹1,000 reservation deposit and ₹5,200 balance before boarding.
             </p>
           </div>
 
@@ -80,7 +80,7 @@ export default function Footer() {
               </div>
               <div className="flex items-center gap-2 text-[#171918]/70">
                 <MapPin className="w-3.5 h-3.5 text-[#D87945] shrink-0" />
-                <span>Pickup & Reporting: Near Main Gate (NH-2), Mathura</span>
+                <span>Pickup & Reporting: GLA University, Mathura (12:00 PM)</span>
               </div>
             </div>
           </div>

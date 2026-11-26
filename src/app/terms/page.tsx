@@ -74,10 +74,10 @@ export default function TermsPage() {
               <span>3. Package Pricing & Remaining Balance Schedule</span>
             </h2>
             <ul className="list-disc pl-5 space-y-1.5 text-xs text-[#646864]">
-              <li><strong>Standard Solo Price:</strong> ₹6,200 per traveller. Pay ₹1,000 advance reservation deposit; remaining balance of ₹5,200 per traveller due prior to departure according to the confirmed schedule.</li>
+              <li><strong>Standard Solo Price:</strong> ₹6,200 per traveller. Pay ₹1,000 advance reservation deposit; remaining balance of ₹5,200 per traveller due before boarding at GLA University according to the confirmed schedule.</li>
               <li><strong>Duo Explorer Rate:</strong> ₹5,999 per traveller (2 passengers booking together). Pay ₹1,000 advance deposit per traveller; remaining balance of ₹4,999 per traveller.</li>
               <li><strong>Squad Cabin Rate:</strong> ₹5,800 per traveller (Groups of 3 or more passengers booking together). Pay ₹1,000 advance deposit per traveller; remaining balance of ₹4,800 per traveller.</li>
-              <li><strong>Balance Due Timing:</strong> The remaining package balance must be cleared as instructed by trip coordinators before coach boarding at the reporting desk. Failure to pay the outstanding balance may result in seat cancellation with forfeiture of the reservation deposit.</li>
+              <li><strong>Balance Due Timing:</strong> The remaining package balance must be cleared as instructed by trip coordinators before coach boarding at the GLA University reporting desk. Failure to pay the outstanding balance may result in seat cancellation with forfeiture of the reservation deposit.</li>
             </ul>
           </section>
 
@@ -135,7 +135,7 @@ export default function TermsPage() {
               <span>7. Digital QR Boarding Passes & Reporting Desk</span>
             </h2>
             <p>
-              Upon payment confirmation, a unique digital QR boarding pass is generated for each passenger. This digital pass must be presented at the departure point (Near Main Gate, NH-2, Mathura) for check-in scanning. Passes are non-transferable once checked in.
+              Upon payment confirmation, a unique digital QR boarding pass is generated for each passenger. This digital pass must be presented at the departure point (GLA University, Mathura) for check-in scanning. Passes are non-transferable once checked in.
             </p>
           </section>
 
@@ -161,7 +161,7 @@ export default function TermsPage() {
               <p><strong>Expedition Coordinator:</strong> Shrikant Thakur</p>
               <p><strong>Email:</strong> <a href="mailto:shrikant.thakur_cs26@gmail.com" className="text-[#163C32] underline font-semibold">shrikant.thakur_cs26@gmail.com</a></p>
               <p><strong>Hotlines:</strong> {CONTACT_INFO.coordinatorPhone1} / {CONTACT_INFO.coordinatorPhone2}</p>
-              <p><strong>Reporting Location:</strong> Near Main Gate (NH-2), Mathura, Uttar Pradesh, India</p>
+              <p><strong>Reporting Location:</strong> GLA University, Mathura, Uttar Pradesh, India (Departure: 12:00 PM)</p>
             </div>
           </section>
         </div>

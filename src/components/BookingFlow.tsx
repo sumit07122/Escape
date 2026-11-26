@@ -829,7 +829,7 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
                 <span className="font-bold text-base text-[#163C32] tabular-nums">₹{pricing.reservationAmount.toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between items-center text-[#646864] text-xs px-1">
-                <span>Remaining balance at departure gate:</span>
+                <span>Remaining balance before boarding at GLA University:</span>
                 <span className="font-semibold text-[#171918] tabular-nums">₹{pricing.remainingBalance.toLocaleString('en-IN')}</span>
               </div>
             </div>
@@ -1348,8 +1348,8 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
           <div className="p-5 sm:p-6 rounded-2xl bg-[#F7F5EF] border border-[#D8D2C4] space-y-3.5 text-xs">
             <div className="border-b border-[#D8D2C4] pb-2.5">
               <span className="text-[10px] font-bold text-[#646864] uppercase tracking-wider block">EXPEDITION</span>
-              <p className="text-sm font-black text-[#171918]">Mathura → Manali → Kasol → Mathura</p>
-              <p className="text-[11px] text-[#646864]">6 Days / 5 Nights • Luxury AC Tourist Coach</p>
+              <p className="text-sm font-black text-[#171918]">GLA University, Mathura → Kasol → Manali → GLA University</p>
+              <p className="text-[11px] text-[#646864]">Christmas Special 2026 • 6 Days / 5 Nights • AC Traveller</p>
             </div>
 
             <div className="grid grid-cols-2 gap-2 border-b border-[#D8D2C4] pb-2.5">
@@ -1409,7 +1409,7 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
                 <span className="text-base font-bold tabular-nums">₹{pricing.reservationAmount.toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between text-[#646864] text-[11px]">
-                <span>Remaining Balance Before Boarding:</span>
+                <span>Remaining Balance Before Boarding at GLA University:</span>
                 <span className="text-[#171918] font-semibold tabular-nums">₹{pricing.remainingBalance.toLocaleString('en-IN')}</span>
               </div>
             </div>
