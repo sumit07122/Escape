@@ -64,7 +64,7 @@ function BookingTrackerContent() {
           My Trip & Boarding Pass
         </h1>
         <p className="text-xs text-[#646864] max-w-md mx-auto">
-          Access your confirmed seat reservation, view your QR boarding pass, and prepare for departure at GLA University, Mathura.
+          Access your confirmed seat reservation, view your QR boarding pass, and prepare for departure near Main Gate (NH-2), Mathura.
         </p>
         <div className="pt-2">
           <Link

@@ -4,7 +4,7 @@ import { Users, Calendar, Bus, CheckCircle2, ArrowRight } from 'lucide-react';
 import { PACKING_LIST } from '@/lib/constants';
 
 export const metadata = {
-  title: 'Trip Overview | Himalayan Escape – Christmas Special 2026',
+  title: 'Trip Overview | Himalayan Escape — Student Mountain Expedition',
   description: 'Complete expedition specifications, vehicle configuration, packing list, and trip guidelines for Manali & Kasol.',
 };
 
@@ -20,7 +20,7 @@ export default function TripOverviewPage() {
           Trip Overview
         </h1>
         <p className="text-sm text-[#646864]">
-          Pickup & Reporting: GLA University, Mathura (12:00 PM) → Kasol → Manikaran → Manali → Solang Valley → Sissu → Jogini Waterfall → GLA University
+          Pickup & Reporting: Near Main Gate (NH-2), Mathura → Manali → Solang Valley → Kasol → Manikaran → Mathura
         </p>
       </div>
 
@@ -31,7 +31,7 @@ export default function TripOverviewPage() {
             <Calendar className="w-5 h-5" />
           </div>
           <h3 className="font-bold text-[#171918] text-base">Duration & Schedule</h3>
-          <p className="text-xs text-[#646864]">6 Days / 5 Nights total duration. Pickup & Reporting: GLA University, Mathura (Departure: 12:00 PM). Return coach departs Manali at 04:00 PM on Day 5.</p>
+          <p className="text-xs text-[#646864]">6 Days / 5 Nights total duration. Pickup & Reporting: Near Main Gate (NH-2), Mathura.</p>
         </div>
 
         <div className="p-6 rounded-2xl bg-white border border-[#D8D2C4] space-y-2">

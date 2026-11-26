@@ -394,7 +394,7 @@ export default function MyBookingsClient({ initialConfig }: { initialConfig?: an
                   <div className="pt-4 border-t border-[#E7E2D8] flex flex-wrap items-center justify-between gap-3 text-xs text-[#646864]">
                     <div className="flex items-center gap-2">
                       <MapPin className="w-3.5 h-3.5 text-[#163C32]" />
-                      <span>Pickup: {tripConfig?.pickupLocation || 'GLA University, Mathura'} ({tripConfig?.reportingTime || '12:00 PM'})</span>
+                      <span>Pickup: {tripConfig?.pickupLocation || 'Near Main Gate (NH-2), Mathura'} ({tripConfig?.reportingTime || '07:00 PM'})</span>
                     </div>
 
                     <div className="flex items-center gap-2">

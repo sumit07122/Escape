@@ -131,7 +131,7 @@ export default function ContactPage() {
             Reporting Location
           </div>
           <p className="text-xs text-zinc-300 leading-relaxed">
-            GLA University, Mathura, Uttar Pradesh 281406
+            Near Main Gate, 17km Stone, NH-2, Mathura-Delhi Road, Mathura, Uttar Pradesh 281406
           </p>
           <div className="flex items-center gap-2 text-xs text-zinc-400 pt-1">
             <Clock className="w-3.5 h-3.5 text-orange-400" />

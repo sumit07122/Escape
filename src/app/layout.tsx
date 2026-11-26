@@ -13,9 +13,9 @@ const siteUrl =
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: 'Himalayan Escape 2026 | 6 Days Manali & Kasol Christmas Trip from Mathura',
+  title: 'HIMALAYAN ESCAPE 🏔️ | Manali × Kasol 2026 Student Expedition',
   description:
-    'Experience a 6-day, 5-night Himalayan adventure from Mathura to Kasol and Manali. Enjoy riverside camping, Solang Valley, Sissu, Jogini Waterfall and Christmas celebrations.',
+    'Official booking portal for Himalayan Escape. Reserve your seat, select your bus cabin, and generate your boarding pass.',
   icons: {
     icon: [
       { url: '/icon.png', type: 'image/png', sizes: 'any' },
@@ -26,20 +26,20 @@ export const metadata: Metadata = {
   },
   keywords: [
     'Himalayan Escape',
-    'Christmas Special 2026',
-    'GLA University Trip',
-    'Manali Kasol 6D5N',
-    'Solang Valley',
-    'Sissu',
-    'Jogini Waterfall',
-    'Riverside Camping Kasol',
     'Student Mountain Expedition',
+    'Manali Kasol Trip',
+    'Student Group Tour',
+    'Solang Valley',
+    'Atal Tunnel',
+    'Kasol Riverside',
+    'Manikaran Sahib',
+    'Mathura Highway Departure',
   ],
   authors: [{ name: 'Student Trip Organizers' }],
   openGraph: {
-    title: 'Himalayan Escape 2026 | 6 Days Manali & Kasol Christmas Trip from Mathura',
+    title: 'HIMALAYAN ESCAPE 🏔️ | Manali × Kasol 2026 Student Expedition',
     description:
-      'Experience a 6-day, 5-night Himalayan adventure from Mathura to Kasol and Manali. Enjoy riverside camping, Solang Valley, Sissu, Jogini Waterfall and Christmas celebrations.',
+      'Official booking portal for Himalayan Escape. Reserve your seat, select your bus cabin, and generate your boarding pass.',
     type: 'website',
     images: [
       {
@@ -58,9 +58,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Himalayan Escape 2026 | 6 Days Manali & Kasol Christmas Trip from Mathura',
+    title: 'HIMALAYAN ESCAPE 🏔️ | Manali × Kasol 2026 Student Expedition',
     description:
-      'Experience a 6-day, 5-night Himalayan adventure from Mathura to Kasol and Manali. Enjoy riverside camping, Solang Valley, Sissu, Jogini Waterfall and Christmas celebrations.',
+      'Official booking portal for Himalayan Escape. Reserve your seat, select your bus cabin, and generate your boarding pass.',
     images: ['/images/hero-himalayas.jpg'],
   },
 };

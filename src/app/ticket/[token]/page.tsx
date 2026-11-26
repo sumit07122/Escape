@@ -190,7 +190,7 @@ export default function DigitalTicketPage({
             </div>
             <div className="text-right">
               <span className="inline-block px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 text-[10px] font-black uppercase tracking-wider">
-                ● HIMALAYAN ESCAPE – CHRISTMAS SPECIAL 2026
+                ● HIMALAYAN ESCAPE — EXPEDITION PASS
               </span>
               <p className="text-[10px] text-stone-300 font-mono mt-1">
                 PASS #{ticket.ticketNumber}
@@ -201,7 +201,7 @@ export default function DigitalTicketPage({
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 text-xs">
             <div>
               <span className="text-[10px] text-stone-300 uppercase block font-semibold">ROUTE</span>
-              <span className="font-bold text-white">GLA UNIVERSITY → KASOL & MANALI</span>
+              <span className="font-bold text-white">MATHURA → MANALI × KASOL</span>
             </div>
             <div>
               <span className="text-[10px] text-stone-300 uppercase block font-semibold">DURATION</span>
@@ -209,7 +209,7 @@ export default function DigitalTicketPage({
             </div>
             <div>
               <span className="text-[10px] text-stone-300 uppercase block font-semibold">PICKUP & REPORTING</span>
-              <span className="font-bold text-white">GLA University, Mathura</span>
+              <span className="font-bold text-white">Near Main Gate (NH-2), Mathura</span>
             </div>
             <div>
               <span className="text-[10px] text-stone-300 uppercase block font-semibold">BOOKING REF</span>
@@ -352,10 +352,10 @@ export default function DigitalTicketPage({
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[#1C1C1C]/80">
               <p>
-                <strong>Reporting Spot:</strong> GLA University, Mathura. Coach departs at 12:00 PM sharp.
+                <strong>Reporting Spot:</strong> Near Main Gate (Pickup Bay area), NH-2 Highway, Mathura.
               </p>
               <p>
-                <strong>Reporting Time:</strong> 12:00 PM (Assembly). Return coach departs Manali at 04:00 PM on Day 5.
+                <strong>Reporting Time:</strong> 04:30 PM. Coach gate verification desk opens 1 hour prior to departure.
               </p>
               <p>
                 <strong>Mandatory Documents:</strong> Student ID / College ID + Government ID (Aadhaar/DL).
