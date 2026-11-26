@@ -14,13 +14,13 @@ export default function TripOverviewPage() {
       {/* Header */}
       <div className="text-center space-y-2">
         <span className="text-xs font-bold text-[#163C32] uppercase tracking-widest">
-          EXPEDITION SPECIFICATION
+          CHRISTMAS SPECIAL 2026 SPECIFICATION
         </span>
         <h1 className="text-3xl sm:text-5xl font-black text-[#171918]">
           Trip Overview
         </h1>
         <p className="text-sm text-[#646864]">
-          Pickup & Reporting: Near Main Gate (NH-2), Mathura → Manali → Solang Valley → Kasol → Manikaran → Mathura
+          Pickup & Reporting: GLA University, Mathura → Kasol → Manali → Atal Tunnel & Sissu → Solang Valley → Mathura
         </p>
       </div>
 
@@ -30,24 +30,24 @@ export default function TripOverviewPage() {
           <div className="w-10 h-10 rounded-xl bg-[#163C32]/10 text-[#163C32] flex items-center justify-center">
             <Calendar className="w-5 h-5" />
           </div>
-          <h3 className="font-bold text-[#171918] text-base">Duration & Schedule</h3>
-          <p className="text-xs text-[#646864]">6 Days / 5 Nights total duration. Pickup & Reporting: Near Main Gate (NH-2), Mathura.</p>
+          <h3 className="font-bold text-[#171918] text-base">Duration & Dates</h3>
+          <p className="text-xs text-[#646864]">6 Days / 5 Nights (23 Dec – 28 Dec 2026). Pickup & Reporting at GLA University, Mathura.</p>
         </div>
 
         <div className="p-6 rounded-2xl bg-white border border-[#D8D2C4] space-y-2">
           <div className="w-10 h-10 rounded-xl bg-[#D87945]/10 text-[#D87945] flex items-center justify-center">
             <Users className="w-5 h-5" />
           </div>
-          <h3 className="font-bold text-[#171918] text-base">Expedition Capacity</h3>
-          <p className="text-xs text-[#646864]">Dedicated passenger capacity across the expedition coaches.</p>
+          <h3 className="font-bold text-[#171918] text-base">Expedition Pricing</h3>
+          <p className="text-xs text-[#646864]">Flat ₹6,199 per person. Lock your seat with ₹1,000 deposit. ₹600 group discount for 5+ travellers.</p>
         </div>
 
         <div className="p-6 rounded-2xl bg-white border border-[#D8D2C4] space-y-2">
           <div className="w-10 h-10 rounded-xl bg-[#163C32]/10 text-[#163C32] flex items-center justify-center">
             <Bus className="w-5 h-5" />
           </div>
-          <h3 className="font-bold text-[#171918] text-base">Air-conditioned coach travel</h3>
-          <p className="text-xs text-[#646864]">A dedicated coach for the round trip, with passenger seating and on-road coordination.</p>
+          <h3 className="font-bold text-[#171918] text-base">AC Traveller Bus</h3>
+          <p className="text-xs text-[#646864]">Round-trip luxury AC Traveller bus from GLA University with reserved seats and experienced mountain chauffeurs.</p>
         </div>
       </div>
 
