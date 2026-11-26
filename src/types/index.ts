@@ -67,6 +67,7 @@ export interface BookingPricing {
   remainingBalance: number;
   finalAmount: number;
   discountAmount: number;
+  groupDiscountAmount?: number;
   isGroupRate?: boolean;
   groupThreshold?: number;
   groupPackagePrice?: number;

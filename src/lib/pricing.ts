@@ -11,40 +11,28 @@ export interface PricingCalculationInput {
 }
 
 /**
- * Server-side Tiered Squad Pricing Engine for HIMALAYAN ESCAPE
- * Dynamic source of truth loaded from TripConfig with group discount thresholds & coupon discounts.
+ * Server-side Pricing Engine for HIMALAYAN ESCAPE — CHRISTMAS SPECIAL 2026
+ * Single Source of Truth:
+ * - Package price: ₹6,199 per person.
+ * - Booking deposit: ₹1,000 per traveller.
+ * - Remaining balance: ₹5,199 per traveller.
+ * - Group offer: ₹600 discount on the entire booking when 5 or more travellers book together.
+ *   (Applied ONCE to the booking total, never stacked, applied to remaining balance).
  */
 export async function calculateDynamicBookingPricing(input: PricingCalculationInput): Promise<BookingPricing> {
   const config = await getTripConfig();
   const rawCount = Number(input.travellersCount) || 1;
-  const travellersCount = Math.max(1, Math.min(rawCount, config.totalCapacity || 75));
+  const travellersCount = Math.max(1, Math.min(rawCount, config.totalCapacity || 50));
 
-  const standardPackagePrice = Number(config.packagePrice) || 6200;
-  const duoPackagePrice = Number(config.duoPackagePrice) || 5999;
-  const groupPackagePrice = Number(config.groupPackagePrice) || 5800;
-  const groupThreshold = Number(config.groupSizeThreshold) || 3;
+  const standardPackagePrice = Number(config.packagePrice) || PRICING_DEFAULTS.pricePerTraveller;
+  const reservationAmountPerTraveller = Number(config.depositPrice) || PRICING_DEFAULTS.reservationAmountPerTraveller;
+  const groupThreshold = Number(config.groupSizeThreshold) || PRICING_DEFAULTS.groupThreshold;
+  const groupDiscountTotal = Number(config.groupDiscountAmount) || PRICING_DEFAULTS.groupDiscountAmount;
 
-  // Student Offer Rules:
-  // 1: Solo (₹6,200)
-  // 2: Duo Explorer (₹5,999/head)
-  // 3+: Squad Cabin (₹5,800/head)
-  let pricePerTraveller = standardPackagePrice;
-  let isGroupRate = false;
-  let savingsPerTraveller = 0;
-
-  if (travellersCount === 2) {
-    pricePerTraveller = duoPackagePrice;
-    isGroupRate = true;
-    savingsPerTraveller = Math.max(0, standardPackagePrice - duoPackagePrice);
-  } else if (travellersCount >= groupThreshold) {
-    pricePerTraveller = groupPackagePrice;
-    isGroupRate = true;
-    savingsPerTraveller = Math.max(0, standardPackagePrice - groupPackagePrice);
-  }
-
-  const reservationAmountPerTraveller = Number(config.depositPrice) || 1000;
-  const rawTotal = travellersCount * pricePerTraveller;
-  const depositTotal = travellersCount * reservationAmountPerTraveller;
+  // Authoritative Pricing Formula
+  const baseAmount = travellersCount * standardPackagePrice;
+  const isGroupRate = travellersCount >= groupThreshold;
+  const appliedGroupDiscount = isGroupRate ? groupDiscountTotal : 0;
 
   // Coupon lookup & discount
   let couponDiscount = 0;
@@ -62,30 +50,32 @@ export async function calculateDynamicBookingPricing(input: PricingCalculationIn
         }
       }
     } catch {
-      // In offline/fallback mode, no unauthorized arbitrary coupon discounts
       couponDiscount = 0;
       appliedCouponCode = null;
     }
   }
 
-  const finalTotal = Math.max(0, rawTotal - couponDiscount);
-  const gateBalanceDue = Math.max(0, finalTotal - depositTotal);
+  const totalDiscount = appliedGroupDiscount + couponDiscount;
+  const finalTotal = Math.max(0, baseAmount - totalDiscount);
+  const depositTotal = travellersCount * reservationAmountPerTraveller;
+  const remainingBalance = Math.max(0, finalTotal - depositTotal);
 
   return {
     travellersCount,
-    baseAmount: rawTotal,
+    baseAmount,
     totalAmount: finalTotal,
-    pricePerTraveller,
+    pricePerTraveller: standardPackagePrice,
     reservationAmountPerTraveller,
     reservationAmount: depositTotal,
-    remainingBalance: gateBalanceDue,
+    remainingBalance,
     finalAmount: finalTotal,
-    discountAmount: couponDiscount + (travellersCount * savingsPerTraveller),
+    discountAmount: totalDiscount,
+    groupDiscountAmount: appliedGroupDiscount,
     isGroupRate,
     groupThreshold,
-    groupPackagePrice,
+    groupPackagePrice: standardPackagePrice,
     standardPackagePrice,
-    savingsPerTraveller,
+    savingsPerTraveller: isGroupRate ? Math.round(appliedGroupDiscount / travellersCount) : 0,
     couponCode: appliedCouponCode,
     couponDiscount,
   };
@@ -96,47 +86,36 @@ export async function calculateDynamicBookingPricing(input: PricingCalculationIn
  */
 export function calculateBookingPricing(input: PricingCalculationInput): BookingPricing {
   const rawCount = Number(input.travellersCount) || 1;
-  const travellersCount = Math.max(1, Math.min(rawCount, 75));
+  const travellersCount = Math.max(1, Math.min(rawCount, 50));
 
-  const standardPackagePrice = 6200;
-  const duoPackagePrice = 5999;
-  const groupPackagePrice = 5800;
-  const groupThreshold = 3;
+  const standardPackagePrice = PRICING_DEFAULTS.pricePerTraveller;
+  const reservationAmountPerTraveller = PRICING_DEFAULTS.reservationAmountPerTraveller;
+  const groupThreshold = PRICING_DEFAULTS.groupThreshold;
+  const groupDiscountTotal = PRICING_DEFAULTS.groupDiscountAmount;
 
-  let pricePerTraveller = standardPackagePrice;
-  let isGroupRate = false;
-  let savingsPerTraveller = 0;
+  const baseAmount = travellersCount * standardPackagePrice;
+  const isGroupRate = travellersCount >= groupThreshold;
+  const appliedGroupDiscount = isGroupRate ? groupDiscountTotal : 0;
 
-  if (travellersCount === 2) {
-    pricePerTraveller = duoPackagePrice;
-    isGroupRate = true;
-    savingsPerTraveller = Math.max(0, standardPackagePrice - duoPackagePrice);
-  } else if (travellersCount >= groupThreshold) {
-    pricePerTraveller = groupPackagePrice;
-    isGroupRate = true;
-    savingsPerTraveller = Math.max(0, standardPackagePrice - groupPackagePrice);
-  }
-
-  const reservationAmountPerTraveller = 1000;
-  const rawTotal = travellersCount * pricePerTraveller;
+  const finalTotal = Math.max(0, baseAmount - appliedGroupDiscount);
   const depositTotal = travellersCount * reservationAmountPerTraveller;
-  const finalTotal = rawTotal;
-  const gateBalanceDue = Math.max(0, finalTotal - depositTotal);
+  const remainingBalance = Math.max(0, finalTotal - depositTotal);
 
   return {
     travellersCount,
-    baseAmount: rawTotal,
+    baseAmount,
     totalAmount: finalTotal,
-    pricePerTraveller,
+    pricePerTraveller: standardPackagePrice,
     reservationAmountPerTraveller,
     reservationAmount: depositTotal,
-    remainingBalance: gateBalanceDue,
+    remainingBalance,
     finalAmount: finalTotal,
-    discountAmount: travellersCount * savingsPerTraveller,
+    discountAmount: appliedGroupDiscount,
+    groupDiscountAmount: appliedGroupDiscount,
     isGroupRate,
     groupThreshold,
-    groupPackagePrice,
+    groupPackagePrice: standardPackagePrice,
     standardPackagePrice,
-    savingsPerTraveller,
+    savingsPerTraveller: isGroupRate ? Math.round(appliedGroupDiscount / travellersCount) : 0,
   };
 }
