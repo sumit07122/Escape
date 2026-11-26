@@ -63,7 +63,7 @@ export default function ItineraryPage() {
           Complete 6-Day Itinerary
         </h1>
         <p className="text-sm text-[#646864] max-w-xl mx-auto">
-          Pickup: GLA University, Mathura → Kasol Riverside Camps → Manali 4-Star Riverside Hotel → Atal Tunnel & Sissu → Solang Valley → Mathura
+          Pickup: GLA University, Mathura → Kasol Riverside Camps → Manali 4-Star Riverside Hotel → Solang Valley, Atal Tunnel & Sissu → Kullu Adventure Day → Mathura
         </p>
       </div>
 

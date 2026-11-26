@@ -44,7 +44,7 @@ export default function Footer() {
               </div>
             </Link>
             <p className="text-[#171918]/70 text-[11px] leading-relaxed">
-              Christmas Special 2026 (23–28 Dec). Pickup & Reporting: GLA University, Mathura. Package: ₹6,199 per person with ₹1,000 advance reservation deposit and ₹600 group discount for 5+ travellers.
+              Himalayan Escape 2026 (23–28 Dec). Pickup & Reporting: GLA University, Mathura. Package: ₹6,199 per person with ₹1,000 advance reservation deposit and ₹600 group discount for 5+ travellers.
             </p>
           </div>
 

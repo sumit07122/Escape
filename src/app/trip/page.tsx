@@ -14,13 +14,13 @@ export default function TripOverviewPage() {
       {/* Header */}
       <div className="text-center space-y-2">
         <span className="text-xs font-bold text-[#163C32] uppercase tracking-widest">
-          CHRISTMAS SPECIAL 2026 SPECIFICATION
+          EXPEDITION SPECIFICATION • 23–28 DEC 2026
         </span>
         <h1 className="text-3xl sm:text-5xl font-black text-[#171918]">
           Trip Overview
         </h1>
         <p className="text-sm text-[#646864]">
-          Pickup & Reporting: GLA University, Mathura → Kasol → Manali → Atal Tunnel & Sissu → Solang Valley → Mathura
+          Pickup & Reporting: GLA University, Mathura → Kasol → Manali → Solang Valley, Atal Tunnel & Sissu → Kullu Adventure Day → Mathura
         </p>
       </div>
 

@@ -35,7 +35,7 @@ function LoginFormContent() {
             </div>
             <h1 className="text-xl font-black tracking-tight text-[#171918] mt-2">HIMALAYAN ESCAPE</h1>
             <p className="text-[10px] font-bold tracking-widest text-[#D87945] uppercase">
-              CHRISTMAS SPECIAL • 23–28 DEC 2026
+              23–28 DEC 2026 • 6D / 5N EXPEDITION
             </p>
           </Link>
         </div>

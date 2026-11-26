@@ -84,7 +84,7 @@ export default async function HomePage() {
               </p>
             )}
             <h1 className="hero-title mx-auto max-w-6xl">
-              {tripConfig.tripTitle || 'Himalayan Escape'}
+              HIMALAYAN ESCAPE
             </h1>
             <p className="mx-auto max-w-2xl text-base font-light leading-relaxed text-stone-100/90 sm:text-xl md:text-2xl">
               {tripConfig.subtitle}

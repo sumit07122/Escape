@@ -23,7 +23,7 @@ export interface TripConfigData {
 
 export const DEFAULT_TRIP_CONFIG: TripConfigData = {
   id: 'global',
-  tripTitle: 'Himalayan Escape – Christmas Special 2026',
+  tripTitle: 'Himalayan Escape',
   subtitle: 'Six days away from routine. A lifetime of stories. From pine-scented riverside camping in Kasol to snow peaks in Manali.',
   totalCapacity: 50,
   packagePrice: 6199,
@@ -37,7 +37,7 @@ export const DEFAULT_TRIP_CONFIG: TripConfigData = {
   reportingTime: '12:00 PM',
   pickupLocation: 'GLA University, Mathura',
   emergencyHelplines: ['8126854850', '6398412828'],
-  announcementBanner: 'Christmas Special 2026: Pick up from GLA University, Mathura on 23rd December.',
+  announcementBanner: 'Himalayan Escape: Pick up from GLA University, Mathura on 23rd December.',
   announcementActive: false,
   customSeatsDisplayEnabled: false,
   customAvailableSeats: 17,

@@ -8,7 +8,7 @@ import { ArrowRight, Check, Compass, Users, UserRound, Sparkles, ShieldCheck } f
 import { getTripConfig } from '@/lib/trip-config';
 
 export const metadata = {
-  title: 'Pricing | Himalayan Escape – Christmas Special 2026',
+  title: 'Pricing | Himalayan Escape',
   description: 'Clear expedition pricing: ₹6,199 per person, ₹1,000 reservation deposit, and ₹600 group discount for 5+ travellers.',
 };
 
@@ -36,7 +36,7 @@ export default async function PricingPage() {
         <div className="pointer-events-none absolute -right-20 -top-32 h-96 w-96 rounded-full bg-[#dbe8df] blur-3xl" />
         <div className="relative mx-auto max-w-6xl">
           <div className="mb-5 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#678275]">
-            <Compass className="h-4 w-4" /> Christmas Special 2026 Pricing
+            <Compass className="h-4 w-4" /> All-Inclusive Expedition Pricing
           </div>
           <h1 className="max-w-3xl text-4xl font-semibold leading-[1.02] tracking-[-0.05em] text-[#15392f] sm:text-6xl">
             Clear prices.<br className="hidden sm:block" /> Full Himalayan adventure.

@@ -11,7 +11,7 @@ import { verifyUserSession } from '@/lib/auth';
 import { Megaphone } from 'lucide-react';
 
 export const metadata = {
-  title: 'Book Your Seat | Himalayan Escape – Christmas Special 2026',
+  title: 'Book Your Seat | Himalayan Escape',
   description: 'Book your luxury AC traveller bus seat with real-time seat selector, advance reservation payment, and instant digital QR ticket.',
 };
 
@@ -50,13 +50,13 @@ export default async function BookPage() {
 
       <div className="max-w-4xl mx-auto px-4 mb-4 text-center space-y-1.5">
         <span className="inline-block text-[11px] font-semibold text-[#D87945] uppercase tracking-widest px-3 py-1 rounded-full bg-[#D87945]/10 border border-[#D87945]/20">
-          Christmas Special 2026 Reservation Portal
+          Official Expedition Reservation Portal
         </span>
         <h1 className="text-3xl sm:text-4xl font-black text-[#171918]">
           {tripConfig.tripTitle || 'HIMALAYAN ESCAPE'}
         </h1>
         <p className="text-xs sm:text-sm text-[#646864] uppercase font-medium tracking-wide">
-          {tripConfig.subtitle || 'KASOL × MANALI • CHRISTMAS SPECIAL'} • PICKUP: {tripConfig.pickupLocation || 'GLA UNIVERSITY, MATHURA'} • REPORTING: {tripConfig.reportingTime || '12:00 PM'}
+          {tripConfig.subtitle || 'KASOL × MANALI EXPEDITION'} • PICKUP: {tripConfig.pickupLocation || 'GLA UNIVERSITY, MATHURA'} • REPORTING: {tripConfig.reportingTime || '12:00 PM'}
         </p>
       </div>
 
