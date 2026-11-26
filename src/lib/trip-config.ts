@@ -86,7 +86,7 @@ async function readLegacyTripConfig() {
 async function persistLegacyTripConfig(config: TripConfigData) {
   const categories: Record<keyof typeof LEGACY_CONFIG_KEYS, string> = {
     tripTitle: 'GENERAL', subtitle: 'GENERAL', totalCapacity: 'PRICING',
-    packagePrice: 'PRICING', groupPackagePrice: 'PRICING', groupSizeThreshold: 'PRICING',
+    packagePrice: 'PRICING', groupPackagePrice: 'PRICING', groupDiscountAmount: 'PRICING', groupSizeThreshold: 'PRICING',
     depositPrice: 'PRICING', departureDate: 'GENERAL', returnDate: 'GENERAL',
     reportingTime: 'GENERAL', pickupLocation: 'GENERAL', emergencyHelplines: 'CONTACTS',
     announcementBanner: 'GENERAL', announcementActive: 'GENERAL',

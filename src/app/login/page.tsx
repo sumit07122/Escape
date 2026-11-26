@@ -10,6 +10,7 @@ function LoginFormContent() {
   const searchParams = useSearchParams();
   const returnUrl = searchParams.get('returnUrl') || '/book';
   const urlError = searchParams.get('error');
+  const notice = searchParams.get('notice');
 
   return (
     <div className="w-full min-h-[78vh] flex items-center justify-center px-4 py-12 bg-[#F7F5EF] text-[#171918]">
@@ -28,9 +29,19 @@ function LoginFormContent() {
           </div>
           <h1 className="text-xl font-black tracking-tight text-[#171918]">HIMALAYAN ESCAPE</h1>
           <p className="text-[10px] font-bold tracking-widest text-[#D87945] uppercase">
-            STUDENT MOUNTAIN EXPEDITION • 2026
+            CHRISTMAS SPECIAL • 23–28 DEC 2026
           </p>
         </div>
+
+        {notice === 'auth_required' && (
+          <div className="p-3.5 rounded-xl border border-emerald-300 bg-emerald-50 text-emerald-950 text-xs flex items-start gap-2.5 shadow-xs">
+            <AlertCircle className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold">Sign In Required to Reserve Seats</p>
+              <p className="text-[11px] opacity-90">Please sign in or create an account with your mobile number to begin booking your seats.</p>
+            </div>
+          </div>
+        )}
 
         {urlError && (
           <div className="p-3.5 rounded-xl border border-amber-200 bg-amber-50 text-amber-900 text-xs flex items-start gap-2.5 shadow-xs">

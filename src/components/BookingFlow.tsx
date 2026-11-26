@@ -32,12 +32,15 @@ interface UserSession {
 
 interface BookingFlowProps {
   initialConfig?: TripConfigData;
+  initialUser?: UserSession | null;
 }
 
-export default function BookingFlow({ initialConfig }: BookingFlowProps) {
+export default function BookingFlow({ initialConfig, initialUser }: BookingFlowProps) {
   const config = initialConfig || DEFAULT_TRIP_CONFIG;
-  const packagePrice = Number(config.packagePrice) || 6200;
+  const packagePrice = Number(config.packagePrice) || 6199;
   const depositPerHead = Number(config.depositPrice) || 1000;
+  const groupDiscount = Number(config.groupDiscountAmount) || 600;
+  const groupThreshold = Number(config.groupSizeThreshold) || 5;
 
   // 3 Step High-Converting Flow:
   // 1: Travellers & Instant Pricing
@@ -48,7 +51,7 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
   const [bookingSessionId, setBookingSessionId] = useState<string>('');
 
   // Authentication State
-  const [userSession, setUserSession] = useState<UserSession | null>(null);
+  const [userSession, setUserSession] = useState<UserSession | null>(initialUser || null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(false);
 
   // Step 1: Travellers Count
@@ -56,7 +59,15 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
 
   // Step 2: Passenger Details
   const [travellers, setTravellers] = useState<TravellerInput[]>([
-    { fullName: '', phone: '', email: '', gender: 'Male', collegeId: '', emergencyContactName: '', emergencyContactPhone: '' },
+    {
+      fullName: initialUser?.name || '',
+      phone: initialUser?.phone || '',
+      email: initialUser?.email || '',
+      gender: 'Male',
+      collegeId: '',
+      emergencyContactName: '',
+      emergencyContactPhone: '',
+    },
   ]);
   const [useSameEmergencyForAll, setUseSameEmergencyForAll] = useState(true);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -72,9 +83,9 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
   const [squadFriendSeats, setSquadFriendSeats] = useState<string[]>([]);
   const [squadLinkNotice, setSquadLinkNotice] = useState<string | null>(null);
 
-  // Pricing & Payment: Canonical Flat ₹6,200 per traveller, ₹1,000 deposit, ₹5,200 balance
+  // Pricing & Payment: Canonical Flat ₹6,199 per traveller, ₹1,000 deposit, ₹5,199 balance
   const [pricing, setPricing] = useState<BookingPricing>(() => {
-    const rate = 6200;
+    const rate = 6199;
     return {
       travellersCount: 1,
       baseAmount: rate,
@@ -82,13 +93,14 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
       pricePerTraveller: rate,
       reservationAmountPerTraveller: 1000,
       reservationAmount: 1000,
-      remainingBalance: 5200,
+      remainingBalance: 5199,
       finalAmount: rate,
       discountAmount: 0,
+      groupDiscountAmount: 0,
       isGroupRate: false,
-      groupThreshold: 1,
-      groupPackagePrice: 6200,
-      standardPackagePrice: 6200,
+      groupThreshold: 5,
+      groupPackagePrice: rate,
+      standardPackagePrice: rate,
       savingsPerTraveller: 0,
     };
   });
@@ -264,50 +276,41 @@ export default function BookingFlow({ initialConfig }: BookingFlowProps) {
     checkAuth();
   }, []);
 
-  // Instant Client Pricing calculation with Student Offers:
-  // Solo: ₹6,200 (Deposit ₹1,000, Gate Balance ₹5,200)
-  // Duo Explorer (2): ₹5,999/head (Save ₹402 per duo, Deposit ₹1,000/head)
-  // Squad Cabin (3+): ₹5,800/head (Save ₹400/head, Deposit ₹1,000/head)
+  // Instant Client Pricing calculation with Group Offers:
+  // Flat ₹6,199 per traveller
+  // ₹1,000 advance deposit per traveller
+  // ₹5,199 remaining balance before boarding
+  // ₹600 group discount applied ONCE to booking total for 5+ travellers
   const updatePricing = useCallback((count: number, couponDiscount = 0, couponCode: string | null = null) => {
-    const singleRate = Number(config.packagePrice) || 6200;
-    const duoRate = Number(config.duoPackagePrice) || 5999;
-    const squadRate = Number(config.groupPackagePrice) || 5800;
+    const singleRate = Number(config.packagePrice) || 6199;
     const depositPerHead = Number(config.depositPrice) || 1000;
+    const groupDiscountAmount = Number(config.groupDiscountAmount) || 600;
+    const groupThreshold = Number(config.groupSizeThreshold) || 5;
 
-    let rate = singleRate;
-    let isGroupOffer = false;
-    let savingsPerHead = 0;
+    const rawTotal = count * singleRate;
+    const isGroupOffer = count >= groupThreshold;
+    const appliedGroupDiscount = isGroupOffer ? groupDiscountAmount : 0;
 
-    if (count === 2) {
-      rate = duoRate;
-      isGroupOffer = true;
-      savingsPerHead = Math.max(0, singleRate - duoRate);
-    } else if (count >= 3) {
-      rate = squadRate;
-      isGroupOffer = true;
-      savingsPerHead = Math.max(0, singleRate - squadRate);
-    }
-
-    const rawTotal = count * rate;
+    const finalTotal = Math.max(0, rawTotal - appliedGroupDiscount - couponDiscount);
     const depositTotal = count * depositPerHead;
-    const finalTotal = Math.max(0, rawTotal - couponDiscount);
     const balanceDue = Math.max(0, finalTotal - depositTotal);
 
     setPricing({
       travellersCount: count,
       baseAmount: rawTotal,
       totalAmount: finalTotal,
-      pricePerTraveller: rate,
+      pricePerTraveller: singleRate,
       reservationAmountPerTraveller: depositPerHead,
       reservationAmount: depositTotal,
       remainingBalance: balanceDue,
       finalAmount: finalTotal,
-      discountAmount: couponDiscount + (count * savingsPerHead),
+      discountAmount: appliedGroupDiscount + couponDiscount,
+      groupDiscountAmount: appliedGroupDiscount,
       isGroupRate: isGroupOffer,
-      groupThreshold: 3,
-      groupPackagePrice: squadRate,
+      groupThreshold,
+      groupPackagePrice: singleRate,
       standardPackagePrice: singleRate,
-      savingsPerTraveller: savingsPerHead,
+      savingsPerTraveller: isGroupOffer ? Math.round(appliedGroupDiscount / count) : 0,
       couponCode: couponCode || undefined,
       couponDiscount,
     });

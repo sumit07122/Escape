@@ -8,11 +8,25 @@ import { signUserSession } from '@/lib/auth';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
-    const { phone, password, name } = body;
+    const { phone, password, confirmPassword, name, termsAccepted } = body;
 
     if (!phone || !password) {
       return NextResponse.json(
         { error: 'Mobile number and password are required' },
+        { status: 400 }
+      );
+    }
+
+    if (confirmPassword !== undefined && password !== confirmPassword) {
+      return NextResponse.json(
+        { error: 'Passwords do not match. Please re-enter your password.' },
+        { status: 400 }
+      );
+    }
+
+    if (termsAccepted !== undefined && !termsAccepted) {
+      return NextResponse.json(
+        { error: 'Please accept the Terms & Conditions and Privacy Policy to proceed.' },
         { status: 400 }
       );
     }
@@ -40,6 +54,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const cleanName = name ? String(name).trim() : '';
+    if (!cleanName || cleanName.length < 2) {
+      return NextResponse.json(
+        { error: 'Please enter your full legal name.' },
+        { status: 400 }
+      );
+    }
+
     // Check for duplicate registration
     const existingUser = await db.user.findFirst({
       where: { phone: cleanPhone },
@@ -54,9 +76,7 @@ export async function POST(request: NextRequest) {
 
     // Hash password using bcryptjs (salt rounds: 10)
     const passwordHash = await bcrypt.hash(String(password), 10);
-    const cleanName = name ? String(name).trim() : 'Traveller';
-    // Older deployed databases still require email even though phone-only auth does not.
-    // A reserved .invalid address satisfies that legacy constraint without inventing a deliverable email.
+    // Older deployed databases require email; reserve .invalid address for phone-only accounts
     const accountEmail = `${cleanPhone}@phone.himalayaescape.invalid`;
 
     // Create user in database

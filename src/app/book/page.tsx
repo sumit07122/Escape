@@ -3,17 +3,28 @@ export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
 import React from 'react';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import BookingFlow from '@/components/BookingFlow';
-import { getTripConfig, getSeatAvailability } from '@/lib/trip-config';
-import { Megaphone, AlertTriangle, Users } from 'lucide-react';
-
+import { getTripConfig } from '@/lib/trip-config';
+import { verifyUserSession } from '@/lib/auth';
+import { Megaphone } from 'lucide-react';
 
 export const metadata = {
-  title: 'Book Your Seat | Himalayan Escape — Student Mountain Expedition',
-  description: 'Book your luxury bus seat with real-time seat selector, advance reservation payment, and instant digital QR ticket.',
+  title: 'Book Your Seat | Himalayan Escape – Christmas Special 2026',
+  description: 'Book your luxury AC traveller bus seat with real-time seat selector, advance reservation payment, and instant digital QR ticket.',
 };
 
 export default async function BookPage() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('user_session')?.value || cookieStore.get('gla_user_session')?.value;
+  const userSession = token ? verifyUserSession(token) : null;
+
+  // Strict Pre-booking Authentication Gate (No Guest Checkout)
+  if (!userSession) {
+    redirect('/login?returnUrl=/book&notice=auth_required');
+  }
+
   const tripConfig = await getTripConfig();
 
   return (
@@ -39,17 +50,17 @@ export default async function BookPage() {
 
       <div className="max-w-4xl mx-auto px-4 mb-4 text-center space-y-1.5">
         <span className="inline-block text-[11px] font-semibold text-[#D87945] uppercase tracking-widest px-3 py-1 rounded-full bg-[#D87945]/10 border border-[#D87945]/20">
-          Student Reservation Portal
+          Christmas Special 2026 Reservation Portal
         </span>
         <h1 className="text-3xl sm:text-4xl font-black text-[#171918]">
           {tripConfig.tripTitle || 'HIMALAYAN ESCAPE'}
         </h1>
         <p className="text-xs sm:text-sm text-[#646864] uppercase font-medium tracking-wide">
-          {tripConfig.subtitle || 'MANALI × KASOL • STUDENT EXPEDITION'} • PICKUP: {tripConfig.pickupLocation || 'NEAR MAIN GATE (NH-2), MATHURA'} • REPORTING: {tripConfig.reportingTime || '07:00 PM'}
+          {tripConfig.subtitle || 'KASOL × MANALI • CHRISTMAS SPECIAL'} • PICKUP: {tripConfig.pickupLocation || 'GLA UNIVERSITY, MATHURA'} • REPORTING: {tripConfig.reportingTime || '12:00 PM'}
         </p>
       </div>
 
-      <BookingFlow initialConfig={tripConfig} />
+      <BookingFlow initialConfig={tripConfig} initialUser={userSession} />
     </div>
   );
 }

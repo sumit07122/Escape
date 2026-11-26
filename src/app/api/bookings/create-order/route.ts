@@ -253,8 +253,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Package not configured' }, { status: 500 });
     }
 
-    // Check customer user session if available
+    // Check customer user session (Strict Pre-Booking Authentication Gate)
     const customerUser = await getUserSessionFromRequest(request);
+    if (!customerUser) {
+      return NextResponse.json({
+        error: 'Please sign in or create an account to reserve your seats.',
+        code: 'AUTH_REQUIRED',
+      }, { status: 401 });
+    }
 
     // 8. Create booking record in database
     const booking = await db.booking.create({
@@ -262,10 +268,10 @@ export async function POST(request: NextRequest) {
         bookingId,
         tripId: trip.id,
         packageId: selectedPackage.id,
-        userId: customerUser?.id || null,
-        primaryTravellerName: primaryTraveller.fullName || 'Primary Student',
-        primaryEmail: primaryTraveller.email || customerUser?.email || 'student@gla.ac.in',
-        primaryPhone: primaryTraveller.phone || '0000000000',
+        userId: customerUser.id,
+        primaryTravellerName: primaryTraveller.fullName || customerUser.name || 'Primary Traveller',
+        primaryEmail: primaryTraveller.email || customerUser.email || `${customerUser.phone}@phone.himalayaescape.invalid`,
+        primaryPhone: primaryTraveller.phone || customerUser.phone || '0000000000',
         gender: primaryTraveller.gender || 'NOT_SPECIFIED',
         emergencyContactName: primaryTraveller.emergencyContactName.trim(),
         emergencyContactPhone: primaryTraveller.emergencyContactPhone.trim(),

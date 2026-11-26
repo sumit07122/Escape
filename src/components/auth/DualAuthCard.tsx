@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Lock, Eye, EyeOff, Loader2, AlertCircle, ArrowRight, User, Phone, CheckCircle2 } from 'lucide-react';
+import { Lock, Eye, EyeOff, Loader2, AlertCircle, ArrowRight, User, Phone, CheckCircle2, ShieldCheck, Check, MessageSquare } from 'lucide-react';
 
 interface DualAuthCardProps {
   returnUrl?: string;
@@ -23,7 +23,7 @@ interface DualAuthCardProps {
 export default function DualAuthCard({
   returnUrl = '/book',
   onAuthSuccess,
-  title = 'Student Mountain Expedition Sign In',
+  title = 'Expedition Account Sign In',
   subtitle = 'Sign in or create an account to reserve your coach seats and access your digital QR boarding pass.',
   compact = false,
 }: DualAuthCardProps) {
@@ -32,12 +32,30 @@ export default function DualAuthCard({
 
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Password strength calculation
+  const passwordStrength = useMemo(() => {
+    if (!password) return { label: '', color: '', percent: 0 };
+    let score = 0;
+    if (password.length >= 6) score += 1;
+    if (password.length >= 8) score += 1;
+    if (/[0-9]/.test(password)) score += 1;
+    if (/[A-Z]/.test(password) || /[^A-Za-z0-9]/.test(password)) score += 1;
+
+    if (score <= 1) return { label: 'Weak', color: 'bg-red-500 text-red-600', percent: 25 };
+    if (score === 2) return { label: 'Fair', color: 'bg-amber-500 text-amber-600', percent: 50 };
+    if (score === 3) return { label: 'Good', color: 'bg-blue-500 text-blue-600', percent: 75 };
+    return { label: 'Strong', color: 'bg-emerald-500 text-emerald-600', percent: 100 };
+  }, [password]);
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/[^0-9]/g, '');
@@ -66,9 +84,19 @@ export default function DualAuthCard({
       return;
     }
 
-    if (mode === 'REGISTER' && !name.trim()) {
-      setErrorMessage('Please enter your full name.');
-      return;
+    if (mode === 'REGISTER') {
+      if (!name.trim() || name.trim().length < 2) {
+        setErrorMessage('Please enter your full legal name.');
+        return;
+      }
+      if (password !== confirmPassword) {
+        setErrorMessage('Passwords do not match. Please re-enter your password.');
+        return;
+      }
+      if (!termsAccepted) {
+        setErrorMessage('You must accept the Terms & Conditions to create an account.');
+        return;
+      }
     }
 
     setLoading(true);
@@ -77,7 +105,13 @@ export default function DualAuthCard({
       const endpoint = mode === 'SIGN_IN' ? '/api/auth/login-phone' : '/api/auth/register-phone';
       const payload = mode === 'SIGN_IN'
         ? { phone: cleanPhone, password }
-        : { phone: cleanPhone, password, name: name.trim() };
+        : {
+            phone: cleanPhone,
+            password,
+            confirmPassword,
+            name: name.trim(),
+            termsAccepted,
+          };
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -152,18 +186,11 @@ export default function DualAuthCard({
           <span>Continue with Google</span>
         </a>
 
-        <p className="text-[10.5px] text-center text-[#646864] leading-tight px-1">
-          By signing in with Google, you agree to our{' '}
-          <Link href="/terms" target="_blank" className="text-[#163C32] underline font-medium">Terms</Link>{' '}
-          and acknowledge our{' '}
-          <Link href="/privacy-policy" target="_blank" className="text-[#163C32] underline font-medium">Privacy Policy</Link>.
-        </p>
-
         {/* Subtle Divider */}
         <div className="relative flex py-1.5 items-center">
           <div className="flex-grow border-t border-[#D8D2C4]" />
           <span className="flex-shrink mx-3 text-[10px] text-[#646864] uppercase font-bold tracking-wider">
-            — OR WITH PHONE NUMBER —
+            — OR DIRECT LOGIN WITH MOBILE —
           </span>
           <div className="flex-grow border-t border-[#D8D2C4]" />
         </div>
@@ -222,14 +249,14 @@ export default function DualAuthCard({
           <div className="space-y-1">
             <label className="text-[11px] font-bold text-[#171918] uppercase tracking-wider flex items-center gap-1.5">
               <User className="w-3.5 h-3.5 text-[#163C32]" />
-              <span>Full Name</span>
+              <span>Full Legal Name</span>
             </label>
             <input
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Rahul Sharma"
+              placeholder="e.g. Shrikant Tiwari"
               className="w-full px-3.5 py-2.5 rounded-xl bg-[#F7F5EF] border border-[#D8D2C4] text-xs text-[#171918] focus:border-[#163C32] focus:bg-white focus:outline-none transition-colors"
             />
           </div>
@@ -271,7 +298,7 @@ export default function DualAuthCard({
               minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder={mode === 'REGISTER' ? 'Minimum 6 characters' : 'Enter your password'}
+              placeholder={mode === 'REGISTER' ? 'Create a secure password (min 6 chars)' : 'Enter your password'}
               className="w-full px-3.5 py-2.5 pr-10 rounded-xl bg-[#F7F5EF] border border-[#D8D2C4] text-xs text-[#171918] focus:border-[#163C32] focus:bg-white focus:outline-none transition-colors"
             />
             <button
@@ -283,7 +310,89 @@ export default function DualAuthCard({
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
+          {/* Password strength indicator on register */}
+          {mode === 'REGISTER' && password.length > 0 && (
+            <div className="pt-1 space-y-1">
+              <div className="flex items-center justify-between text-[10px]">
+                <span className="text-[#646864]">Password strength:</span>
+                <span className={`font-bold ${passwordStrength.color}`}>{passwordStrength.label}</span>
+              </div>
+              <div className="w-full bg-[#EAE6DC] h-1.5 rounded-full overflow-hidden">
+                <div
+                  className={`h-full transition-all duration-300 ${passwordStrength.color.split(' ')[0]}`}
+                  style={{ width: `${passwordStrength.percent}%` }}
+                />
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* Confirm Password in REGISTER mode */}
+        {mode === 'REGISTER' && (
+          <div className="space-y-1">
+            <label className="text-[11px] font-bold text-[#171918] uppercase tracking-wider flex items-center gap-1.5">
+              <Lock className="w-3.5 h-3.5 text-[#163C32]" />
+              <span>Confirm Password</span>
+            </label>
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                required
+                minLength={6}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Re-enter your password"
+                className="w-full px-3.5 py-2.5 pr-10 rounded-xl bg-[#F7F5EF] border border-[#D8D2C4] text-xs text-[#171918] focus:border-[#163C32] focus:bg-white focus:outline-none transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#646864] hover:text-[#171918] transition-colors p-1"
+                aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+              >
+                {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Terms acceptance on REGISTER */}
+        {mode === 'REGISTER' && (
+          <label className="flex items-start gap-2.5 pt-1 cursor-pointer">
+            <input
+              type="checkbox"
+              required
+              checked={termsAccepted}
+              onChange={(e) => setTermsAccepted(e.target.checked)}
+              className="mt-0.5 rounded border-[#D8D2C4] text-[#163C32] focus:ring-[#163C32]"
+            />
+            <span className="text-[11px] text-[#646864] leading-tight select-none">
+              I agree to the{' '}
+              <Link href="/terms" target="_blank" className="text-[#163C32] font-semibold underline">
+                Terms & Conditions
+              </Link>{' '}
+              and acknowledge the{' '}
+              <Link href="/cancellation" target="_blank" className="text-[#163C32] font-semibold underline">
+                Cancellation Policy
+              </Link>.
+            </span>
+          </label>
+        )}
+
+        {/* Forgot password in SIGN_IN mode */}
+        {mode === 'SIGN_IN' && (
+          <div className="flex items-center justify-end text-[11px]">
+            <a
+              href="https://wa.me/918126854850?text=Hi%20coordinator%2C%20I%20need%20help%20recovering%20my%20Himalayan%20Escape%20password."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#163C32] font-semibold hover:underline flex items-center gap-1"
+            >
+              <MessageSquare className="w-3 h-3" />
+              <span>Forgot Password? WhatsApp Support</span>
+            </a>
+          </div>
+        )}
 
         <button
           type="submit"
@@ -312,7 +421,7 @@ export default function DualAuthCard({
                 setMode('REGISTER');
                 setErrorMessage(null);
               }}
-              className="font-bold text-[#163C32] hover:underline"
+              className="font-bold text-[#163C32] hover:underline cursor-pointer"
             >
               Create one now
             </button>
@@ -326,7 +435,7 @@ export default function DualAuthCard({
                 setMode('SIGN_IN');
                 setErrorMessage(null);
               }}
-              className="font-bold text-[#163C32] hover:underline"
+              className="font-bold text-[#163C32] hover:underline cursor-pointer"
             >
               Sign in here
             </button>
