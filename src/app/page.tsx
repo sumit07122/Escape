@@ -26,12 +26,10 @@ export default async function HomePage() {
   const tripConfig = availability.tripConfig;
   const availableSeats = availability.availableSeats;
   const depPrice = Number(tripConfig.depositPrice) || 1000;
-  const soloPrice = Number(tripConfig.packagePrice) || 6200;
-  const squadPrice = Number(tripConfig.groupPackagePrice) || 6200;
-  const groupThreshold = Number(tripConfig.groupSizeThreshold) || 1;
-  const squadSaving = Math.max(0, soloPrice - squadPrice);
+  const soloPrice = Number(tripConfig.packagePrice) || 6199;
+  const groupDiscount = Number(tripConfig.groupDiscountAmount) || 600;
+  const groupThreshold = Number(tripConfig.groupSizeThreshold) || 5;
   const soloBalance = Math.max(0, soloPrice - depPrice);
-  const squadBalance = Math.max(0, squadPrice - depPrice);
   const activeBusCount = await safeDbQuery(
     () => db.bus.count({ where: { status: 'ACTIVE' } }),
     2,
@@ -254,16 +252,16 @@ export default async function HomePage() {
 
         {/* Pricing Cards Grid */}
         <div className="grid gap-6 lg:grid-cols-2 items-stretch">
-          {/* Card 1: Solo Explorer */}
+          {/* Card 1: Standard Package */}
           <div className="relative flex flex-col justify-between overflow-hidden rounded-[2rem] border border-[#e2ddd3] bg-white p-7 sm:p-8 shadow-[0_15px_45px_rgba(21,57,47,0.06)] transition-all hover:border-[#163C32]/30 hover:shadow-[0_20px_50px_rgba(21,57,47,0.10)]">
             <div>
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#718078]">
-                    Solo & Duo Travellers
+                    Individual Package
                   </span>
                   <h3 className="mt-1 text-2xl font-bold tracking-tight text-[#163C32]">
-                    Solo Explorer
+                    Standard Expedition
                   </h3>
                   <p className="mt-0.5 text-xs text-[#748078]">
                     1 to {groupThreshold - 1} travellers
@@ -279,14 +277,14 @@ export default async function HomePage() {
                 <span className="text-4xl sm:text-5xl font-extrabold tracking-tight text-[#17251f]">
                   ₹{soloPrice.toLocaleString('en-IN')}
                 </span>
-                <span className="text-sm font-medium text-[#77817b]">/ traveller</span>
+                <span className="text-sm font-medium text-[#77817b]">/ person</span>
               </div>
 
               {/* Deposit Pill */}
               <div className="mt-3 inline-flex flex-wrap items-center gap-1.5 rounded-xl bg-[#f5f4ef] px-3.5 py-2 text-xs font-semibold text-[#526058] border border-[#e8e4da]">
                 <span className="text-[#163C32] font-bold">₹{depPrice.toLocaleString('en-IN')} advance</span>
                 <span className="text-[#a0a8a3]">·</span>
-                <span>₹{soloBalance.toLocaleString('en-IN')} due before departure</span>
+                <span>₹{soloBalance.toLocaleString('en-IN')} balance due before boarding</span>
               </div>
 
               <div className="my-6 h-px bg-[#eeebe2]" />
@@ -299,23 +297,27 @@ export default async function HomePage() {
                 <ul className="space-y-2.5 text-xs sm:text-sm text-[#4b5852]">
                   <li className="flex items-center gap-2.5">
                     <Check className="h-4 w-4 shrink-0 text-[#245b4a]" />
-                    <span>Dedicated AC coach seat (pick window or aisle)</span>
+                    <span>Round-trip AC Traveller Bus from GLA University, Mathura</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <Check className="h-4 w-4 shrink-0 text-[#245b4a]" />
-                    <span>5 nights (3-star Manali hotel + Kasol camp + overnight journeys)</span>
+                    <span>1 Night Riverside Camping in Kasol</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <Check className="h-4 w-4 shrink-0 text-[#245b4a]" />
-                    <span>3 Dinners (Pure Veg) & 3 Breakfasts included</span>
+                    <span>2 Nights in 4-Star Riverside Hotel in Manali</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <Check className="h-4 w-4 shrink-0 text-[#245b4a]" />
-                    <span>Solang Valley, Atal Tunnel & Kasol excursions</span>
+                    <span>Total 3 Breakfasts & 3 Dinners included (Pure Veg)</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <Check className="h-4 w-4 shrink-0 text-[#245b4a]" />
-                    <span>Instant digital QR boarding pass on phone</span>
+                    <span>Day 5 Solang Valley Snow Point, Atal Tunnel & Kasol</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <Check className="h-4 w-4 shrink-0 text-[#245b4a]" />
+                    <span>Instant digital QR boarding pass on mobile</span>
                   </li>
                 </ul>
               </div>
@@ -331,7 +333,7 @@ export default async function HomePage() {
             </div>
           </div>
 
-          {/* Card 2: Student Squad Deal (Highlighted) */}
+          {/* Card 2: Group Adventure Offer */}
           <div className="relative flex flex-col justify-between overflow-hidden rounded-[2rem] bg-[#153a30] p-7 sm:p-8 text-white shadow-[0_24px_65px_rgba(14,47,38,0.24)] border border-emerald-400/20">
             {/* Background ambient decorative shapes */}
             <div className="pointer-events-none absolute -right-12 -top-16 h-56 w-56 rounded-full border border-white/10" />
@@ -342,16 +344,16 @@ export default async function HomePage() {
               {/* Highlight Badge */}
               <div className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-[#f1c39e] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#1d2e27]">
                 <Sparkles className="h-3.5 w-3.5" />
-                Student Squad Deal · Auto-Applied
+                Group Adventure Offer · Auto-Applied
               </div>
 
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#f1c39e]">
-                    Group Advantage
+                    5+ Travellers Advantage
                   </span>
                   <h3 className="mt-1 text-2xl font-bold tracking-tight !text-white text-white">
-                    The Squad Rate
+                    ₹600 Instant Group Discount
                   </h3>
                   <p className="mt-0.5 text-xs text-emerald-100/85">
                     {groupThreshold}+ travellers on a single booking
@@ -365,25 +367,22 @@ export default async function HomePage() {
               {/* Price & Savings */}
               <div className="mt-6 flex flex-wrap items-baseline gap-2.5">
                 <span className="text-4xl sm:text-5xl font-extrabold tracking-tight !text-white text-white">
-                  ₹{squadPrice.toLocaleString('en-IN')}
+                  ₹{groupDiscount} Off
                 </span>
-                <span className="text-sm font-medium text-emerald-100/80">/ traveller</span>
-                <span className="text-base font-semibold text-emerald-200/50 line-through">
-                  ₹{soloPrice.toLocaleString('en-IN')}
-                </span>
+                <span className="text-sm font-medium text-emerald-100/80">on entire booking total</span>
               </div>
 
               {/* Deposit Pill */}
               <div className="mt-3 inline-flex flex-wrap items-center gap-1.5 rounded-xl bg-black/25 px-3.5 py-2 text-xs font-semibold text-emerald-100/90 border border-white/10">
-                <span className="text-[#f1c39e] font-bold">₹{depPrice.toLocaleString('en-IN')} advance</span>
+                <span className="text-[#f1c39e] font-bold">₹{depPrice.toLocaleString('en-IN')}/person advance</span>
                 <span className="text-white/40">·</span>
-                <span>₹{squadBalance.toLocaleString('en-IN')} due before departure</span>
+                <span>Discount applied directly to remaining balance</span>
               </div>
 
-              {/* Savings Highlight Pill */}
+              {/* Example Breakdown Pill */}
               <div className="mt-2.5 flex items-center justify-between gap-2 rounded-xl border border-emerald-400/25 bg-emerald-950/60 px-3.5 py-2 text-xs backdrop-blur-sm">
                 <span className="font-semibold text-emerald-100">
-                  Save ₹{squadSaving.toLocaleString('en-IN')} per seat (₹{(squadSaving * groupThreshold).toLocaleString('en-IN')} total)
+                  5 Travellers: ₹30,395 total (save ₹600)
                 </span>
                 <span className="shrink-0 rounded-full bg-[#f1c39e] px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-[#1d2e27]">
                   No code needed
@@ -395,28 +394,28 @@ export default async function HomePage() {
               {/* Inclusions */}
               <div className="space-y-3">
                 <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-200/70">
-                  Everything in Solo, plus squad perks:
+                  Everything in Standard, plus group perks:
                 </p>
                 <ul className="space-y-2.5 text-xs sm:text-sm text-emerald-50/90">
                   <li className="flex items-center gap-2.5">
                     <Check className="h-4 w-4 shrink-0 text-[#f1c39e]" />
-                    <span>Guaranteed adjacent seats for your whole group</span>
+                    <span>Guaranteed adjacent / grouped seats together on coach</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <Check className="h-4 w-4 shrink-0 text-[#f1c39e]" />
-                    <span>Synchronized room allocations in Manali & Kasol</span>
+                    <span>Unified group booking with individual digital tickets</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <Check className="h-4 w-4 shrink-0 text-[#f1c39e]" />
-                    <span>Single checkout with ₹{depPrice.toLocaleString('en-IN')}/seat advance</span>
+                    <span>Single checkout with ₹{depPrice.toLocaleString('en-IN')}/traveller deposit</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <Check className="h-4 w-4 shrink-0 text-[#f1c39e]" />
-                    <span>All meals & excursions included without surcharge</span>
+                    <span>Synchronized room allotments in Kasol & Manali</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <Check className="h-4 w-4 shrink-0 text-[#f1c39e]" />
-                    <span>Dedicated group trip coordinator support</span>
+                    <span>Direct WhatsApp coordination for group boarding at GLA</span>
                   </li>
                 </ul>
               </div>
@@ -427,7 +426,7 @@ export default async function HomePage() {
                 href="/book"
                 className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#f1c39e] px-5 py-3.5 text-sm font-bold text-[#17231f] shadow-lg transition-all hover:bg-white hover:shadow-xl"
               >
-                Book Squad Seats · ₹{depPrice.toLocaleString('en-IN')}/traveller <ArrowRight className="h-4 w-4" />
+                Book Group Seats · ₹{depPrice.toLocaleString('en-IN')}/traveller <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </div>

@@ -35,7 +35,7 @@ export default function Footer() {
               </div>
             </div>
             <p className="text-[#171918]/70 text-[11px] leading-relaxed">
-              Independent student mountain expedition. Pickup & Reporting: Near Main Gate (NH-2), Mathura. Tiered squad pricing: ₹6,200 solo / ₹5,999 duo / ₹5,800 squad (3+) with ₹1,000 advance reservation deposit.
+              Christmas Special 2026 (23–28 Dec). Pickup & Reporting: GLA University, Mathura. Package: ₹6,199 per person with ₹1,000 advance reservation deposit and ₹600 group discount for 5+ travellers.
             </p>
           </div>
 
@@ -80,7 +80,17 @@ export default function Footer() {
               </div>
               <div className="flex items-center gap-2 text-[#171918]/70">
                 <MapPin className="w-3.5 h-3.5 text-[#D87945] shrink-0" />
-                <span>Pickup & Reporting: Near Main Gate (NH-2), Mathura</span>
+                <span>Pickup & Reporting: GLA University, Mathura</span>
+              </div>
+              <div className="flex items-center gap-2 pt-1">
+                <a
+                  href={CONTACT_INFO.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#163C32] hover:text-[#D87945] transition-colors"
+                >
+                  <span>Follow @himalayan.escape_ on Instagram</span>
+                </a>
               </div>
             </div>
           </div>
