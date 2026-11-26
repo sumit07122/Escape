@@ -19,8 +19,17 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
           {/* Brand */}
           <div className="space-y-3 md:col-span-1">
-            <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-full overflow-hidden bg-white border border-[#163C32]/20 shadow-sm shrink-0">
+            <Link
+              href="/"
+              onClick={() => {
+                if (pathname === '/') {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+              }}
+              className="flex items-center gap-2.5 group cursor-pointer hover:opacity-90 transition-opacity"
+              title="Return to Himalayan Escape Homepage"
+            >
+              <div className="w-10 h-10 rounded-full overflow-hidden bg-white border border-[#163C32]/20 shadow-sm shrink-0 transition-transform group-hover:scale-105">
                 <Image
                   src="/logo.png"
                   alt="Himalayan Escape Logo"
@@ -33,7 +42,7 @@ export default function Footer() {
                 <span className="font-black text-[#171918] text-sm tracking-tight">HIMALAYAN ESCAPE</span>
                 <p className="text-[10px] text-[#D87945] font-bold uppercase tracking-wider">STUDENT EXPEDITION • MANALI × KASOL</p>
               </div>
-            </div>
+            </Link>
             <p className="text-[#171918]/70 text-[11px] leading-relaxed">
               Christmas Special 2026 (23–28 Dec). Pickup & Reporting: GLA University, Mathura. Package: ₹6,199 per person with ₹1,000 advance reservation deposit and ₹600 group discount for 5+ travellers.
             </p>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { Suspense } from 'react';
+import Link from 'next/link';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { AlertCircle } from 'lucide-react';
@@ -17,20 +18,26 @@ function LoginFormContent() {
       <div className="w-full max-w-md space-y-4">
         {/* Official Brand Header */}
         <div className="text-center space-y-2">
-          <div className="w-16 h-16 rounded-full overflow-hidden bg-white border border-[#163C32]/20 shadow-sm mx-auto p-0.5">
-            <Image
-              src="/logo.png"
-              alt="Himalayan Escape"
-              width={64}
-              height={64}
-              className="w-full h-full object-cover rounded-full"
-              priority
-            />
-          </div>
-          <h1 className="text-xl font-black tracking-tight text-[#171918]">HIMALAYAN ESCAPE</h1>
-          <p className="text-[10px] font-bold tracking-widest text-[#D87945] uppercase">
-            CHRISTMAS SPECIAL • 23–28 DEC 2026
-          </p>
+          <Link
+            href="/"
+            className="inline-block group cursor-pointer hover:opacity-90 transition-opacity"
+            title="Return to Himalayan Escape Homepage"
+          >
+            <div className="w-16 h-16 rounded-full overflow-hidden bg-white border border-[#163C32]/20 shadow-sm mx-auto p-0.5 transition-transform group-hover:scale-105">
+              <Image
+                src="/logo.png"
+                alt="Himalayan Escape"
+                width={64}
+                height={64}
+                className="w-full h-full object-cover rounded-full"
+                priority
+              />
+            </div>
+            <h1 className="text-xl font-black tracking-tight text-[#171918] mt-2">HIMALAYAN ESCAPE</h1>
+            <p className="text-[10px] font-bold tracking-widest text-[#D87945] uppercase">
+              CHRISTMAS SPECIAL • 23–28 DEC 2026
+            </p>
+          </Link>
         </div>
 
         {notice === 'auth_required' && (

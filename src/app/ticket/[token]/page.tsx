@@ -169,8 +169,12 @@ export default function DigitalTicketPage({
         {/* Pass Top Branding Banner */}
         <div className="bg-[#163C32] text-white p-6 sm:p-8 relative print-banner">
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/20 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-full overflow-hidden bg-white border border-white/20 shadow-sm shrink-0">
+            <Link
+              href="/"
+              className="flex items-center gap-3 group cursor-pointer hover:opacity-95 transition-opacity"
+              title="Return to Himalayan Escape Homepage"
+            >
+              <div className="w-11 h-11 rounded-full overflow-hidden bg-white border border-white/20 shadow-sm shrink-0 transition-transform group-hover:scale-105">
                 <Image
                   src="/logo.png"
                   alt="Himalayan Escape"
@@ -187,7 +191,7 @@ export default function DigitalTicketPage({
                   HIMALAYAN ESCAPE
                 </h1>
               </div>
-            </div>
+            </Link>
             <div className="text-right">
               <span className="inline-block px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 text-[10px] font-black uppercase tracking-wider">
                 ● HIMALAYAN ESCAPE — EXPEDITION PASS

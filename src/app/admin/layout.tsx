@@ -150,20 +150,26 @@ export default function AdminLayout({
         <div className="absolute inset-x-0 top-0 h-2 bg-[#1b4a3d]" />
         <div className="relative w-full max-w-md bg-white border border-[#e4e2da] rounded-3xl p-7 sm:p-9 space-y-6 shadow-[0_24px_70px_rgba(26,47,39,0.10)]">
           <div className="text-center space-y-2">
-            <div className="w-14 h-14 rounded-2xl bg-[#edf3ef] border border-[#dbe7df] flex items-center justify-center mx-auto p-2.5">
-              <img
-                src="/logo.png"
-                alt="Himalayan Escape"
-                className="w-full h-full object-contain drop-shadow"
-                onError={(e) => {
-                  // Fallback icon if image path fails
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-            </div>
-            <span className="text-[10px] font-bold tracking-[0.16em] uppercase text-[#587267] block">
-              Himalayan Escape · Admin
-            </span>
+            <Link
+              href="/"
+              className="inline-block group cursor-pointer hover:opacity-90 transition-opacity"
+              title="Return to Himalayan Escape Homepage"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-[#edf3ef] border border-[#dbe7df] flex items-center justify-center mx-auto p-2.5 transition-transform group-hover:scale-105">
+                <img
+                  src="/logo.png"
+                  alt="Himalayan Escape"
+                  className="w-full h-full object-contain drop-shadow"
+                  onError={(e) => {
+                    // Fallback icon if image path fails
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
+              <span className="text-[10px] font-bold tracking-[0.16em] uppercase text-[#587267] block mt-2">
+                Himalayan Escape · Admin
+              </span>
+            </Link>
             <h1 className="text-2xl font-sans font-bold text-[#203c32] tracking-tight">
               Admin sign in
             </h1>

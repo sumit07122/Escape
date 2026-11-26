@@ -107,7 +107,17 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between sm:h-20">
           {/* Brand Logo */}
-          <Link href="/" className="flex items-center gap-3 group">
+          <Link
+            href="/"
+            onClick={() => {
+              setMobileMenuOpen(false);
+              if (pathname === '/') {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }}
+            className="flex items-center gap-3 group cursor-pointer"
+            title="Himalayan Escape Homepage"
+          >
             <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 border-[#163C32]/25 bg-white p-0.5 shadow-md transition-transform group-hover:scale-105 sm:h-12 sm:w-12">
               <Image
                 src="/logo.png"
