@@ -74,10 +74,11 @@ export default function TermsPage() {
               <span>3. Package Pricing & Remaining Balance Schedule</span>
             </h2>
             <ul className="list-disc pl-5 space-y-1.5 text-xs text-[#646864]">
-              <li><strong>Standard Solo Price:</strong> ₹6,200 per traveller. Pay ₹1,000 advance reservation deposit; remaining balance of ₹5,200 per traveller due prior to departure according to the confirmed schedule.</li>
-              <li><strong>Duo Explorer Rate:</strong> ₹5,999 per traveller (2 passengers booking together). Pay ₹1,000 advance deposit per traveller; remaining balance of ₹4,999 per traveller.</li>
-              <li><strong>Squad Cabin Rate:</strong> ₹5,800 per traveller (Groups of 3 or more passengers booking together). Pay ₹1,000 advance deposit per traveller; remaining balance of ₹4,800 per traveller.</li>
-              <li><strong>Balance Due Timing:</strong> The remaining package balance must be cleared as instructed by trip coordinators before coach boarding at the reporting desk. Failure to pay the outstanding balance may result in seat cancellation with forfeiture of the reservation deposit.</li>
+              <li><strong>Total Package Price:</strong> ₹6,199 per person all-inclusive.</li>
+              <li><strong>Advance Reservation Deposit:</strong> ₹1,000 per traveller paid at the time of booking to permanently lock coach seats and hotel allotments.</li>
+              <li><strong>Remaining Balance:</strong> ₹5,199 per traveller due before coach boarding at GLA University, Mathura, according to coordinator schedule.</li>
+              <li><strong>Group Adventure Discount:</strong> A ₹600 discount is automatically applied to the entire booking total when 5 or more travellers book together under a single booking. The discount applies once per qualifying booking (not stacked, not per person), reducing the outstanding balance.</li>
+              <li><strong>Balance Due Timing:</strong> The remaining balance must be settled before boarding at GLA University, Mathura. Failure to clear the balance may result in seat cancellation with forfeiture of the advance reservation deposit.</li>
             </ul>
           </section>
 

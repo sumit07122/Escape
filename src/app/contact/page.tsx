@@ -128,14 +128,25 @@ export default function ContactPage() {
         <div className="p-6 rounded-2xl bg-zinc-900/60 border border-zinc-800 space-y-3">
           <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wider">
             <MapPin className="w-4 h-4" />
-            Reporting Location
+            Reporting Location & Social
           </div>
           <p className="text-xs text-zinc-300 leading-relaxed">
-            Near Main Gate, 17km Stone, NH-2, Mathura-Delhi Road, Mathura, Uttar Pradesh 281406
+            GLA University, 17km Stone, NH-2, Mathura-Delhi Road, Mathura, Uttar Pradesh 281406
           </p>
           <div className="flex items-center gap-2 text-xs text-zinc-400 pt-1">
             <Clock className="w-3.5 h-3.5 text-orange-400" />
-            <span>Reporting: Day 1 at 04:30 PM (Bus Bay / Main Gate)</span>
+            <span>Reporting: 23rd December 2026 at 12:00 PM (GLA University Main Gate)</span>
+          </div>
+          <div className="pt-2 border-t border-zinc-800">
+            <a
+              href={CONTACT_INFO.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-xs font-bold text-[#f1c39e] hover:text-white transition-colors"
+            >
+              <span>Follow @himalayan.escape_ on Instagram</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </a>
           </div>
         </div>
       </div>
