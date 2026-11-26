@@ -259,7 +259,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: 'What is the pricing per traveller?',
-    a: 'Pricing is tiered: ₹6,200 for solo travellers, ₹5,999 per head for duos (2 travellers), and ₹5,800 per head for squads of 3 or more. A ₹1,000 deposit per traveller is due to reserve seats.',
+    a: 'Package price is ₹6,199 per traveller with a ₹1,000 reservation deposit per person (remaining ₹5,199 balance payable before boarding at GLA University). When booking for 5 or more travellers together, a flat ₹600 group discount is automatically applied to your booking.',
   },
   {
     q: 'Can I book for a group of friends?',

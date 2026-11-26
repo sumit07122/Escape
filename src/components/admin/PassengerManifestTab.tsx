@@ -248,7 +248,7 @@ export default function PassengerManifestTab() {
       `"${t.checkInStatus === 'CHECKED_IN' ? 'CHECKED IN' : 'NOT CHECKED IN'}"`,
       t.reservationAmount || 1000,
       t.remainingBalance || 0,
-      t.totalAmount || 6200,
+      t.totalAmount || 6199,
       `"${(t.emergencyContactPhone || '').replace(/"/g, '""')}"`,
     ]);
 

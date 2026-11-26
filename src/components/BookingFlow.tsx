@@ -726,8 +726,8 @@ export default function BookingFlow({ initialConfig, initialUser }: BookingFlowP
                   : 'bg-white text-[#171918] border-[#D8D2C4] hover:bg-stone-50'
                   }`}
               >
-                <span className="block text-[11px] font-medium uppercase tracking-wider text-inherit/80">Solo</span>
-                <span className="text-xs font-bold tabular-nums">₹6,200</span>
+                <span className="block text-[11px] font-medium uppercase tracking-wider text-inherit/80">Solo (1)</span>
+                <span className="text-xs font-bold tabular-nums">₹6,199</span>
               </button>
               <button
                 type="button"
@@ -737,25 +737,22 @@ export default function BookingFlow({ initialConfig, initialUser }: BookingFlowP
                   : 'bg-white text-[#171918] border-[#D8D2C4] hover:bg-stone-50'
                   }`}
               >
-                <span className="absolute -top-2 right-1.5 px-1.5 py-0.5 rounded-full bg-[#D87945] text-white text-[8px] font-bold uppercase tracking-wider shadow-xs">
-                  Save ₹402
-                </span>
                 <span className="block text-[11px] font-medium uppercase tracking-wider text-inherit/80">Duo (2)</span>
-                <span className="text-xs font-bold tabular-nums">₹5,999<span className="text-[10px] font-normal opacity-80">/head</span></span>
+                <span className="text-xs font-bold tabular-nums">₹12,398</span>
               </button>
               <button
                 type="button"
-                onClick={() => setTravellersCount(3)}
-                className={`py-2 px-2.5 rounded-xl text-xs font-semibold transition-all border relative ${travellersCount >= 3
+                onClick={() => setTravellersCount(5)}
+                className={`py-2 px-2.5 rounded-xl text-xs font-semibold transition-all border relative ${travellersCount >= 5
                   ? 'bg-[#163C32] text-white border-[#163C32] shadow-sm'
                   : 'bg-white text-[#171918] border-[#D8D2C4] hover:bg-stone-50'
                   }`}
               >
                 <span className="absolute -top-2 right-1.5 px-1.5 py-0.5 rounded-full bg-emerald-600 text-white text-[8px] font-bold uppercase tracking-wider shadow-xs">
-                  Best Value
+                  ₹600 OFF
                 </span>
-                <span className="block text-[11px] font-medium uppercase tracking-wider text-inherit/80">Squad (3+)</span>
-                <span className="text-xs font-bold tabular-nums">₹5,800<span className="text-[10px] font-normal opacity-80">/head</span></span>
+                <span className="block text-[11px] font-medium uppercase tracking-wider text-inherit/80">Squad (5+)</span>
+                <span className="text-xs font-bold tabular-nums">₹30,395</span>
               </button>
             </div>
 
@@ -798,17 +795,17 @@ export default function BookingFlow({ initialConfig, initialUser }: BookingFlowP
                 <div className="text-sm sm:text-base font-semibold tracking-tight text-[#163C32]">
                   {pricing.isGroupRate ? (
                     <span className="flex flex-col sm:flex-row items-center justify-center gap-1">
-                      <span>🎉 Student Offer Applied:</span>
+                      <span>🎉 Group Offer Applied:</span>
                       <strong className="text-emerald-950 font-bold tabular-nums">
-                        ₹{pricing.pricePerTraveller.toLocaleString('en-IN')} / traveller
+                        ₹{pricing.totalAmount.toLocaleString('en-IN')} Total
                       </strong>
                       <span className="text-xs font-medium text-emerald-700">
-                        (Saving ₹{(pricing.savingsPerTraveller || 0).toLocaleString('en-IN')} each!)
+                        (Flat ₹{pricing.groupDiscountAmount || 600} off total booking!)
                       </span>
                     </span>
                   ) : (
                     <span>
-                      Single Person: <strong className="text-emerald-950 font-bold tabular-nums">₹6,200</strong> All-Inclusive
+                      Package: <strong className="text-emerald-950 font-bold tabular-nums">₹{pricing.totalAmount.toLocaleString('en-IN')}</strong> All-Inclusive
                     </span>
                   )}
                 </div>

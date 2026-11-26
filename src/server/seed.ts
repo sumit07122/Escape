@@ -91,7 +91,7 @@ async function main() {
       price: PRICING_DEFAULTS.groupPricePerTraveller,
       reservationAmount: PRICING_DEFAULTS.reservationAmountPerTraveller,
       travellersCount: 1,
-      description: 'Group booking for five or more friends travelling together at the discounted ₹6,200 per traveller rate, with adjacent seat recommendations and individual QR passes.',
+      description: 'Group booking for five or more friends travelling together with ₹600 flat discount on total booking, adjacent seat recommendations and individual QR passes.',
       features: JSON.stringify(['Same Bus Allocation', 'Adjacent Seat Recommendations', 'Shared Booking Dashboard', 'All Hotel Stays & Meals Included', 'Individual Digital Passes']),
     },
   ];
@@ -103,7 +103,7 @@ async function main() {
       create: pkg,
     });
   }
-  console.log(`✓ Seeded ${packages.length} Packages (₹6,200 solo, ₹5,999 duo, ₹5,800 squad 3+, ₹1,000 deposit)`);
+  console.log(`✓ Seeded ${packages.length} Packages (₹6,199 solo, ₹600 group discount for 5+, ₹1,000 deposit)`);
 
   // 5. Seed Buses and Exact 25-Position Layouts
   for (let i = 0; i < INITIAL_BUSES.length; i++) {

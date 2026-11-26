@@ -80,29 +80,28 @@ export async function POST(request: NextRequest) {
       await db.trip.update({
         where: { id: trip.id },
         data: {
-          packagePrice: 6200,
-          packagePricePerTraveller: 6200,
+          packagePrice: 6199,
+          packagePricePerTraveller: 6199,
           reservationAmountPerTraveller: 1000,
           capacity: 50,
           duration: '6 DAYS • 5 NIGHTS',
-          startDate: new Date('2026-12-24T12:00:00.000Z'),
-          endDate: new Date('2026-12-29T08:00:00.000Z'),
+          startDate: new Date('2026-12-23T12:00:00.000Z'),
+          endDate: new Date('2026-12-28T08:00:00.000Z'),
         },
       });
     }
 
     // 6. Update global TripConfig
     await updateTripConfig({
-      packagePrice: 6200,
-      duoPackagePrice: 5999,
-      groupPackagePrice: 5800,
-      groupSizeThreshold: 3,
+      packagePrice: 6199,
+      groupDiscountAmount: 600,
+      groupSizeThreshold: 5,
       depositPrice: 1000,
-      totalCapacity: 75,
-      departureDate: '2026-12-24',
-      returnDate: '2026-12-29',
-      reportingTime: '04:30 PM',
-      pickupLocation: 'Near Main Gate (NH-2), Mathura',
+      totalCapacity: 50,
+      departureDate: '2026-12-23',
+      returnDate: '2026-12-28',
+      reportingTime: '12:00 PM',
+      pickupLocation: 'GLA University, Mathura',
     });
 
     // 7. Audit Log
@@ -131,11 +130,11 @@ export async function POST(request: NextRequest) {
         deletedTickets: deletedTickets.count,
         deletedSeatHolds: deletedSeatHolds.count,
         resetPassengerSeats: resetPassengerSeats.count,
-        totalFleetCapacity: 75,
-        packagePrice: 6200,
+        totalFleetCapacity: 50,
+        packagePrice: 6199,
         depositPrice: 1000,
-        departureDate: '2026-12-24',
-        returnDate: '2026-12-29',
+        departureDate: '2026-12-23',
+        returnDate: '2026-12-28',
       },
     });
   } catch (error: any) {
