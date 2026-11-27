@@ -326,6 +326,13 @@ export default function AdminBookingsPage() {
                       >
                         {b.paymentStatus}
                       </span>
+                      {b.payments?.[0]?.razorpayOrderId?.startsWith('UPI-') && (
+                        <div className="mt-1 flex items-center gap-1 text-[9px] font-mono text-cyan-400">
+                          <span className="px-1.5 py-0.5 rounded bg-cyan-950/60 border border-cyan-800/60">
+                            UPI {b.payments[0].razorpayPaymentId ? `UTR: ${b.payments[0].razorpayPaymentId.slice(-6)}` : 'QR Pending'}
+                          </span>
+                        </div>
+                      )}
                     </td>
                     <td className="p-4">
                       <span
@@ -555,27 +562,42 @@ export default function AdminBookingsPage() {
                   Payment Transactions Ledger
                 </h3>
                 <div className="space-y-1.5">
-                  {selectedBooking.payments.map((p: any) => (
-                    <div
-                      key={p.id}
-                      className="p-2.5 rounded-xl bg-stone-900/60 border border-white/5 flex items-center justify-between text-xs"
-                    >
-                      <div>
-                        <div className="font-mono font-bold text-stone-200">
-                          {p.razorpayPaymentId || 'Pending Gateway ID'}
+                  {selectedBooking.payments.map((p: any) => {
+                    const isUpi = p.razorpayOrderId?.startsWith('UPI-') || p.razorpaySignature?.includes('UPI');
+                    return (
+                      <div
+                        key={p.id}
+                        className="p-2.5 rounded-xl bg-stone-900/60 border border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs"
+                      >
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-stone-200">
+                              {p.razorpayPaymentId || 'Pending Gateway ID'}
+                            </span>
+                            {isUpi && (
+                              <span className="px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800 text-[9px] font-bold uppercase tracking-wider">
+                                Direct UPI
+                              </span>
+                            )}
+                            {p.razorpaySignature && (
+                              <span className="text-[9px] text-emerald-400 font-mono">
+                                ({p.razorpaySignature})
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[10px] text-stone-500 font-mono mt-0.5">
+                            Order: {p.razorpayOrderId} • {p.paymentType}
+                          </div>
                         </div>
-                        <div className="text-[10px] text-stone-500 font-mono">
-                          {p.razorpayOrderId} • {p.paymentType}
+                        <div className="text-right flex items-center sm:flex-col sm:items-end justify-between">
+                          <span className="font-bold text-emerald-400">₹{p.amount.toLocaleString('en-IN')}</span>
+                          <span className="block text-[10px] text-stone-400">
+                            {new Date(p.createdAt).toLocaleDateString()}
+                          </span>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <span className="font-bold text-emerald-400">₹{p.amount.toLocaleString('en-IN')}</span>
-                        <span className="block text-[10px] text-stone-400">
-                          {new Date(p.createdAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}

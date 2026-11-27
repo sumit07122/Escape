@@ -46,8 +46,10 @@ yarn-error.log*
 
 # scratch & test scripts
 scratch/
+.superpowers/
 test-flow.js
 test-updates.js
+.superpowers/
 test-admin-users.cjs
 Gemini_Generated_Image_*.png
 

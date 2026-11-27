@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import BusSeatMap from './BusSeatMap';
 import GoogleContactsImportModal from '@/components/booking/GoogleContactsImportModal';
+import UpiPaymentModal, { UpiOrderData } from '@/components/booking/UpiPaymentModal';
 import { SittingPreference, TravellerInput, BookingPricing } from '@/types';
 import { TripConfigData, DEFAULT_TRIP_CONFIG } from '@/lib/trip-config-shared';
 import SeatHoldTimer from './SeatHoldTimer';
@@ -110,6 +111,7 @@ export default function BookingFlow({ initialConfig, initialUser }: BookingFlowP
   const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [activeUpiOrder, setActiveUpiOrder] = useState<UpiOrderData | null>(null);
 
   // Step 4: Confirmed Booking Details
   const [confirmedBooking, setConfirmedBooking] = useState<any>(null);
@@ -530,7 +532,7 @@ export default function BookingFlow({ initialConfig, initialUser }: BookingFlowP
         couponCode: couponInput.trim() || undefined,
       };
 
-      const res = await fetch('/api/bookings/create-order', {
+      const res = await fetch('/api/payments/upi/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -541,77 +543,39 @@ export default function BookingFlow({ initialConfig, initialUser }: BookingFlowP
         throw new Error(orderData.error || 'Failed to initialize booking payment');
       }
 
-      // Ensure Razorpay SDK is available or dynamically injected
-      let RazorpayConstructor = (window as any).Razorpay;
-      if (!RazorpayConstructor && typeof window !== 'undefined') {
-        await new Promise<void>((resolve) => {
-          const script = document.createElement('script');
-          script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-          script.async = true;
-          script.onload = () => {
-            RazorpayConstructor = (window as any).Razorpay;
-            resolve();
-          };
-          script.onerror = () => resolve();
-          document.body.appendChild(script);
-        });
-      }
-
-      RazorpayConstructor = (window as any).Razorpay;
-      if (RazorpayConstructor) {
-        const options = {
-          key: orderData.keyId,
-          amount: orderData.amountInPaise,
-          currency: 'INR',
-          name: 'HIMALAYAN ESCAPE',
-          description: `Expedition Seat Reservation (${travellers.length} ${travellers.length === 1 ? 'Traveller' : 'Travellers'}) • ${orderData.bookingId}`,
-          image: '/logo.png',
-          order_id: orderData.razorpayOrderId,
-          prefill: {
-            name: primary.fullName,
-            email: primary.email,
-            contact: primary.phone,
-          },
-          notes: {
-            bookingId: orderData.bookingId,
-            seats: (selectedSeats || []).join(', '),
-            busId: selectedBusId || '',
-          },
-          theme: {
-            color: '#163C32',
-          },
-          modal: {
-            confirm_close: true,
-            ondismiss: function () {
-              setIsProcessingPayment(false);
-              setPaymentError('Payment window was closed. Your seats remain reserved for 10 minutes.');
-            },
-          },
-          handler: async function (response: any) {
-            await verifyPayment({
-              bookingId: orderData.bookingId,
-              razorpayOrderId: response.razorpay_order_id,
-              razorpayPaymentId: response.razorpay_payment_id,
-              razorpaySignature: response.razorpay_signature,
-            });
-          },
-        };
-
-        const rzp = new RazorpayConstructor(options);
-        rzp.on('payment.failed', function (resp: any) {
-          setIsProcessingPayment(false);
-          setPaymentError(resp.error?.description || 'Payment failed or was cancelled. Please try again.');
-        });
-        rzp.open();
-      } else {
-        throw new Error('Razorpay secure checkout could not be loaded. Please ensure you have an active internet connection.');
-      }
+      // Launch UPI Dynamic QR & Intent Launcher Modal
+      setActiveUpiOrder({
+        bookingId: orderData.bookingId,
+        orderId: orderData.orderId,
+        amount: orderData.amount,
+        vpa: orderData.vpa,
+        payeeName: orderData.payeeName,
+        upiString: orderData.upiString,
+        qrCodeDataUrl: orderData.qrDataUrl,
+        qrDataUrl: orderData.qrDataUrl,
+        intentLinks: orderData.intentLinks,
+        expiresAt: orderData.expiresAt,
+        seats: selectedSeats,
+      });
+      setIsProcessingPayment(false);
     } catch (err: unknown) {
       console.error(err);
       const msg = err instanceof Error ? err.message : 'Payment process interrupted';
       setPaymentError(msg);
       setIsProcessingPayment(false);
     }
+  };
+
+  const handleUpiPaymentSuccess = (confirmationData: any) => {
+    setActiveUpiOrder(null);
+    setConfirmedBooking(confirmationData.booking || confirmationData);
+    setCurrentStep(4);
+    if (typeof window !== 'undefined' && (window as any).confetti) {
+      try {
+        (window as any).confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+      } catch {}
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const verifyPayment = async (verificationPayload: any) => {
@@ -1430,7 +1394,7 @@ export default function BookingFlow({ initialConfig, initialUser }: BookingFlowP
               {isProcessingPayment ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin text-white" />
-                  <span>Securing Order with Razorpay...</span>
+                  <span>Generating UPI QR & App Links...</span>
                 </>
               ) : (
                 <span>PAY RESERVATION DEPOSIT · ₹{pricing.reservationAmount.toLocaleString('en-IN')}</span>
@@ -1590,6 +1554,15 @@ export default function BookingFlow({ initialConfig, initialUser }: BookingFlowP
             </button>
           )}
         </aside>
+      )}
+
+      {/* Zero-Commission Developer UPI Payment & Instant UTR Verification Modal */}
+      {activeUpiOrder && (
+        <UpiPaymentModal
+          orderData={activeUpiOrder}
+          onSuccess={handleUpiPaymentSuccess}
+          onClose={() => setActiveUpiOrder(null)}
+        />
       )}
     </div>
   );

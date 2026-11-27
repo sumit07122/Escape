@@ -246,6 +246,7 @@ export default function AdminPaymentsPage() {
               ) : (
                 filteredPayments.map((p) => {
                   const isManual = p.razorpayPaymentId?.startsWith('MANUAL_');
+                  const isUpi = p.razorpayOrderId?.startsWith('UPI-') || p.razorpaySignature?.includes('UPI') || /^\d{12}$/.test(p.razorpayPaymentId || '');
                   let payloadData: any = null;
                   if (p.payload) {
                     try {
@@ -258,11 +259,22 @@ export default function AdminPaymentsPage() {
                       <td className="p-4 font-mono">
                         <div className="flex items-center gap-1.5">
                           <span className="font-bold text-white">
-                            {p.razorpayPaymentId || 'Pending Gateway ID'}
+                            {p.razorpayPaymentId ? (
+                              /^\d{12}$/.test(p.razorpayPaymentId) ? (
+                                <span className="text-emerald-300 font-mono">UTR: {p.razorpayPaymentId}</span>
+                              ) : p.razorpayPaymentId
+                            ) : (
+                              'Pending Gateway ID'
+                            )}
                           </span>
                           {isManual && (
                             <span className="px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400 font-sans font-bold text-[9px] uppercase">
                               Manual
+                            </span>
+                          )}
+                          {isUpi && !isManual && (
+                            <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-sans font-bold text-[9px] uppercase">
+                              Direct UPI
                             </span>
                           )}
                         </div>
@@ -291,6 +303,10 @@ export default function AdminPaymentsPage() {
                                 <Banknote className="w-3 h-3" /> Cash Desk
                               </span>
                             )
+                          ) : isUpi ? (
+                            <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-semibold">
+                              <Smartphone className="w-3 h-3" /> UPI Gateway
+                            </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 text-[11px] text-stone-300 font-semibold">
                               <CreditCard className="w-3 h-3" /> Razorpay
