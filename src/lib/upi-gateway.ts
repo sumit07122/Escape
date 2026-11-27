@@ -42,7 +42,7 @@ export function getDefaultCoordinatorVpa(): string {
   return (
     process.env.NEXT_PUBLIC_DEFAULT_UPI_VPA ||
     process.env.DEFAULT_UPI_VPA ||
-    '8126854850@paytm'
+    'gdark909@okicici'
   );
 }
 

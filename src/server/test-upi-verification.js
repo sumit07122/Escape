@@ -7,7 +7,7 @@ async function runVerificationTests() {
 
   // Test 1: Order Generation with Deep Links & Canonical URL parameters
   const upiOrder = generateUpiPayload({
-    vpa: '8126854850@paytm',
+    vpa: 'gdark909@okicici',
     payeeName: 'HIMALAYAN ESCAPE',
     amount: 5000,
     bookingId: 'GHE-TEST99',
@@ -16,7 +16,7 @@ async function runVerificationTests() {
   });
 
   assert.strictEqual(upiOrder.amount, 5000);
-  assert.strictEqual(upiOrder.vpa, '8126854850@paytm');
+  assert.strictEqual(upiOrder.vpa, 'gdark909@okicici');
   assert.ok(upiOrder.upiString.includes('tr=UPI-GHE-TEST99-123456'));
   assert.ok(upiOrder.upiString.includes('am=5000'));
   assert.ok(upiOrder.intentLinks.gpay.startsWith('tez://'));

@@ -244,8 +244,18 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Query custom UPI VPA from settings if configured
+    let customVpa = process.env.NEXT_PUBLIC_DEFAULT_UPI_VPA || process.env.DEFAULT_UPI_VPA || 'gdark909@okicici';
+    try {
+      const upiSetting = await db.settings.findUnique({ where: { key: 'upi_vpa' } });
+      if (upiSetting?.value?.trim()) {
+        customVpa = upiSetting.value.trim();
+      }
+    } catch {}
+
     // Generate UPI Payload & dynamic QR Code
     const upiPayload = await createMicroGatewayOrder({
+      vpa: customVpa,
       amount: depositAmount,
       bookingId: booking.bookingId,
       orderId,

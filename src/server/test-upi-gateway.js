@@ -6,7 +6,7 @@ async function run() {
 
   // Test 1: Payload generation
   const payload = generateUpiPayload({
-    vpa: '8126854850@paytm',
+    vpa: 'gdark909@okicici',
     payeeName: 'HIMALAYAN ESCAPE',
     amount: 1000,
     bookingId: 'GHE-TEST01',
@@ -14,10 +14,10 @@ async function run() {
     note: 'Himalayan Escape Deposit',
   });
 
-  assert.strictEqual(payload.vpa, '8126854850@paytm');
+  assert.strictEqual(payload.vpa, 'gdark909@okicici');
   assert.strictEqual(payload.amount, 1000);
   assert.ok(payload.upiString.startsWith('upi://pay?'));
-  assert.ok(payload.upiString.includes('pa=8126854850%40paytm'));
+  assert.ok(payload.upiString.includes('pa=gdark909%40okicici'));
   assert.ok(payload.upiString.includes('am=1000'));
   assert.ok(payload.intentLinks.gpay.startsWith('tez://upi/pay?'));
   assert.ok(payload.intentLinks.phonepe.startsWith('phonepe://pay?'));
