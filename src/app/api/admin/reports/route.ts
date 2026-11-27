@@ -47,7 +47,12 @@ export async function GET() {
       orderBy: { createdAt: 'desc' },
       include: {
         booking: {
-          select: { bookingId: true, primaryTravellerName: true },
+          select: {
+            bookingId: true,
+            primaryTravellerName: true,
+            primaryPhone: true,
+            primaryEmail: true,
+          },
         },
       },
     });

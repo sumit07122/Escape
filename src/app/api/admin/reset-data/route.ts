@@ -98,10 +98,10 @@ export async function POST(request: NextRequest) {
       groupSizeThreshold: 5,
       depositPrice: 1000,
       totalCapacity: 50,
-      departureDate: '2026-12-23',
-      returnDate: '2026-12-28',
-      reportingTime: '12:00 PM',
-      pickupLocation: 'GLA University, Mathura',
+      departureDate: '2026-12-24',
+      returnDate: '2026-12-29',
+      reportingTime: '07:00 PM',
+      pickupLocation: 'Near Main Gate (NH-2), Mathura',
     });
 
     // 7. Audit Log
@@ -133,8 +133,8 @@ export async function POST(request: NextRequest) {
         totalFleetCapacity: 50,
         packagePrice: 6199,
         depositPrice: 1000,
-        departureDate: '2026-12-23',
-        returnDate: '2026-12-28',
+        departureDate: '2026-12-24',
+        returnDate: '2026-12-29',
       },
     });
   } catch (error: any) {
