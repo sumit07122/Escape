@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { bookingId, amount, paymentMethod = 'CASH', notes } = body;
+    const { bookingId, amount, paymentMethod = 'CASH', utr, notes } = body;
 
     if (!bookingId) {
       return NextResponse.json({ error: 'Booking ID is required' }, { status: 400 });
@@ -70,9 +70,12 @@ export async function POST(request: NextRequest) {
     }
 
     const timestamp = Date.now();
+    const cleanUtr = utr ? String(utr).trim() : null;
     const randomSuffix = Math.random().toString(36).substring(2, 8).toUpperCase();
     const manualOrderId = `manual_ord_${timestamp}_${randomSuffix}`;
-    const manualPaymentId = `MANUAL_${paymentMethod}_${(admin.email || 'ADMIN').replace(/[^a-zA-Z0-9]/g, '').slice(0, 8)}_${timestamp}`;
+    const manualPaymentId = cleanUtr
+      ? `MANUAL_${paymentMethod}_UTR_${cleanUtr}`
+      : `MANUAL_${paymentMethod}_${(admin.email || 'ADMIN').replace(/[^a-zA-Z0-9]/g, '').slice(0, 8)}_${timestamp}`;
 
     const adminIdentity = admin.name ? `Admin: ${admin.name} (${admin.email})` : `Admin: ${admin.email}`;
 
@@ -93,6 +96,7 @@ export async function POST(request: NextRequest) {
           verifiedAt: new Date(),
           payload: JSON.stringify({
             method: paymentMethod,
+            utr: cleanUtr,
             recordedBy: adminIdentity,
             adminEmail: admin.email,
             notes: notes || null,

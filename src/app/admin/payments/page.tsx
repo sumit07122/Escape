@@ -30,6 +30,7 @@ export default function AdminPaymentsPage() {
   const [manualBookingId, setManualBookingId] = useState('');
   const [manualAmount, setManualAmount] = useState('');
   const [manualMethod, setManualMethod] = useState<'CASH' | 'UPI' | 'BANK_TRANSFER'>('CASH');
+  const [manualUtr, setManualUtr] = useState('');
   const [manualNotes, setManualNotes] = useState('');
   const [submittingManual, setSubmittingManual] = useState(false);
 
@@ -80,6 +81,7 @@ export default function AdminPaymentsPage() {
           bookingId: manualBookingId.trim(),
           amount: amt,
           paymentMethod: manualMethod,
+          utr: manualMethod === 'UPI' && manualUtr.trim() ? manualUtr.trim() : undefined,
           notes: manualNotes.trim() || undefined,
         }),
       });
@@ -90,6 +92,7 @@ export default function AdminPaymentsPage() {
         setShowManualModal(false);
         setManualBookingId('');
         setManualAmount('');
+        setManualUtr('');
         setManualNotes('');
         await fetchPayments();
       } else {
@@ -110,9 +113,17 @@ export default function AdminPaymentsPage() {
 
     // Method filter
     const isManual = p.razorpayPaymentId?.startsWith('MANUAL_');
-    if (methodFilter === 'CASH' && (!isManual || !p.razorpayPaymentId?.includes('_CASH_'))) return false;
-    if (methodFilter === 'UPI' && (!isManual || !p.razorpayPaymentId?.includes('_UPI_'))) return false;
-    if (methodFilter === 'ONLINE' && isManual) return false;
+    const isUpi =
+      p.razorpayOrderId?.startsWith('UPI-') ||
+      p.razorpaySignature?.includes('UPI') ||
+      /^\d{12}$/.test(p.razorpayPaymentId || '') ||
+      p.razorpayPaymentId?.includes('_UPI_');
+    const isCash = isManual && p.razorpayPaymentId?.includes('_CASH_');
+    const isOnline = !isManual && !isUpi;
+
+    if (methodFilter === 'CASH' && !isCash) return false;
+    if (methodFilter === 'UPI' && !isUpi) return false;
+    if (methodFilter === 'ONLINE' && !isOnline) return false;
 
     // Search filter
     if (search.trim()) {
@@ -121,7 +132,14 @@ export default function AdminPaymentsPage() {
       const name = p.booking?.primaryTravellerName?.toLowerCase() || '';
       const paymentId = p.razorpayPaymentId?.toLowerCase() || '';
       const orderId = p.razorpayOrderId?.toLowerCase() || '';
-      return bookingId.includes(q) || name.includes(q) || paymentId.includes(q) || orderId.includes(q);
+      const phone = p.booking?.primaryPhone?.toLowerCase() || '';
+      return (
+        bookingId.includes(q) ||
+        name.includes(q) ||
+        paymentId.includes(q) ||
+        orderId.includes(q) ||
+        phone.includes(q)
+      );
     }
 
     return true;
@@ -421,6 +439,22 @@ export default function AdminPaymentsPage() {
                   ))}
                 </div>
               </div>
+
+              {manualMethod === 'UPI' && (
+                <div>
+                  <label className="text-[11px] font-bold text-stone-300 block mb-1">
+                    12-Digit UPI Ref / UTR Number (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={12}
+                    placeholder="e.g. 432109876543"
+                    value={manualUtr}
+                    onChange={(e) => setManualUtr(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-stone-900 border border-white/10 text-white font-mono focus:border-emerald-500 focus:outline-none"
+                  />
+                </div>
+              )}
 
               <div>
                 <label className="text-[11px] font-bold text-stone-300 block mb-1">
