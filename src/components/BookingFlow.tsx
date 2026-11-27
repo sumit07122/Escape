@@ -1355,33 +1355,49 @@ export default function BookingFlow({ initialConfig, initialUser }: BookingFlowP
             </div>
 
             {/* Financial Calculation */}
-            <div className="space-y-1.5 pt-1">
-              <div className="flex justify-between text-[#646864]">
-                <span>Total Package Price:</span>
-                <span className="font-bold text-[#171918] tabular-nums">₹{pricing.baseAmount.toLocaleString('en-IN')}</span>
+            <div className="space-y-2 pt-2">
+              <div className="flex justify-between items-center text-xs text-[#646864]">
+                <span className="font-medium">Total Package ({travellersCount} {travellersCount === 1 ? 'Traveller' : 'Travellers'}):</span>
+                <span className="font-mono font-bold text-[#171918] tabular-nums">₹{pricing.baseAmount.toLocaleString('en-IN')}</span>
               </div>
 
               {pricing.discountAmount > 0 && (
-                <div className="flex justify-between text-emerald-700 font-bold">
-                  <span>Promo Discount ({pricing.couponCode}):</span>
-                  <span className="tabular-nums font-semibold">−₹{pricing.discountAmount.toLocaleString('en-IN')}</span>
+                <div className="flex justify-between items-center text-xs text-emerald-700 font-bold bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200/60">
+                  <span className="flex items-center gap-1">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Group / Promo Discount:</span>
+                  </span>
+                  <span className="font-mono tabular-nums font-bold">−₹{pricing.discountAmount.toLocaleString('en-IN')}</span>
                 </div>
               )}
 
-              <div className="flex justify-between text-[#D87945] font-bold text-sm pt-1 border-t border-[#D8D2C4]">
-                <span>Reservation Deposit Due Today:</span>
-                <span className="text-base font-bold tabular-nums">₹{pricing.reservationAmount.toLocaleString('en-IN')}</span>
+              {/* Deposit Card */}
+              <div className="p-3.5 rounded-xl bg-gradient-to-br from-[#163C32]/5 to-transparent border border-[#163C32]/15">
+                <div className="flex justify-between items-baseline">
+                  <div>
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#163C32] block">
+                      Payable Now (Deposit)
+                    </span>
+                    <span className="text-[11px] text-[#646864]">
+                      ₹1,000 × {travellersCount} {travellersCount === 1 ? 'Seat' : 'Seats'}
+                    </span>
+                  </div>
+                  <span className="font-serif text-2xl font-black text-[#163C32] tracking-tight tabular-nums">
+                    ₹{pricing.reservationAmount.toLocaleString('en-IN')}
+                  </span>
+                </div>
               </div>
-              <div className="flex justify-between text-[#646864] text-[11px]">
-                <span>Remaining Balance Before Boarding:</span>
-                <span className="text-[#171918] font-semibold tabular-nums">₹{pricing.remainingBalance.toLocaleString('en-IN')}</span>
+
+              <div className="flex justify-between items-center text-[#646864] text-[11px] px-1">
+                <span>Remaining Balance Due at Departure:</span>
+                <span className="text-[#171918] font-mono font-bold tabular-nums">₹{pricing.remainingBalance.toLocaleString('en-IN')}</span>
               </div>
             </div>
 
             {paymentError && (
               <div className="p-3 rounded-xl bg-red-50 border border-red-200 flex items-center gap-2 text-red-700 text-xs">
                 <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{paymentError}</span>
+                <span className="font-medium">{paymentError}</span>
               </div>
             )}
 
@@ -1389,15 +1405,18 @@ export default function BookingFlow({ initialConfig, initialUser }: BookingFlowP
               type="button"
               disabled={isProcessingPayment || (selectedSeats.length > 0 && selectedSeats.length !== travellersCount)}
               onClick={handleProceedToPayment}
-              className="w-full py-3.5 rounded-xl bg-[#D87945] hover:bg-[#C26735] disabled:opacity-50 text-white font-extrabold text-sm shadow-md flex items-center justify-center gap-2 transition-all mt-2"
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#D87945] to-[#B85F30] hover:from-[#C26735] hover:to-[#A35126] disabled:opacity-50 text-white font-extrabold text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 transition-all mt-3 cursor-pointer"
             >
               {isProcessingPayment ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin text-white" />
-                  <span>Generating UPI QR & App Links...</span>
+                  <span>Generating Dynamic UPI QR...</span>
                 </>
               ) : (
-                <span>PAY RESERVATION DEPOSIT · ₹{pricing.reservationAmount.toLocaleString('en-IN')}</span>
+                <div className="flex items-center gap-2">
+                  <span>PAY RESERVATION DEPOSIT · ₹{pricing.reservationAmount.toLocaleString('en-IN')}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </div>
               )}
             </button>
           </div>
