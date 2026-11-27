@@ -3,6 +3,7 @@ import { Manrope, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import PublicSiteLayout from '@/components/PublicSiteLayout';
 import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const manrope = Manrope({ subsets: ['latin'], variable: '--font-manrope' });
 const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair', display: 'swap' });
@@ -81,6 +82,7 @@ export default function RootLayout({
           {children}
         </PublicSiteLayout>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
