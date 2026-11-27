@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   CalendarDays, Mail, Phone, RefreshCw, Search, Ticket, Users,
-  Trash2, Edit3, UserPlus, X, Check, AlertTriangle, ShieldCheck
+  Trash2, Edit3, UserPlus, X, Check, AlertTriangle, ShieldCheck,
+  MessageCircle, Sparkles
 } from 'lucide-react';
 
 interface RegisteredUser {
@@ -28,6 +29,7 @@ export default function AdminUsersPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState('');
+  const [filterType, setFilterType] = useState<'all' | 'leads' | 'booked'>('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -233,18 +235,120 @@ export default function AdminUsersPage() {
         </div>
       </header>
 
+      {/* Leads vs Booked KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+        <button
+          type="button"
+          onClick={() => setFilterType('all')}
+          className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
+            filterType === 'all'
+              ? 'bg-amber-500/10 border-amber-500/40 shadow-lg shadow-amber-950/20'
+              : 'bg-stone-900/60 border-white/10 hover:border-white/20'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-stone-400">Total Accounts</span>
+            <Users className="w-4 h-4 text-amber-400" />
+          </div>
+          <p className="mt-2 text-2xl font-black text-white">{total.toLocaleString('en-IN')}</p>
+          <p className="text-[11px] text-stone-500 mt-0.5">All customer and traveller accounts</p>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setFilterType('leads')}
+          className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
+            filterType === 'leads'
+              ? 'bg-amber-500/15 border-amber-500/50 shadow-lg shadow-amber-950/30'
+              : 'bg-stone-900/60 border-white/10 hover:border-white/20'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Interested Leads
+            </span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300">
+              {users.filter((u) => (u._count?.bookings || 0) === 0).length}
+            </span>
+          </div>
+          <p className="mt-2 text-2xl font-black text-amber-300">
+            {users.filter((u) => (u._count?.bookings || 0) === 0).length}
+          </p>
+          <p className="text-[11px] text-stone-500 mt-0.5">Signed up visitors ready for follow-up</p>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setFilterType('booked')}
+          className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
+            filterType === 'booked'
+              ? 'bg-emerald-500/15 border-emerald-500/50 shadow-lg shadow-emerald-950/30'
+              : 'bg-stone-900/60 border-white/10 hover:border-white/20'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-300 flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Booked Travellers
+            </span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300">
+              {users.filter((u) => (u._count?.bookings || 0) > 0).length}
+            </span>
+          </div>
+          <p className="mt-2 text-2xl font-black text-emerald-300">
+            {users.filter((u) => (u._count?.bookings || 0) > 0).length}
+          </p>
+          <p className="text-[11px] text-stone-500 mt-0.5">Customers with confirmed bookings</p>
+        </button>
+      </div>
+
       <section className="rounded-2xl border border-white/10 bg-stone-900/60 p-4 sm:p-5 shadow-xl">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <label className="relative block w-full sm:max-w-md">
-            <Search className="absolute left-3.5 top-3 h-4 w-4 text-stone-500" />
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => { setSearch(event.target.value); setPage(1); }}
-              placeholder="Search name, email, or phone"
-              className="w-full rounded-xl border border-white/15 bg-stone-950 py-2.5 pl-10 pr-3 text-sm text-white outline-none placeholder:text-stone-500 focus:border-amber-400"
-            />
-          </label>
+          <div className="flex flex-wrap items-center gap-3 w-full sm:max-w-xl">
+            <label className="relative block flex-1 min-w-[200px]">
+              <Search className="absolute left-3.5 top-3 h-4 w-4 text-stone-500" />
+              <input
+                type="search"
+                value={search}
+                onChange={(event) => { setSearch(event.target.value); setPage(1); }}
+                placeholder="Search name, email, or phone"
+                className="w-full rounded-xl border border-white/15 bg-stone-950 py-2.5 pl-10 pr-3 text-sm text-white outline-none placeholder:text-stone-500 focus:border-amber-400"
+              />
+            </label>
+
+            {/* Quick Segment Filter Pills */}
+            <div className="flex items-center gap-1 p-1 rounded-xl bg-stone-950 border border-white/10 text-[11px] font-bold">
+              <button
+                type="button"
+                onClick={() => setFilterType('all')}
+                className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+                  filterType === 'all' ? 'bg-amber-500 text-stone-950 font-black' : 'text-stone-400 hover:text-white'
+                }`}
+              >
+                All
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterType('leads')}
+                className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1 ${
+                  filterType === 'leads' ? 'bg-amber-500 text-stone-950 font-black' : 'text-stone-400 hover:text-white'
+                }`}
+              >
+                <Sparkles className="w-3 h-3" />
+                <span>Leads</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterType('booked')}
+                className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1 ${
+                  filterType === 'booked' ? 'bg-emerald-500 text-stone-950 font-black' : 'text-stone-400 hover:text-white'
+                }`}
+              >
+                <Check className="w-3 h-3" />
+                <span>Booked</span>
+              </button>
+            </div>
+          </div>
+
           <div className="flex items-center gap-2 text-xs text-stone-400">
             <Users className="h-4 w-4 text-amber-400" />
             <span><strong className="text-white">{total.toLocaleString('en-IN')}</strong> registered {total === 1 ? 'user' : 'users'}</span>
@@ -254,11 +358,11 @@ export default function AdminUsersPage() {
         {error && <p role="alert" className="mt-4 rounded-xl border border-rose-500/30 bg-rose-950/40 px-4 py-3 text-xs text-rose-200">{error}</p>}
 
         <div className="mt-4 overflow-hidden rounded-xl border border-white/10 bg-stone-950/50">
-          <div className="hidden grid-cols-[minmax(0,1.3fr)_minmax(0,1.2fr)_minmax(0,1fr)_90px_100px_90px] gap-3 bg-stone-950 px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-stone-400 md:grid border-b border-white/10">
+          <div className="hidden grid-cols-[minmax(0,1.3fr)_minmax(0,1.4fr)_minmax(0,1fr)_110px_90px_90px] gap-3 bg-stone-950 px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-stone-400 md:grid border-b border-white/10">
             <span>User</span>
-            <span>Contact</span>
+            <span>Contact / Outreach</span>
             <span>Registered</span>
-            <span>Bookings</span>
+            <span>Status / Bookings</span>
             <span>Role</span>
             <span className="text-right">Actions</span>
           </div>
@@ -273,8 +377,14 @@ export default function AdminUsersPage() {
             </div>
           ) : (
             <div className="divide-y divide-white/5">
-              {users.map((user) => (
-                <article key={user.id} className="grid gap-3 px-4 py-3.5 text-xs md:grid-cols-[minmax(0,1.3fr)_minmax(0,1.2fr)_minmax(0,1fr)_90px_100px_90px] md:items-center md:gap-3 hover:bg-white/[0.02] transition-colors">
+              {users
+                .filter((user) => {
+                  if (filterType === 'leads') return (user._count?.bookings || 0) === 0;
+                  if (filterType === 'booked') return (user._count?.bookings || 0) > 0;
+                  return true;
+                })
+                .map((user) => (
+                <article key={user.id} className="grid gap-3 px-4 py-3.5 text-xs md:grid-cols-[minmax(0,1.3fr)_minmax(0,1.4fr)_minmax(0,1fr)_110px_90px_90px] md:items-center md:gap-3 hover:bg-white/[0.02] transition-colors">
                   <div className="flex min-w-0 items-center gap-3">
                     {user.image ? (
                       <img src={user.image} alt="" className="h-9 w-9 shrink-0 rounded-full bg-stone-800 object-cover" />
@@ -289,20 +399,39 @@ export default function AdminUsersPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-1 text-stone-300">
+                  <div className="space-y-1.5 text-stone-300">
                     {user.email && (
                       <p className="flex min-w-0 items-center gap-1.5 truncate">
                         <Mail className="h-3 w-3 shrink-0 text-stone-500" />
                         <span className="truncate">{user.email}</span>
                       </p>
                     )}
-                    {user.phone && (
-                      <p className="flex items-center gap-1.5 font-mono text-[11px]">
-                        <Phone className="h-3 w-3 shrink-0 text-stone-500" />
-                        {user.phone}
-                      </p>
+                    {user.phone ? (
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <a
+                          href={`tel:${user.phone}`}
+                          className="flex items-center gap-1 font-mono text-[11px] text-stone-200 hover:text-amber-400 transition"
+                          title="Click to Call"
+                        >
+                          <Phone className="h-3 w-3 shrink-0 text-amber-400" />
+                          <span>{user.phone}</span>
+                        </a>
+                        <a
+                          href={`https://wa.me/91${user.phone.replace(/[^0-9]/g, '').slice(-10)}?text=${encodeURIComponent(
+                            `Hi ${user.name || 'there'}! Saw your registration for the Himalayan Escape Manali trip. How can we help you plan your journey?`
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="Direct WhatsApp Chat"
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-950/80 border border-emerald-600/40 text-[10px] font-bold text-emerald-300 hover:bg-emerald-900 transition"
+                        >
+                          <MessageCircle className="w-2.5 h-2.5 text-emerald-400" />
+                          <span>WhatsApp</span>
+                        </a>
+                      </div>
+                    ) : (
+                      !user.email && <span className="text-stone-500 text-[11px]">No contact details</span>
                     )}
-                    {!user.email && !user.phone && <span className="text-stone-500 text-[11px]">No contact details</span>}
                   </div>
 
                   <p className="flex items-center gap-2 text-stone-300">
@@ -310,12 +439,17 @@ export default function AdminUsersPage() {
                     {formatDate(user.createdAt)}
                   </p>
 
-                  <p className="flex items-center gap-2 font-medium text-stone-200">
-                    <Ticket className="h-3.5 w-3.5 text-stone-500 md:hidden" />
-                    <span className="px-2 py-0.5 rounded bg-stone-800 text-[11px] font-mono font-bold">
-                      {user._count.bookings}
-                    </span>
-                  </p>
+                  <div>
+                    {user._count.bookings > 0 ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold">
+                        <Check className="w-2.5 h-2.5" /> Booked ({user._count.bookings})
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-950 text-amber-300 border border-amber-500/30 text-[10px] font-bold">
+                        <Sparkles className="w-2.5 h-2.5" /> Interested Lead
+                      </span>
+                    )}
+                  </div>
 
                   <div>
                     <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${

@@ -52,8 +52,10 @@ export default function Navbar() {
       }
     }
     checkAuth();
+    window.addEventListener('auth-change', checkAuth);
     return () => {
       isMounted = false;
+      window.removeEventListener('auth-change', checkAuth);
     };
   }, [pathname]);
 

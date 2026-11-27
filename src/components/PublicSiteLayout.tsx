@@ -7,6 +7,7 @@ import Footer from '@/components/Footer';
 import MobileBottomBar from '@/components/MobileBottomBar';
 import WhatsAppCommunityButton from '@/components/WhatsAppCommunityButton';
 import SocialProofPopup from '@/components/SocialProofPopup';
+import VisitorLeadPopup from '@/components/auth/VisitorLeadPopup';
 
 export default function PublicSiteLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -30,6 +31,7 @@ export default function PublicSiteLayout({ children }: { children: React.ReactNo
       <MobileBottomBar />
       <WhatsAppCommunityButton />
       <SocialProofPopup />
+      <VisitorLeadPopup />
     </>
   );
 }

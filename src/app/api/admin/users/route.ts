@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     const search = (searchParams.get('search') || '').trim().slice(0, 120);
     const page = Math.max(1, Number.parseInt(searchParams.get('page') || '1', 10) || 1);
     const where = {
-      role: 'USER',
+      role: { not: 'SUPER_ADMIN' },
       ...(search
         ? {
             OR: [
@@ -56,13 +56,34 @@ export async function GET(request: NextRequest) {
           role: true,
           createdAt: true,
           updatedAt: true,
+          bookings: {
+            select: { primaryPhone: true },
+            take: 1,
+            orderBy: { createdAt: 'desc' },
+          },
           _count: { select: { bookings: true } },
         },
       }),
     ]);
 
+    const formattedUsers = users.map((u) => {
+      const resolvedPhone = u.phone || u.bookings?.[0]?.primaryPhone || null;
+      const isSystemPhoneEmail = u.email?.includes('@phone.himalayaescape.invalid');
+      return {
+        id: u.id,
+        name: u.name,
+        email: isSystemPhoneEmail ? null : u.email,
+        phone: resolvedPhone,
+        image: u.image,
+        role: u.role,
+        createdAt: u.createdAt,
+        updatedAt: u.updatedAt,
+        _count: u._count,
+      };
+    });
+
     return NextResponse.json({
-      users,
+      users: formattedUsers,
       total,
       page,
       pageSize: PAGE_SIZE,
@@ -111,9 +132,9 @@ export async function DELETE(request: NextRequest) {
       });
     }
 
-    // Purge ALL registered customer users (role = 'USER')
+    // Purge ALL registered customer users (non SUPER_ADMIN)
     const customerUsers = await db.user.findMany({
-      where: { role: 'USER' },
+      where: { role: { not: 'SUPER_ADMIN' } },
       select: { id: true },
     });
 
